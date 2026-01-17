@@ -4,6 +4,7 @@
   "main": "index.ts",
   "scripts": {
     "start": "expo start",
+    "generate-map": "node scripts/generate-map.js",
     "prebuild": "npx expo prebuild --clean",
     "android": "expo run:android -d",
     "ios": "expo run:ios",
