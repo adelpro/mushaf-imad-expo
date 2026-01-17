@@ -3,6 +3,8 @@ import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { registerRootComponent } from "expo";
 import { useFonts } from "expo-font";
 import { MushafScreen } from "./src/screens/MushafScreen";
+import { StatusBar } from "expo-status-bar";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -18,9 +20,10 @@ export default function App() {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={["left", "right", "bottom"]}>
+      <StatusBar style="dark" translucent backgroundColor="transparent" />
       <MushafScreen />
-    </View>
+    </SafeAreaView>
   );
 }
 

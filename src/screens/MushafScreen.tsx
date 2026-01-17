@@ -1,14 +1,7 @@
-import React, { useState, useRef, useCallback } from "react";
-import {
-  View,
-  FlatList,
-  StyleSheet,
-  Dimensions,
-  SafeAreaView,
-} from "react-native";
+import React, { useState, useRef } from "react";
+import { View, FlatList, StyleSheet, Dimensions } from "react-native";
 import { QuranPage } from "../components/QuranPage";
 import { AudioPlayerBar } from "../components/AudioPlayerBar";
-import { StatusBar } from "expo-status-bar";
 import { RealmService } from "../services/RealmService";
 import { Page } from "../models/schema";
 
@@ -45,7 +38,6 @@ export const MushafScreen = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar hidden />
       <FlatList
         data={pages}
         keyExtractor={(item) => item.toString()}
@@ -64,7 +56,7 @@ export const MushafScreen = () => {
             />
           </View>
         )}
-        getItemLayout={(data, index) => ({
+        getItemLayout={(_, index) => ({
           length: width,
           offset: width * index,
           index,
@@ -72,6 +64,7 @@ export const MushafScreen = () => {
         initialNumToRender={1}
         maxToRenderPerBatch={2}
         windowSize={3}
+        removeClippedSubviews
       />
       <View style={{ height: 60 }}>
         <AudioPlayerBar
