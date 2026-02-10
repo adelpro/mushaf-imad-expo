@@ -30,7 +30,7 @@ export function MushafScreen() {
         const chapter = await databaseService.getChapterByNumber(chapterNum);
         if (chapter) {
           setCurrentChapter((prev) =>
-            chapter.number !== prev ? chapter.number : prev
+            chapter.number !== prev ? chapter.number : prev,
           );
         }
       }
@@ -50,7 +50,7 @@ export function MushafScreen() {
       if (Number.isFinite(pageNum)) {
         void updateChapter(pageNum);
       }
-    }
+    },
   ).current;
 
   return (

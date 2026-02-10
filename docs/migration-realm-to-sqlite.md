@@ -309,3 +309,210 @@ Expected counts:
 - Verse Highlights: 27,039
 - Chapter Headers: 228
 - Page Headers: 1,208
+
+## Database Initialization
+
+The `SQLiteService.ts` implements a robust database initialization strategy:
+
+### Asset Copy Process
+
+1. Check if database already exists in the app's document directory
+2. If exists, verify it contains data (check `chapters` table count)
+3. If empty or invalid, delete and copy from `assets/quran.db`
+4. Use `expo-asset` to ensure the asset is fully downloaded before copying
+5. Re-open database connection after copy to avoid stale references
+
+### Key Implementation Details
+
+```typescript
+private async initDatabase(): Promise<SQLiteDb> {
+  const dbPath = `${FileSystem.documentDirectory}SQLite/${DB_NAME}`;
+
+  // Check existing database
+  const dbInfo = await FileSystem.getInfoAsync(dbPath);
+  if (dbInfo.exists) {
+    const existingDb = await SQLite.openDatabaseAsync(DB_NAME);
+    const chapterCount = await existingDb.getFirstAsync<{ count: number }>(
+      "SELECT COUNT(*) as count FROM chapters"
+    );
+
+    if (chapterCount && chapterCount.count > 0) {
+      return existingDb;
+    }
+
+    // Empty database - delete and re-copy
+    await existingDb.closeAsync().catch(() => {});
+    await FileSystem.deleteAsync(dbPath, { idempotent: true });
+  }
+
+  // Copy from assets
+  const asset = Asset.Asset.fromModule(require("../../assets/quran.db"));
+  await asset.downloadAsync();
+
+  if (asset.localUri) {
+    await FileSystem.deleteAsync(dbPath, { idempotent: true });
+    await FileSystem.copyAsync({ from: asset.localUri, to: dbPath });
+    return SQLite.openDatabaseAsync(DB_NAME);
+  }
+}
+```
+
+## Troubleshooting
+
+### Common Issues
+
+#### "no such table: chapters" or "no such table: pages"
+
+**Cause**: Database initialization failed or tables weren't created.
+
+**Solution**: Ensure `initializeDatabase()` is called in `initDatabase()`. The database copy from assets should include pre-populated tables.
+
+#### Sura Name Bar and Verse Fasel Not Showing
+
+**Cause**: Database copy failed silently, app uses empty database.
+
+**Solution**:
+
+1. Check database file size after copy (should be ~10MB)
+2. Verify `assets/quran.db` exists and contains data
+3. Run `node scripts/check-db.js` to verify database integrity
+4. Use `databaseService.resetForTesting()` during development to force re-copy
+
+#### Stale Database Reference After Copy
+
+**Cause**: Database connection opened before copy completes.
+
+**Solution**: Always re-open database connection after copying from assets using `SQLite.openDatabaseAsync(DB_NAME)`.
+
+### Verification Scripts
+
+Several scripts are available for debugging:
+
+- `scripts/check-db-data.js` - Verify database record counts and sample data
+- `scripts/check-pages-schema.js` - Verify pages table schema
+- `scripts/check-page-numbering.js` - Verify page/chapter relationships
+- `scripts/check-markers.js` - Verify verse marker data
+- `scripts/migrate-realm-to-sqlite.js` - Main migration script (reference only)
+
+Run any script with:
+
+```bash
+node scripts/<script-name>.js
+```
+
+## Migration Script Reference
+
+The `scripts/migrate-realm-to-sqlite.js` script performs the complete migration from Realm to SQLite. It is kept for reference and documentation purposes.
+
+### Purpose
+
+Converts the Realm database (`assets/quran.realm`) to SQLite format (`assets/quran.db`), preserving all data relationships and creating appropriate indexes for performance.
+
+### Prerequisites
+
+- Node.js with `realm` and `better-sqlite3` packages installed
+- Source Realm database at `assets/quran.realm`
+- Destination directory `assets/` must be writable
+
+### Usage
+
+```bash
+node scripts/migrate-realm-to-sqlite.js
+```
+
+### What It Does
+
+1. Opens the Realm database from `assets/quran.realm`
+2. Creates a new SQLite database at `assets/quran.db`
+3. Creates all table schemas with proper indexes
+4. Migrates data in this order:
+   - Parts (30 records)
+   - Quarters (240 records)
+   - Chapters (114 records)
+   - Pages (604 records)
+   - Sections (1,325 records)
+   - Verses (6,236 records)
+   - Verse Highlights (27,039 records)
+   - Chapter Headers (228 records)
+   - Page Headers (1,208 records)
+5. Verifies migration by printing final counts
+6. Closes both databases
+
+### Key Implementation Details
+
+- Uses `better-sqlite3` for SQLite operations
+- Uses prepared statements for efficient inserts
+- Wraps bulk inserts in transactions for performance
+- Sets `PRAGMA journal_mode = WAL` for concurrent read performance
+- Preserves foreign key relationships
+
+### Output
+
+After successful migration, prints:
+
+```
+=== Migration Complete ===
+
+Verifying migration...
+
+Final counts:
+  Chapters: 114
+  Pages: 604
+  Verses: 6236
+  Parts: 30
+  Quarters: 240
+  Sections: 1325
+  Verse Highlights: 27039
+  Chapter Headers: 228
+  Page Headers: 1208
+```
+
+### When to Re-run
+
+This script should only be re-run when:
+
+- Starting with a new Realm database source
+- Schema changes require full re-migration
+- The source `quran.realm` file has been updated
+
+For normal development, use the pre-migrated `assets/quran.db` file.
+
+## Image Map Generation
+
+The `scripts/generate-map.js` script generates the `src/constants/imageMap.ts` file which maps page numbers to their corresponding line images.
+
+### Purpose
+
+Expo requires image assets to be explicitly imported using `require()`. This script scans the `assets/images/quran/` directory structure and generates a TypeScript file with all the required imports for each page's line images.
+
+### Usage
+
+```bash
+node scripts/generate-map.js
+```
+
+### Output
+
+Generates `src/constants/imageMap.ts`:
+
+```typescript
+export const QuranImages: Record<number, any[]> = {
+  1: [
+    require('../../assets/images/quran/1/1.png'),
+    require('../../assets/images/quran/1/2.png'),
+    // ...
+  ],
+  2: [
+    // ...
+  ],
+  // ... pages 1-604
+};
+```
+
+### When to Re-run
+
+Run this script when:
+
+- Adding new page images to `assets/images/quran/`
+- Modifying the directory structure of quran images
+- After updating the number of lines per page

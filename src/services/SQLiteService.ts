@@ -1,4 +1,6 @@
 import * as SQLite from "expo-sqlite";
+import * as FileSystem from "expo-file-system/legacy";
+import * as Asset from "expo-asset";
 
 const DB_NAME = "quran.db";
 
@@ -48,21 +50,40 @@ export type Verse = {
   highlights1405: VerseHighlight[];
 };
 
-type VerseRow = {
-  verseID: number;
-  humanReadableID: string;
+export type Page = {
+  identifier: number;
   number: number;
-  text: string;
-  textWithoutTashkil: string;
-  uthmanicHafsText: string;
-  hafsSmartText: string;
-  searchableText: string;
-  chapter_id: number | null;
-  part_id: number | null;
-  quarter_id: number | null;
-  section_id: number | null;
-  page1441_id: number | null;
-  page1405_id: number | null;
+  isRight: boolean;
+  header1441: {
+    part_id: number | null;
+    quarter_id: number | null;
+  } | null;
+  header1405: {
+    part_id: number | null;
+    quarter_id: number | null;
+  } | null;
+  chapterHeaders1441: Array<{
+    id: number;
+    chapter_id: number | null;
+    line: number;
+    centerX: number;
+    centerY: number;
+  }>;
+  chapterHeaders1405: Array<{
+    id: number;
+    chapter_id: number | null;
+    line: number;
+    centerX: number;
+    centerY: number;
+  }>;
+  verses1441: Verse[];
+  verses1405: Verse[];
+};
+
+type VerseRow = Omit<
+  Verse,
+  "marker1441" | "marker1405" | "highlights1441" | "highlights1405"
+> & {
   marker1441_numberCodePoint: string | null;
   marker1441_line: number | null;
   marker1441_centerX: number | null;
@@ -73,59 +94,13 @@ type VerseRow = {
   marker1405_centerY: number | null;
 };
 
-export type ChapterHeader = {
-  id: number;
-  chapter_id: number | null;
-  line: number;
-  centerX: number;
-  centerY: number;
-};
-
-export type PageHeader = {
-  id: number;
-  part_id: number | null;
-  quarter_id: number | null;
-};
-
-export type Page = {
-  identifier: number;
-  number: number;
-  isRight: number;
-  header1441: PageHeader | null;
-  header1405: PageHeader | null;
-  chapterHeaders1441: ChapterHeader[];
-  chapterHeaders1405: ChapterHeader[];
-  verses1441: Verse[];
-  verses1405: Verse[];
-};
-
-export type Part = {
-  identifier: number;
-  number: number;
-  arabicTitle: string;
-  englishTitle: string;
-};
-
-export type Quarter = {
-  identifier: number;
-  hizbNumber: number;
-  hizbFraction: number;
-  arabicTitle: string;
-  englishTitle: string;
-  part_id: number | null;
-};
-
-export type QuranSection = {
-  identifier: number;
-};
-
 type SQLiteDb = Awaited<ReturnType<typeof SQLite.openDatabaseAsync>>;
 
 class DatabaseService {
   private db: SQLiteDb | null = null;
   private initPromise: Promise<SQLiteDb> | null = null;
 
-  private async getDb(): Promise<SQLiteDb> {
+  async getDb(): Promise<SQLiteDb> {
     if (this.db) {
       return this.db;
     }
@@ -134,16 +109,129 @@ class DatabaseService {
       return this.initPromise;
     }
 
-    this.initPromise = SQLite.openDatabaseAsync(DB_NAME);
+    this.initPromise = this.initDatabase();
     this.db = await this.initPromise;
-    await this.initializeDatabase();
     return this.db;
   }
 
-  private async initializeDatabase(): Promise<void> {
-    if (!this.db) return;
+  private async initDatabase(): Promise<SQLiteDb> {
+    const dbPath = `${FileSystem.documentDirectory}SQLite/${DB_NAME}`;
 
-    await this.db.execAsync(`
+    try {
+      const dbInfo = await FileSystem.getInfoAsync(dbPath);
+
+      if (dbInfo.exists) {
+        const existingDb = await SQLite.openDatabaseAsync(DB_NAME);
+        const chapterCount = await existingDb.getFirstAsync<{ count: number }>(
+          "SELECT COUNT(*) as count FROM chapters",
+        );
+
+        if (chapterCount && chapterCount.count > 0) {
+          return existingDb;
+        }
+
+        await existingDb.closeAsync().catch(() => {});
+        await FileSystem.deleteAsync(dbPath, { idempotent: true }).catch(
+          () => {},
+        );
+      }
+
+      const asset = Asset.Asset.fromModule(require("../../assets/quran.db"));
+      await asset.downloadAsync();
+
+      if (asset.localUri) {
+        await FileSystem.deleteAsync(dbPath, { idempotent: true }).catch(
+          () => {},
+        );
+        await FileSystem.copyAsync({ from: asset.localUri, to: dbPath });
+
+        return SQLite.openDatabaseAsync(DB_NAME);
+      }
+
+      const newDb = await SQLite.openDatabaseAsync(DB_NAME);
+      await this.initializeDatabase(newDb);
+      return newDb;
+    } catch {
+      const db = await SQLite.openDatabaseAsync(DB_NAME);
+      await this.runMigrations(db);
+      return db;
+    }
+  }
+
+  private async runMigrations(db: SQLiteDb): Promise<void> {
+    const result = await db.getFirstAsync<{ count: number }>(
+      "SELECT COUNT(*) as count FROM sqlite_master WHERE type='table' AND name='chapter_headers'",
+    );
+
+    if (!result || result.count === 0) {
+      await this.initializeDatabase(db);
+    } else {
+      const pageColumns = await db.getFirstAsync<{ sql: string }>(
+        "SELECT sql FROM sqlite_master WHERE type='table' AND name='pages'",
+      );
+
+      if (pageColumns && !pageColumns.sql.includes("header1441_part_id")) {
+        await db
+          .execAsync("ALTER TABLE pages ADD COLUMN header1441_part_id INTEGER")
+          .catch(() => {});
+        await db
+          .execAsync(
+            "ALTER TABLE pages ADD COLUMN header1441_quarter_id INTEGER",
+          )
+          .catch(() => {});
+        await db
+          .execAsync("ALTER TABLE pages ADD COLUMN header1405_part_id INTEGER")
+          .catch(() => {});
+        await db
+          .execAsync(
+            "ALTER TABLE pages ADD COLUMN header1405_quarter_id INTEGER",
+          )
+          .catch(() => {});
+      }
+
+      const verseHighlightsColumns = await db.getFirstAsync<{ sql: string }>(
+        "SELECT sql FROM sqlite_master WHERE type='table' AND name='verse_highlights'",
+      );
+
+      if (
+        verseHighlightsColumns &&
+        !verseHighlightsColumns.sql.includes("id INTEGER PRIMARY KEY")
+      ) {
+        await db
+          .execAsync(
+            `
+          CREATE TABLE IF NOT EXISTS verse_highlights_new (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            verse_id INTEGER NOT NULL,
+            layout_type INTEGER NOT NULL,
+            line INTEGER NOT NULL,
+            left_position REAL NOT NULL,
+            right_position REAL NOT NULL,
+            FOREIGN KEY (verse_id) REFERENCES verses(verseID)
+          )
+        `,
+          )
+          .catch(() => {});
+        await db
+          .execAsync(
+            `
+          INSERT INTO verse_highlights_new (verse_id, layout_type, line, left_position, right_position)
+          SELECT verse_id, layout_type, line, left_position, right_position FROM verse_highlights
+        `,
+          )
+          .catch(() => {});
+        await db.execAsync("DROP TABLE verse_highlights").catch(() => {});
+        await db
+          .execAsync(
+            "ALTER TABLE verse_highlights_new RENAME TO verse_highlights",
+          )
+          .catch(() => {});
+      }
+    }
+  }
+
+  private async initializeDatabase(db: SQLiteDb): Promise<void> {
+    await db.execAsync(`
       CREATE TABLE IF NOT EXISTS pages (
         identifier INTEGER PRIMARY KEY AUTOINCREMENT,
         number INTEGER NOT NULL,
@@ -151,7 +239,7 @@ class DatabaseService {
       );
     `);
 
-    await this.db.execAsync(`
+    await db.execAsync(`
       CREATE TABLE IF NOT EXISTS chapters (
         identifier INTEGER PRIMARY KEY AUTOINCREMENT,
         number INTEGER NOT NULL,
@@ -165,7 +253,7 @@ class DatabaseService {
       );
     `);
 
-    await this.db.execAsync(`
+    await db.execAsync(`
       CREATE TABLE IF NOT EXISTS parts (
         identifier INTEGER PRIMARY KEY AUTOINCREMENT,
         number INTEGER NOT NULL,
@@ -174,7 +262,7 @@ class DatabaseService {
       );
     `);
 
-    await this.db.execAsync(`
+    await db.execAsync(`
       CREATE TABLE IF NOT EXISTS quarters (
         identifier INTEGER PRIMARY KEY AUTOINCREMENT,
         hizbNumber INTEGER NOT NULL,
@@ -186,7 +274,7 @@ class DatabaseService {
       );
     `);
 
-    await this.db.execAsync(`
+    await db.execAsync(`
       CREATE TABLE IF NOT EXISTS verses (
         verseID INTEGER PRIMARY KEY AUTOINCREMENT,
         humanReadableID TEXT NOT NULL,
@@ -216,7 +304,7 @@ class DatabaseService {
       );
     `);
 
-    await this.db.execAsync(`
+    await db.execAsync(`
       CREATE TABLE IF NOT EXISTS page_headers (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         page_id INTEGER NOT NULL,
@@ -229,7 +317,7 @@ class DatabaseService {
       );
     `);
 
-    await this.db.execAsync(`
+    await db.execAsync(`
       CREATE TABLE IF NOT EXISTS chapter_headers (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         chapter_id INTEGER,
@@ -243,7 +331,7 @@ class DatabaseService {
       );
     `);
 
-    await this.db.execAsync(`
+    await db.execAsync(`
       CREATE TABLE IF NOT EXISTS verse_highlights (
         line INTEGER NOT NULL,
         left_position REAL NOT NULL,
@@ -343,7 +431,7 @@ class DatabaseService {
           ),
         ]);
 
-        return this.inflateVerse(verse, highlights1441, highlights1405);
+        return this.mapVerseRow(verse, highlights1441, highlights1405);
       }),
     );
 
@@ -368,59 +456,37 @@ class DatabaseService {
           ),
         ]);
 
-        return this.inflateVerse(verse, highlights1441, highlights1405);
+        return this.mapVerseRow(verse, highlights1441, highlights1405);
       }),
     );
 
     return {
-      identifier: pageId,
+      identifier: pageResult.identifier,
       number: pageResult.number,
-      isRight: pageResult.isRight,
+      isRight: pageResult.isRight === 1,
       header1441: header1441
         ? {
-            id: header1441.id,
             part_id: header1441.part_id,
             quarter_id: header1441.quarter_id,
           }
         : null,
       header1405: header1405
         ? {
-            id: header1405.id,
             part_id: header1405.part_id,
             quarter_id: header1405.quarter_id,
           }
         : null,
-      chapterHeaders1441: chapterHeaders1441.map((h) => ({
-        id: h.id,
-        chapter_id: h.chapter_id,
-        line: h.line,
-        centerX: h.centerX,
-        centerY: h.centerY,
-      })),
-      chapterHeaders1405: chapterHeaders1405.map((h) => ({
-        id: h.id,
-        chapter_id: h.chapter_id,
-        line: h.line,
-        centerX: h.centerX,
-        centerY: h.centerY,
-      })),
+      chapterHeaders1441,
+      chapterHeaders1405,
       verses1441,
       verses1405,
     };
   }
 
-  private inflateVerse(
+  private mapVerseRow(
     verse: VerseRow,
-    highlights1441: Array<{
-      line: number;
-      left_position: number;
-      right_position: number;
-    }>,
-    highlights1405: Array<{
-      line: number;
-      left_position: number;
-      right_position: number;
-    }>,
+    highlights1441: VerseHighlight[],
+    highlights1405: VerseHighlight[],
   ): Verse {
     return {
       verseID: verse.verseID,
@@ -456,86 +522,23 @@ class DatabaseService {
 
   async getChapterByNumber(chapterNumber: number): Promise<Chapter | null> {
     const db = await this.getDb();
-    return db.getFirstAsync<Chapter>(
+
+    const chapter = await db.getFirstAsync<Chapter>(
       "SELECT * FROM chapters WHERE number = ? LIMIT 1",
       [chapterNumber],
     );
+
+    return chapter;
   }
 
-  async getVersesByChapter(chapterNumber: number): Promise<Verse[]> {
+  async getChapters(): Promise<Chapter[]> {
     const db = await this.getDb();
 
-    const versesResult = await db.getAllAsync<VerseRow>(
-      "SELECT * FROM verses WHERE chapter_id = (SELECT identifier FROM chapters WHERE number = ?) ORDER BY number ASC",
-      [chapterNumber],
+    const chapters = await db.getAllAsync<Chapter>(
+      "SELECT * FROM chapters ORDER BY number ASC",
     );
 
-    return Promise.all(
-      versesResult.map(async (verse) => {
-        const [highlights1441, highlights1405] = await Promise.all([
-          db.getAllAsync<{
-            line: number;
-            left_position: number;
-            right_position: number;
-          }>(
-            "SELECT * FROM verse_highlights WHERE verse_id = ? AND layout_type = 1441",
-            [verse.verseID],
-          ),
-          db.getAllAsync<{
-            line: number;
-            left_position: number;
-            right_position: number;
-          }>(
-            "SELECT * FROM verse_highlights WHERE verse_id = ? AND layout_type = 1405",
-            [verse.verseID],
-          ),
-        ]);
-
-        return this.inflateVerse(verse, highlights1441, highlights1405);
-      }),
-    );
-  }
-
-  async searchVerses(query: string): Promise<Verse[]> {
-    const db = await this.getDb();
-
-    const versesResult = await db.getAllAsync<VerseRow>(
-      "SELECT * FROM verses WHERE searchableText LIKE ? ORDER BY chapter_id, number ASC LIMIT 100",
-      [`%${query}%`],
-    );
-
-    return Promise.all(
-      versesResult.map(async (verse) => {
-        const [highlights1441, highlights1405] = await Promise.all([
-          db.getAllAsync<{
-            line: number;
-            left_position: number;
-            right_position: number;
-          }>(
-            "SELECT * FROM verse_highlights WHERE verse_id = ? AND layout_type = 1441",
-            [verse.verseID],
-          ),
-          db.getAllAsync<{
-            line: number;
-            left_position: number;
-            right_position: number;
-          }>(
-            "SELECT * FROM verse_highlights WHERE verse_id = ? AND layout_type = 1405",
-            [verse.verseID],
-          ),
-        ]);
-
-        return this.inflateVerse(verse, highlights1441, highlights1405);
-      }),
-    );
-  }
-
-  async close(): Promise<void> {
-    if (this.db) {
-      await this.db.closeAsync();
-      this.db = null;
-      this.initPromise = null;
-    }
+    return chapters;
   }
 }
 

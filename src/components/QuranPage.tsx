@@ -56,79 +56,78 @@ export const QuranPage: React.FC<Props> = ({
       }>
     >();
 
-    if (!page) return map;
+    if (page) {
+      const markersWithData = page.verses1441.filter(
+        (v) => v.marker1441 && v.marker1441.line !== null,
+      );
 
-    page.verses1441.forEach((verse) => {
-      const marker = verse.marker1441;
-      if (
-        !marker ||
-        marker.line === null ||
-        marker.centerX === null ||
-        marker.centerY === null
-      )
-        return;
+      page.verses1441.forEach((verse) => {
+        const marker = verse.marker1441;
+        if (
+          !marker ||
+          marker.line === null ||
+          marker.centerX === null ||
+          marker.centerY === null
+        )
+          return;
 
-      const list = map.get(marker.line) ?? [];
-      list.push({
-        verseID: verse.verseID,
-        number: verse.number,
-        centerX: marker.centerX,
-        centerY: marker.centerY,
+        const list = map.get(marker.line) ?? [];
+        list.push({
+          verseID: verse.verseID,
+          number: verse.number,
+          centerX: marker.centerX,
+          centerY: marker.centerY,
+        });
+        map.set(marker.line, list);
       });
-      map.set(marker.line, list);
-    });
+    }
 
     for (const list of map.values()) {
       list.sort((a, b) => a.centerX - b.centerX || a.number - b.number);
     }
 
     return map;
-  }, [page]);
-
-  if (loading) {
-    return (
-      <View style={[styles.container, styles.center]}>
-        <ActivityIndicator size="large" color="#000" />
-      </View>
-    );
-  }
+  }, [page, pageNumber]);
 
   const renderSurahTitleBackgrounds = (lineIndex: number) => {
     if (!page) return null;
 
-    return page.chapterHeaders1441
-      .filter((header) => header.line === lineIndex)
-      .map((header, i) => {
-        const centerX = width * header.centerX;
-        const centerY = LINE_HEIGHT * header.centerY;
+    const matchingHeaders = page.chapterHeaders1441.filter(
+      (header) => header.line === lineIndex,
+    );
 
-        const left = centerX - SURA_NAME_BAR_WIDTH / 2;
-        const top =
-          centerY - SURA_NAME_BAR_HEIGHT / 2 + SURA_NAME_BAR_CENTER_Y_OFFSET;
+    return matchingHeaders.map((header, i) => {
+      const centerX = width * header.centerX;
+      const centerY = LINE_HEIGHT * header.centerY;
 
-        return (
-          <View
-            key={`surah-title-bg-${lineIndex}-${i}`}
-            pointerEvents="none"
-            style={{
-              position: "absolute",
-              left,
-              top,
-            }}
-          >
-            <SuraNameBar
-              width={SURA_NAME_BAR_WIDTH}
-              height={SURA_NAME_BAR_HEIGHT}
-            />
-          </View>
-        );
-      });
+      const left = centerX - SURA_NAME_BAR_WIDTH / 2;
+      const top =
+        centerY - SURA_NAME_BAR_HEIGHT / 2 + SURA_NAME_BAR_CENTER_Y_OFFSET;
+
+      return (
+        <View
+          key={`surah-title-bg-${lineIndex}-${i}`}
+          pointerEvents="none"
+          style={{
+            position: "absolute",
+            left,
+            top,
+          }}
+        >
+          <SuraNameBar
+            width={SURA_NAME_BAR_WIDTH}
+            height={SURA_NAME_BAR_HEIGHT}
+          />
+        </View>
+      );
+    });
   };
 
   const renderVerseMarkers = (lineIndex: number) => {
     if (!page) return null;
 
     const markers = markersByLine.get(lineIndex) ?? [];
+
     const scaledImageHeight = width / LINE_ASPECT_RATIO;
     const cropOffset = (scaledImageHeight - LINE_HEIGHT) / 2;
 
@@ -183,8 +182,6 @@ export const QuranPage: React.FC<Props> = ({
   };
 
   const renderLines = () => {
-    if (!page) return null;
-
     const lines: React.ReactNode[] = [];
     const lineCount = 15;
 
