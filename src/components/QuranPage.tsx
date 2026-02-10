@@ -9,6 +9,7 @@ import {
 import { useQuranPage } from "../hooks/useQuranPage";
 import SuraNameBar from "../../assets/images/sura_name_bar.svg";
 import { VerseFasel } from "./VerseFasel";
+import { QuranImages } from "../constants/imageMap";
 
 const { width } = Dimensions.get("window");
 const LINE_ASPECT_RATIO = 1440 / 232;
@@ -26,63 +27,9 @@ const resolveLineImage = (
   pageNumber: number,
   lineIndex: number,
 ): number | undefined => {
-  const lineNum = lineIndex + 1;
-
-  const pageImages: Record<number, Record<number, number>> = {
-    1: {
-      1: require("../../assets/images/quran/1/1.png"),
-      2: require("../../assets/images/quran/1/2.png"),
-      3: require("../../assets/images/quran/1/3.png"),
-      4: require("../../assets/images/quran/1/4.png"),
-      5: require("../../assets/images/quran/1/5.png"),
-      6: require("../../assets/images/quran/1/6.png"),
-      7: require("../../assets/images/quran/1/7.png"),
-      8: require("../../assets/images/quran/1/8.png"),
-      9: require("../../assets/images/quran/1/9.png"),
-      10: require("../../assets/images/quran/1/10.png"),
-      11: require("../../assets/images/quran/1/11.png"),
-      12: require("../../assets/images/quran/1/12.png"),
-      13: require("../../assets/images/quran/1/13.png"),
-      14: require("../../assets/images/quran/1/14.png"),
-      15: require("../../assets/images/quran/1/15.png"),
-    },
-    2: {
-      1: require("../../assets/images/quran/2/1.png"),
-      2: require("../../assets/images/quran/2/2.png"),
-      3: require("../../assets/images/quran/2/3.png"),
-      4: require("../../assets/images/quran/2/4.png"),
-      5: require("../../assets/images/quran/2/5.png"),
-      6: require("../../assets/images/quran/2/6.png"),
-      7: require("../../assets/images/quran/2/7.png"),
-      8: require("../../assets/images/quran/2/8.png"),
-      9: require("../../assets/images/quran/2/9.png"),
-      10: require("../../assets/images/quran/2/10.png"),
-      11: require("../../assets/images/quran/2/11.png"),
-      12: require("../../assets/images/quran/2/12.png"),
-      13: require("../../assets/images/quran/2/13.png"),
-      14: require("../../assets/images/quran/2/14.png"),
-      15: require("../../assets/images/quran/2/15.png"),
-    },
-    3: {
-      1: require("../../assets/images/quran/3/1.png"),
-      2: require("../../assets/images/quran/3/2.png"),
-      3: require("../../assets/images/quran/3/3.png"),
-      4: require("../../assets/images/quran/3/4.png"),
-      5: require("../../assets/images/quran/3/5.png"),
-      6: require("../../assets/images/quran/3/6.png"),
-      7: require("../../assets/images/quran/3/7.png"),
-      8: require("../../assets/images/quran/3/8.png"),
-      9: require("../../assets/images/quran/3/9.png"),
-      10: require("../../assets/images/quran/3/10.png"),
-      11: require("../../assets/images/quran/3/11.png"),
-      12: require("../../assets/images/quran/3/12.png"),
-      13: require("../../assets/images/quran/3/13.png"),
-      14: require("../../assets/images/quran/3/14.png"),
-      15: require("../../assets/images/quran/3/15.png"),
-    },
-  };
-
-  return pageImages[pageNumber]?.[lineNum];
+  const pageImages = QuranImages[pageNumber];
+  if (!pageImages) return undefined;
+  return pageImages[lineIndex];
 };
 
 interface Props {
