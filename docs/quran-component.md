@@ -5,9 +5,17 @@
 A reusable React Native Quran page rendering component for Expo apps. Displays Quran pages with:
 
 - Page images (604 pages)
-- Sura name bars
-- Verse markers (fasel)
+- Sura name bars (with press support)
+- Verse markers (fasel) (with press support)
+- Verse content areas (with press support)
 - Verse highlights
+- Popups for verse/chapter info
+
+## Screenshots
+
+![Quran View - Main Interface](../screenshots/quran-view-1.png)
+
+![Quran View - Detailed View](../screenshots/quran-view-3.png)
 
 ## File Structure
 
@@ -18,9 +26,10 @@ src/
 │       ├── index.ts              # Main exports
 │       ├── types.ts              # Type definitions
 │       ├── constants.ts          # Default configuration
-│       ├── useQuranData.ts      # Data fetching hook
+│       ├── useQuranData.ts       # Data fetching hook
 │       ├── QuranView.tsx         # Main component
-│       ├── QuranPage.tsx         # Page renderer
+│       ├── VersePopup.tsx        # Verse info popup
+│       ├── ChapterPopup.tsx      # Chapter info popup
 │       ├── SuraNameBar.tsx       # Sura name bar component
 │       └── VerseFasel.tsx        # Verse marker component
 ├── services/
@@ -36,134 +45,26 @@ src/
 npm install expo-sqlite expo-asset react-native-svg
 ```
 
-## Types
-
-### Page Types
+## Event Types
 
 ```typescript
-// Page types
-interface VerseMarker {
-  line: number | null;
-  centerX: number | null;
-  centerY: number | null;
+interface VersePressEvent {
+  verse: Verse;
+  page: number;
+  chapter: number;
+  position: {
+    x: number;
+    y: number;
+  } | null;
 }
 
-interface VerseHighlight {
-  line: number;
-  left_position: number;
-  right_position: number;
-}
-
-interface ChapterHeader {
-  id: number;
-  chapter_id: number | null;
-  line: number;
-  centerX: number;
-  centerY: number;
-}
-
-interface Verse {
-  verseID: number;
-  number: number;
-  chapter_id: number | null;
-  marker1441: VerseMarker | null;
-  highlights1441: VerseHighlight[];
-}
-
-interface Page {
-  identifier: number;
-  number: number;
-  isRight: boolean;
-  chapterHeaders1441: ChapterHeader[];
-  verses1441: Verse[];
-  chapterHeaders1405: ChapterHeader[];
-  verses1405: Verse[];
-}
-```
-
-### Configuration Types
-
-```typescript
-interface QuranConfig {
-  // Layout
-  lineCount: number;
-  lineAspectRatio: number;
-
-  // Sura Name Bar
-  suraNameBarWidthRatio: number;
-  suraNameBarHeightRatio: number;
-  suraNameBarCenterYOffset: number;
-
-  // Verse Marker
-  verseMarkerBalance: number;
-  verseMarkerCenterYOffset: number;
-
-  // Theme
-  backgroundColor: string;
-  highlightColor: string;
-}
-
-const DEFAULT_CONFIG: QuranConfig = {
-  lineCount: 15,
-  lineAspectRatio: 1440 / 232,
-  suraNameBarWidthRatio: 0.9,
-  suraNameBarHeightRatio: 0.8,
-  suraNameBarCenterYOffset: 6,
-  verseMarkerBalance: 3.69,
-  verseMarkerCenterYOffset: 8,
-  backgroundColor: "#FFF8E1",
-  highlightColor: "rgba(88, 168, 105, 0.4)",
-};
-```
-
-### Props Types
-
-```typescript
-interface QuranViewProps {
-  // Required
-  pageNumber: number;
-
-  // Layout
-  layout?: 1441 | 1405;
-
-  // Display Options
-  showSuraName?: boolean;
-  showVerseMarkers?: boolean;
-  showHighlights?: boolean;
-
-  // Theme
-  backgroundColor?: string;
-  highlightColor?: string;
-
-  // Selection
-  activeChapter?: number;
-  activeVerse?: number | null;
-
-  // Callbacks
-  onVersePress?: (verse: Verse) => void;
-  onChapterPress?: (chapter: number) => void;
-  onPageChange?: (page: number) => void;
-
-  // Custom Rendering
-  renderSuraNameBar?: (props: SuraNameBarProps) => React.ReactNode;
-  renderVerseMarker?: (props: VerseMarkerProps) => React.ReactNode;
-}
-
-interface SuraNameBarProps {
-  chapterNumber: number;
-  chapterName: string;
-  centerX: number;
-  centerY: number;
-  width: number;
-  height: number;
-}
-
-interface VerseMarkerProps {
-  verseNumber: number;
-  centerX: number;
-  centerY: number;
-  width: number;
-  height: number;
+interface ChapterPressEvent {
+  chapter: Chapter;
+  page: number;
+  position: {
+    x: number;
+    y: number;
+  } | null;
 }
 ```
 
@@ -176,15 +77,14 @@ interface VerseMarkerProps {
 | `showSuraName` | `boolean` | No | `true` | Show sura name bars |
 | `showVerseMarkers` | `boolean` | No | `true` | Show verse number markers |
 | `showHighlights` | `boolean` | No | `true` | Show verse highlights |
-| `backgroundColor` | `string` | No | `"#FFF8E1"` | Page background color |
-| `highlightColor` | `string` | No | `"rgba(88, 168, 105, 0.4)"` | Highlight overlay color |
+| `highlightColor` | `string` | No | `"rgba(120, 120, 120, 0.3)"` | Highlight color (gray) |
 | `activeChapter` | `number` | No | - | Currently selected chapter |
 | `activeVerse` | `number` | No | - | Currently selected verse |
-| `onVersePress` | `(verse: Verse) => void` | No | - | Verse press callback |
-| `onChapterPress` | `(chapter: number) => void` | No | - | Chapter name press callback |
+| `onVersePress` | `(event: VersePressEvent) => void` | No | - | Verse short press callback |
+| `onVerseLongPress` | `(event: VersePressEvent) => void` | No | - | Verse long press callback |
+| `onChapterPress` | `(event: ChapterPressEvent) => void` | No | - | Chapter short press callback |
+| `onChapterLongPress` | `(event: ChapterPressEvent) => void` | No | - | Chapter long press callback |
 | `onPageChange` | `(page: number) => void` | No | - | Page change callback |
-| `renderSuraNameBar` | `(props) => ReactNode` | No | - | Custom sura name bar |
-| `renderVerseMarker` | `(props) => ReactNode` | No | - | Custom verse marker |
 
 ## Usage Examples
 
@@ -196,37 +96,53 @@ import { QuranView } from "./components/quran";
 <QuranView pageNumber={1} />
 ```
 
-### With Interactivity
+### With Press Callbacks
 
 ```tsx
 import { QuranView } from "./components/quran";
 
 function MyScreen() {
-  const [page, setPage] = useState(1);
-  const [chapter, setChapter] = useState(1);
-  const [verse, setVerse] = useState<number | null>(null);
+  const handleVersePress = (event) => {
+    console.log("Verse pressed:", event.verse.number);
+    console.log("Chapter:", event.chapter);
+    console.log("Page:", event.page);
+  };
+
+  const handleVerseLongPress = (event) => {
+    console.log("Verse long pressed:", event.verse.number);
+    // Show copy menu, bookmark, etc.
+  };
 
   return (
     <QuranView
-      pageNumber={page}
-      activeChapter={chapter}
-      activeVerse={verse}
-      highlightColor="rgba(255, 0, 0, 0.3)"
-      onVersePress={(v) => setVerse(v.number)}
-      onChapterPress={(c) => setChapter(c)}
-      onPageChange={(p) => setPage(p)}
+      pageNumber={1}
+      onVersePress={handleVersePress}
+      onVerseLongPress={handleVerseLongPress}
     />
   );
 }
 ```
 
-### With Custom Theme
+### With Chapter Callbacks
 
 ```tsx
 <QuranView
   pageNumber={1}
-  backgroundColor="#FFFFFF"
-  highlightColor="rgba(255, 200, 0, 0.3)"
+  onChapterPress={(event) => {
+    console.log("Chapter:", event.chapter.number);
+  }}
+  onChapterLongPress={(event) => {
+    console.log("Chapter details:", event.chapter);
+  }}
+/>
+```
+
+### Custom Highlight Color
+
+```tsx
+<QuranView
+  pageNumber={1}
+  highlightColor="rgba(100, 100, 100, 0.4)"
 />
 ```
 
@@ -241,36 +157,32 @@ function MyScreen() {
 />
 ```
 
-### Custom Renderers
+### With Built-in Popups
 
 ```tsx
-<QuranView
-  pageNumber={1}
-  renderSuraNameBar={({ chapterNumber, centerX, centerY, width, height }) => (
-    <View
-      style={{
-        position: "absolute",
-        left: width * centerX - width / 2,
-        top: height * centerY - height / 2 + 6,
-      }}
-    >
-      <Text style={{ fontSize: 16, fontWeight: "bold" }}>
-            سورة {chapterNumber}
-      </Text>
-    </View>
-  )}
-  renderVerseMarker={({ verseNumber, centerX, centerY, width, height }) => (
-    <View
-      style={{
-        position: "absolute",
-        left: width * centerX - width / 2,
-        top: height * centerY - height / 2 + 8,
-      }}
-    >
-      <Text style={{ fontSize: 12 }}>{verseNumber}</Text>
-    </View>
-  )}
-/>
+import { QuranView, VersePopup, ChapterPopup } from "./components/quran";
+
+function MyScreen() {
+  const [selectedVerse, setSelectedVerse] = useState(null);
+  const [versePopupVisible, setVersePopupVisible] = useState(false);
+
+  return (
+    <>
+      <QuranView
+        pageNumber={1}
+        onVersePress={(event) => {
+          setSelectedVerse(event.verse);
+          setVersePopupVisible(true);
+        }}
+      />
+      <VersePopup
+        visible={versePopupVisible}
+        verse={selectedVerse}
+        onClose={() => setVersePopupVisible(false)}
+      />
+    </>
+  );
+}
 ```
 
 ### Paginated View (FlatList)
@@ -294,8 +206,7 @@ function PaginatedMushaf() {
       renderItem={({ item }) => (
         <QuranView
           pageNumber={item}
-          activeChapter={currentChapter}
-          activeVerse={activeVerse}
+          onVersePress={(event) => console.log(event.verse)}
         />
       )}
       onMomentumScrollEnd={(e) => {
@@ -306,6 +217,32 @@ function PaginatedMushaf() {
   );
 }
 ```
+
+## Press Support
+
+### What's Clickable
+
+| Element | Short Press | Long Press |
+|---------|-------------|------------|
+| Verse marker (fasel) | Show popup | Custom action |
+| Verse content area | Show popup | Custom action |
+| Sura name bar | Show chapter info | Custom action |
+
+### Multi-line Verses
+
+The component automatically handles verses that span multiple lines:
+
+- Highlight extends across all lines of the verse
+- Pressing anywhere on the verse content triggers the callback
+- The `VersePressEvent` includes the full verse data
+
+### Multi-verse Per Line
+
+When multiple verses appear on one line:
+
+- Each verse has its own content area
+- Press detection uses x-position to identify which verse was pressed
+- Verses are sorted by position for accurate detection
 
 ## Hooks
 
@@ -368,7 +305,8 @@ src/
 │       ├── constants.ts
 │       ├── useQuranData.ts
 │       ├── QuranView.tsx
-│       ├── QuranPage.tsx
+│       ├── VersePopup.tsx
+│       ├── ChapterPopup.tsx
 │       ├── SuraNameBar.tsx
 │       └── VerseFasel.tsx
 └── services/
@@ -427,6 +365,14 @@ Verify `chapter_headers` table has data for the page.
 
 Check `verses` table has `marker1441_line`, `marker1441_centerX`, `marker1441_centerY` values.
 
+### Press not working
+
+Ensure `showHighlights` is `true` (required for content area detection).
+
+### Multi-line verse not highlighting correctly
+
+Check `verse_highlights` table has entries for all lines of the verse.
+
 ## Constants Reference
 
 ```typescript
@@ -436,4 +382,7 @@ const LINE_COUNT = 15;                     // Lines per page
 const SURA_NAME_BAR_WIDTH_RATIO = 0.9;     // 90% of page width
 const SURA_NAME_BAR_HEIGHT_RATIO = 0.8;    // 80% of line height
 const VERSE_MARKER_BALANCE = 3.69;         // Marker sizing multiplier
+
+// Highlight color (gray)
+const DEFAULT_HIGHLIGHT_COLOR = "rgba(120, 120, 120, 0.3)";
 ```

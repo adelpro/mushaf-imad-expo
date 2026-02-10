@@ -2,6 +2,8 @@
 
 export { QuranView } from "./QuranView";
 export { useQuranData } from "./useQuranData";
+export { VersePopup } from "./VersePopup";
+export { ChapterPopup } from "./ChapterPopup";
 
 // Types
 export type {
@@ -10,10 +12,13 @@ export type {
   ChapterHeader,
   Verse,
   Page,
+  Chapter,
   QuranConfig,
   QuranViewProps,
   SuraNameBarProps,
   VerseMarkerProps,
+  VersePressEvent,
+  ChapterPressEvent,
 } from "./types";
 
 // Constants
