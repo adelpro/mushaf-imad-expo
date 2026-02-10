@@ -7,7 +7,6 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
-
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.adelpro.mushafimadrn"
@@ -36,7 +35,8 @@
           },
           "imageWidth": 200
         }
-      ]
+      ],
+      "expo-sqlite"
     ]
   }
 }

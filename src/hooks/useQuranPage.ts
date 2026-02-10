@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { RealmService } from "../services/RealmService";
-import { Page } from "../models/schema";
+import { databaseService, Page } from "../services/SQLiteService";
 
 export const useQuranPage = (pageNumber: number) => {
   const [page, setPage] = useState<Page | null>(null);
@@ -9,18 +8,11 @@ export const useQuranPage = (pageNumber: number) => {
   useEffect(() => {
     const loadPage = async () => {
       try {
-        const realm = await RealmService.getRealm();
-        const result = realm
-          .objects<Page>("Page")
-          .filtered("number == $0", pageNumber)[0];
-
-        if (result) {
-          setPage(result);
-        } else {
-          setPage(null);
-        }
+        const pageData = await databaseService.getPageByNumber(pageNumber);
+        setPage(pageData);
       } catch (error) {
         console.error("Error loading page:", error);
+        setPage(null);
       } finally {
         setLoading(false);
       }

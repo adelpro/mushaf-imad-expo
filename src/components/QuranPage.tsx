@@ -6,7 +6,6 @@ import {
   Dimensions,
   ActivityIndicator,
 } from "react-native";
-import { QuranImages } from "../constants/imageMap";
 import { useQuranPage } from "../hooks/useQuranPage";
 import SuraNameBar from "../../assets/images/sura_name_bar.svg";
 import { VerseFasel } from "./VerseFasel";
@@ -23,6 +22,69 @@ const FASEL_HEIGHT = 27 * FASEL_BALANCE * LINE_SCALE;
 const SURA_NAME_BAR_CENTER_Y_OFFSET = 6 * LINE_SCALE;
 const FASEL_CENTER_Y_OFFSET = 8 * LINE_SCALE;
 
+const resolveLineImage = (
+  pageNumber: number,
+  lineIndex: number,
+): number | undefined => {
+  const lineNum = lineIndex + 1;
+
+  const pageImages: Record<number, Record<number, number>> = {
+    1: {
+      1: require("../../assets/images/quran/1/1.png"),
+      2: require("../../assets/images/quran/1/2.png"),
+      3: require("../../assets/images/quran/1/3.png"),
+      4: require("../../assets/images/quran/1/4.png"),
+      5: require("../../assets/images/quran/1/5.png"),
+      6: require("../../assets/images/quran/1/6.png"),
+      7: require("../../assets/images/quran/1/7.png"),
+      8: require("../../assets/images/quran/1/8.png"),
+      9: require("../../assets/images/quran/1/9.png"),
+      10: require("../../assets/images/quran/1/10.png"),
+      11: require("../../assets/images/quran/1/11.png"),
+      12: require("../../assets/images/quran/1/12.png"),
+      13: require("../../assets/images/quran/1/13.png"),
+      14: require("../../assets/images/quran/1/14.png"),
+      15: require("../../assets/images/quran/1/15.png"),
+    },
+    2: {
+      1: require("../../assets/images/quran/2/1.png"),
+      2: require("../../assets/images/quran/2/2.png"),
+      3: require("../../assets/images/quran/2/3.png"),
+      4: require("../../assets/images/quran/2/4.png"),
+      5: require("../../assets/images/quran/2/5.png"),
+      6: require("../../assets/images/quran/2/6.png"),
+      7: require("../../assets/images/quran/2/7.png"),
+      8: require("../../assets/images/quran/2/8.png"),
+      9: require("../../assets/images/quran/2/9.png"),
+      10: require("../../assets/images/quran/2/10.png"),
+      11: require("../../assets/images/quran/2/11.png"),
+      12: require("../../assets/images/quran/2/12.png"),
+      13: require("../../assets/images/quran/2/13.png"),
+      14: require("../../assets/images/quran/2/14.png"),
+      15: require("../../assets/images/quran/2/15.png"),
+    },
+    3: {
+      1: require("../../assets/images/quran/3/1.png"),
+      2: require("../../assets/images/quran/3/2.png"),
+      3: require("../../assets/images/quran/3/3.png"),
+      4: require("../../assets/images/quran/3/4.png"),
+      5: require("../../assets/images/quran/3/5.png"),
+      6: require("../../assets/images/quran/3/6.png"),
+      7: require("../../assets/images/quran/3/7.png"),
+      8: require("../../assets/images/quran/3/8.png"),
+      9: require("../../assets/images/quran/3/9.png"),
+      10: require("../../assets/images/quran/3/10.png"),
+      11: require("../../assets/images/quran/3/11.png"),
+      12: require("../../assets/images/quran/3/12.png"),
+      13: require("../../assets/images/quran/3/13.png"),
+      14: require("../../assets/images/quran/3/14.png"),
+      15: require("../../assets/images/quran/3/15.png"),
+    },
+  };
+
+  return pageImages[pageNumber]?.[lineNum];
+};
+
 interface Props {
   pageNumber: number;
   activeChapter?: number;
@@ -35,19 +97,29 @@ export const QuranPage: React.FC<Props> = ({
   activeVerse,
 }) => {
   const { page, loading } = useQuranPage(pageNumber);
-  const images = QuranImages[pageNumber];
 
   const markersByLine = React.useMemo(() => {
     const map = new Map<
       number,
-      { verseID: number; number: number; centerX: number; centerY: number }[]
+      Array<{
+        verseID: number;
+        number: number;
+        centerX: number;
+        centerY: number;
+      }>
     >();
 
     if (!page) return map;
 
     page.verses1441.forEach((verse) => {
       const marker = verse.marker1441;
-      if (!marker) return;
+      if (
+        !marker ||
+        marker.line === null ||
+        marker.centerX === null ||
+        marker.centerY === null
+      )
+        return;
 
       const list = map.get(marker.line) ?? [];
       list.push({
@@ -74,14 +146,10 @@ export const QuranPage: React.FC<Props> = ({
     );
   }
 
-  if (!images) {
-    return <View style={styles.container} />;
-  }
-
   const renderSurahTitleBackgrounds = (lineIndex: number) => {
     if (!page) return null;
 
-    return Array.from(page.chapterHeaders1441)
+    return page.chapterHeaders1441
       .filter((header) => header.line === lineIndex)
       .map((header, i) => {
         const centerX = width * header.centerX;
@@ -141,14 +209,14 @@ export const QuranPage: React.FC<Props> = ({
     if (!page || !activeVerse || !activeChapter) return null;
 
     const versesToHighlight = page.verses1441.filter(
-      (v) => v.chapter?.number === activeChapter && v.number === activeVerse
+      (v) => v.chapter_id === activeChapter && v.number === activeVerse,
     );
 
     return versesToHighlight.map((v) => {
       const highlights = v.highlights1441.filter((h) => h.line === lineIndex);
       return highlights.map((h, i) => {
-        const left = width * h.left;
-        const w = width * (h.right - h.left);
+        const left = width * h.left_position;
+        const w = width * (h.right_position - h.left_position);
 
         return (
           <View
@@ -167,22 +235,37 @@ export const QuranPage: React.FC<Props> = ({
     });
   };
 
+  const renderLines = () => {
+    if (!page) return null;
+
+    const lines: React.ReactNode[] = [];
+    const lineCount = 15;
+
+    for (let i = 0; i < lineCount; i++) {
+      const lineImageSource = resolveLineImage(pageNumber, i);
+
+      lines.push(
+        <View key={i} style={{ width, height: LINE_HEIGHT }}>
+          {lineImageSource && (
+            <Image
+              source={lineImageSource}
+              style={{ width, height: LINE_HEIGHT }}
+              resizeMode="stretch"
+            />
+          )}
+          {renderSurahTitleBackgrounds(i)}
+          {renderVerseMarkers(i)}
+          {renderHighlights(i)}
+        </View>,
+      );
+    }
+
+    return lines;
+  };
+
   return (
     <View style={styles.container}>
-      <View style={styles.linesContainer}>
-        {images.map((source, index) => (
-          <View key={index} style={{ width, height: LINE_HEIGHT }}>
-            {renderSurahTitleBackgrounds(index)}
-            {renderVerseMarkers(index)}
-            <Image
-              source={source}
-              style={{ width: "100%", height: "100%" }}
-              resizeMode="contain"
-            />
-            {renderHighlights(index)}
-          </View>
-        ))}
-      </View>
+      <View style={styles.linesContainer}>{renderLines()}</View>
     </View>
   );
 };
@@ -199,5 +282,6 @@ const styles = StyleSheet.create({
   },
   center: {
     alignItems: "center",
+    justifyContent: "center",
   },
 });

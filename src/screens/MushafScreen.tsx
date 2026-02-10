@@ -8,8 +8,7 @@ import {
 } from "react-native";
 import { AudioPlayerBar } from "../components/AudioPlayerBar";
 import { QuranPage } from "../components/QuranPage";
-import { Page } from "../models/schema";
-import { RealmService } from "../services/RealmService";
+import { databaseService } from "../services/SQLiteService";
 
 const { height, width } = Dimensions.get("window");
 
@@ -24,15 +23,17 @@ export function MushafScreen() {
 
   async function updateChapter(pageNumber: number) {
     try {
-      const realm = await RealmService.getRealm();
-      const page = realm
-        .objects<Page>("Page")
-        .filtered("number == $0", pageNumber)[0];
+      const page = await databaseService.getPageByNumber(pageNumber);
 
-      const chapterNum = page?.verses1441?.[0]?.chapter?.number;
-      setCurrentChapter((prev) =>
-        chapterNum && chapterNum !== prev ? chapterNum : prev
-      );
+      const chapterNum = page?.verses1441?.[0]?.chapter_id ?? null;
+      if (chapterNum) {
+        const chapter = await databaseService.getChapterByNumber(chapterNum);
+        if (chapter) {
+          setCurrentChapter((prev) =>
+            chapter.number !== prev ? chapter.number : prev
+          );
+        }
+      }
     } catch (error) {
       console.log("Error getting chapter", error);
     }
