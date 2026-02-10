@@ -14,7 +14,6 @@ Mushaf Imad RN is a reusable Quran page rendering component for Expo application
 - **Verse Markers**: Visual markers for verse numbers (fasel) with press support
 - **Verse Highlights**: Visual highlighting of verse content areas
 - **Info Popups**: Built-in popups for verse and chapter information
-- **Two Layouts**: Support for both 1441 and 1405 page layouts
 - **SQLite Database**: Efficient local storage using Expo SQLite
 
 ## Screenshots
