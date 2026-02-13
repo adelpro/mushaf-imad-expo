@@ -14,8 +14,7 @@ import { VerseFasel } from "./VerseFasel";
 import { QuranImages } from "../constants/imageMap";
 
 const { width } = Dimensions.get("window");
-// ... (نفس الثوابت الأصلية بدون تغيير)
-const LINE_ASPECT_RATIO = 1440 / 232;
+ const LINE_ASPECT_RATIO = 1440 / 232;
 const LINE_HEIGHT = width / LINE_ASPECT_RATIO;
 const SURA_NAME_BAR_WIDTH = width * 0.9;
 const SURA_NAME_BAR_HEIGHT = LINE_HEIGHT * 0.8;
