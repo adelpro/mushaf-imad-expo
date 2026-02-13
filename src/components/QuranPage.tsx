@@ -5,6 +5,8 @@ import {
   StyleSheet,
   Dimensions,
   ActivityIndicator,
+  Text,
+  TouchableOpacity,
 } from "react-native";
 import { useQuranPage } from "../hooks/useQuranPage";
 import SuraNameBar from "../../assets/images/sura_name_bar.svg";
@@ -12,6 +14,7 @@ import { VerseFasel } from "./VerseFasel";
 import { QuranImages } from "../constants/imageMap";
 
 const { width } = Dimensions.get("window");
+// ... (نفس الثوابت الأصلية بدون تغيير)
 const LINE_ASPECT_RATIO = 1440 / 232;
 const LINE_HEIGHT = width / LINE_ASPECT_RATIO;
 const SURA_NAME_BAR_WIDTH = width * 0.9;
@@ -23,10 +26,7 @@ const FASEL_HEIGHT = 27 * FASEL_BALANCE * LINE_SCALE;
 const SURA_NAME_BAR_CENTER_Y_OFFSET = 6 * LINE_SCALE;
 const FASEL_CENTER_Y_OFFSET = 8 * LINE_SCALE;
 
-const resolveLineImage = (
-  pageNumber: number,
-  lineIndex: number,
-): number | undefined => {
+const resolveLineImage = (pageNumber: number, lineIndex: number): number | undefined => {
   const pageImages = QuranImages[pageNumber];
   if (!pageImages) return undefined;
   return pageImages[lineIndex];
@@ -38,86 +38,37 @@ interface Props {
   activeVerse?: number | null;
 }
 
-export const QuranPage: React.FC<Props> = ({
-  pageNumber,
-  activeChapter,
-  activeVerse,
-}) => {
-  const { page, loading } = useQuranPage(pageNumber);
+export const QuranPage: React.FC<Props> = ({ pageNumber, activeChapter, activeVerse }) => {
+  const { page, loading, error, retry } = useQuranPage(pageNumber);
 
-  const markersByLine = React.useMemo(() => {
-    const map = new Map<
-      number,
-      Array<{
-        verseID: number;
-        number: number;
-        centerX: number;
-        centerY: number;
-      }>
-    >();
-
+   const markersByLine = React.useMemo(() => {
+    const map = new Map<number, Array<{ verseID: number; number: number; centerX: number; centerY: number; }>>();
     if (page) {
-      const markersWithData = page.verses1441.filter(
-        (v) => v.marker1441 && v.marker1441.line !== null,
-      );
-
       page.verses1441.forEach((verse) => {
         const marker = verse.marker1441;
-        if (
-          !marker ||
-          marker.line === null ||
-          marker.centerX === null ||
-          marker.centerY === null
-        )
-          return;
-
+        if (!marker || marker.line === null || marker.centerX === null || marker.centerY === null) return;
         const list = map.get(marker.line) ?? [];
-        list.push({
-          verseID: verse.verseID,
-          number: verse.number,
-          centerX: marker.centerX,
-          centerY: marker.centerY,
-        });
+        list.push({ verseID: verse.verseID, number: verse.number, centerX: marker.centerX, centerY: marker.centerY });
         map.set(marker.line, list);
       });
     }
-
     for (const list of map.values()) {
       list.sort((a, b) => a.centerX - b.centerX || a.number - b.number);
     }
-
     return map;
-  }, [page, pageNumber]);
+  }, [page]);
 
   const renderSurahTitleBackgrounds = (lineIndex: number) => {
     if (!page) return null;
-
-    const matchingHeaders = page.chapterHeaders1441.filter(
-      (header) => header.line === lineIndex,
-    );
-
+    const matchingHeaders = page.chapterHeaders1441.filter((header) => header.line === lineIndex);
     return matchingHeaders.map((header, i) => {
       const centerX = width * header.centerX;
       const centerY = LINE_HEIGHT * header.centerY;
-
       const left = centerX - SURA_NAME_BAR_WIDTH / 2;
-      const top =
-        centerY - SURA_NAME_BAR_HEIGHT / 2 + SURA_NAME_BAR_CENTER_Y_OFFSET;
-
+      const top = centerY - SURA_NAME_BAR_HEIGHT / 2 + SURA_NAME_BAR_CENTER_Y_OFFSET;
       return (
-        <View
-          key={`surah-title-bg-${lineIndex}-${i}`}
-          pointerEvents="none"
-          style={{
-            position: "absolute",
-            left,
-            top,
-          }}
-        >
-          <SuraNameBar
-            width={SURA_NAME_BAR_WIDTH}
-            height={SURA_NAME_BAR_HEIGHT}
-          />
+        <View key={`surah-title-bg-${lineIndex}-${i}`} pointerEvents="none" style={{ position: "absolute", left, top }}>
+          <SuraNameBar width={SURA_NAME_BAR_WIDTH} height={SURA_NAME_BAR_HEIGHT} />
         </View>
       );
     });
@@ -125,26 +76,14 @@ export const QuranPage: React.FC<Props> = ({
 
   const renderVerseMarkers = (lineIndex: number) => {
     if (!page) return null;
-
     const markers = markersByLine.get(lineIndex) ?? [];
-
     const scaledImageHeight = width / LINE_ASPECT_RATIO;
     const cropOffset = (scaledImageHeight - LINE_HEIGHT) / 2;
-
     return markers.map((m) => {
       const x = width * m.centerX;
       const y = scaledImageHeight * m.centerY - cropOffset;
-
       return (
-        <View
-          key={`fasel-${m.verseID}`}
-          pointerEvents="none"
-          style={{
-            position: "absolute",
-            left: x - FASEL_WIDTH / 2,
-            top: y - FASEL_HEIGHT / 2 + FASEL_CENTER_Y_OFFSET,
-          }}
-        >
+        <View key={`fasel-${m.verseID}`} pointerEvents="none" style={{ position: "absolute", left: x - FASEL_WIDTH / 2, top: y - FASEL_HEIGHT / 2 + FASEL_CENTER_Y_OFFSET }}>
           <VerseFasel number={m.number} scale={LINE_SCALE} />
         </View>
       );
@@ -153,29 +92,14 @@ export const QuranPage: React.FC<Props> = ({
 
   const renderHighlights = (lineIndex: number) => {
     if (!page || !activeVerse || !activeChapter) return null;
-
-    const versesToHighlight = page.verses1441.filter(
-      (v) => v.chapter_id === activeChapter && v.number === activeVerse,
-    );
-
+    const versesToHighlight = page.verses1441.filter((v) => v.chapter_id === activeChapter && v.number === activeVerse);
     return versesToHighlight.map((v) => {
       const highlights = v.highlights1441.filter((h) => h.line === lineIndex);
       return highlights.map((h, i) => {
         const left = width * h.left_position;
         const w = width * (h.right_position - h.left_position);
-
         return (
-          <View
-            key={`${v.verseID}-${i}`}
-            style={{
-              position: "absolute",
-              left: left,
-              width: w,
-              height: "100%",
-              backgroundColor: "rgba(88, 168, 105, 0.4)",
-              borderRadius: 4,
-            }}
-          />
+          <View key={`${v.verseID}-${i}`} style={{ position: "absolute", left: left, width: w, height: "100%", backgroundColor: "rgba(88, 168, 105, 0.4)", borderRadius: 4 }} />
         );
       });
     });
@@ -183,19 +107,12 @@ export const QuranPage: React.FC<Props> = ({
 
   const renderLines = () => {
     const lines: React.ReactNode[] = [];
-    const lineCount = 15;
-
-    for (let i = 0; i < lineCount; i++) {
+    for (let i = 0; i < 15; i++) {
       const lineImageSource = resolveLineImage(pageNumber, i);
-
       lines.push(
         <View key={i} style={{ width, height: LINE_HEIGHT }}>
           {lineImageSource && (
-            <Image
-              source={lineImageSource}
-              style={{ width, height: LINE_HEIGHT }}
-              resizeMode="stretch"
-            />
+            <Image source={lineImageSource} style={{ width, height: LINE_HEIGHT }} resizeMode="stretch" />
           )}
           {renderSurahTitleBackgrounds(i)}
           {renderVerseMarkers(i)}
@@ -203,9 +120,27 @@ export const QuranPage: React.FC<Props> = ({
         </View>,
       );
     }
-
     return lines;
   };
+
+   if (loading) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <ActivityIndicator size="large" color="#8B4513" />
+      </View>
+    );
+  }
+
+   if (error) {
+    return (
+      <View style={[styles.container, styles.center, { padding: 20 }]}>
+        <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={retry}>
+          <Text style={styles.retryText}>إعادة المحاولة</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -215,17 +150,10 @@ export const QuranPage: React.FC<Props> = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#FFF8E1",
-    justifyContent: "center",
-  },
-  linesContainer: {
-    flexDirection: "column",
-    justifyContent: "center",
-  },
-  center: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
+  container: { flex: 1, backgroundColor: "#FFF8E1", justifyContent: "center" },
+  linesContainer: { flexDirection: "column", justifyContent: "center" },
+  center: { alignItems: "center", justifyContent: "center" },
+  errorText: { color: "#D32F2F", fontSize: 16, textAlign: "center", marginBottom: 15, fontFamily: "System" },
+  retryButton: { backgroundColor: "#8B4513", paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 },
+  retryText: { color: "white", fontWeight: "bold" },
 });
