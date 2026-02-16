@@ -1,25 +1,32 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { databaseService, Page } from "../services/SQLiteService";
 
 export const useQuranPage = (pageNumber: number) => {
   const [page, setPage] = useState<Page | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const loadPage = async () => {
-      try {
-        const pageData = await databaseService.getPageByNumber(pageNumber);
-        setPage(pageData);
-      } catch (error) {
-        console.error("Error loading page:", error);
-        setPage(null);
-      } finally {
-        setLoading(false);
+  const loadPage = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const pageData = await databaseService.getPageByNumber(pageNumber);
+      if (!pageData) {
+        throw new Error("لم يتم العثور على بيانات لهذه الصفحة");
       }
-    };
-
-    loadPage();
+      setPage(pageData);
+    } catch (err) {
+      console.error("Error loading page:", err);
+      setError("حدث خطأ أثناء تحميل الصفحة من قاعدة البيانات");
+      setPage(null);
+    } finally {
+      setLoading(false);
+    }
   }, [pageNumber]);
 
-  return { page, loading };
+  useEffect(() => {
+    loadPage();
+  }, [loadPage]);
+
+  return { page, loading, error, retry: loadPage };
 };
