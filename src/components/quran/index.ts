@@ -1,9 +1,9 @@
 // Quran Component - Main Export
 
-export { QuranView } from "./QuranView";
-export { useQuranData } from "./useQuranData";
-export { VersePopup } from "./VersePopup";
-export { ChapterPopup } from "./ChapterPopup";
+export { QuranView } from "./quran-view";
+export { useQuranData } from "./use-quran-data";
+export { VersePopup } from "./verse-popup";
+export { ChapterPopup } from "./chapter-popup";
 
 // Types
 export type {

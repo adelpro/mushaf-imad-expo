@@ -6,9 +6,9 @@ import {
   View,
   ViewToken,
 } from "react-native";
-import { AudioPlayerBar } from "../components/AudioPlayerBar";
-import { QuranPage } from "../components/QuranPage";
-import { databaseService } from "../services/SQLiteService";
+import { AudioPlayerBar } from "../components/audio-player-bar";
+import { QuranPage } from "../components/quran-page";
+import { databaseService } from "../services/sqlite-service";
 
 const { height, width } = Dimensions.get("window");
 
