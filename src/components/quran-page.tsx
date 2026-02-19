@@ -12,6 +12,7 @@ import { useQuranPage } from "../hooks/use-quran-page";
 import SuraNameBar from "../../assets/images/sura_name_bar.svg";
 import { VerseFasel } from "./verse-fasel";
 import { QuranImages } from "../constants/image-map";
+import { colors } from "../theme";
 
 const { width } = Dimensions.get("window");
 const LINE_ASPECT_RATIO = 1440 / 232;
@@ -151,7 +152,7 @@ export const QuranPage: React.FC<Props> = ({
               left: left,
               width: w,
               height: "100%",
-              backgroundColor: "rgba(88, 168, 105, 0.4)",
+              backgroundColor: colors.brand.highlight,
               borderRadius: 4,
             }}
           />
@@ -185,7 +186,7 @@ export const QuranPage: React.FC<Props> = ({
   if (loading) {
     return (
       <View style={[styles.container, styles.center]}>
-        <ActivityIndicator size="large" color="#8B4513" />
+        <ActivityIndicator size="large" color={colors.brand.accent} />
       </View>
     );
   }
@@ -209,21 +210,21 @@ export const QuranPage: React.FC<Props> = ({
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#FFF8E1", justifyContent: "center" },
+  container: { flex: 1, backgroundColor: colors.background.default, justifyContent: "center" },
   linesContainer: { flexDirection: "column", justifyContent: "center" },
   center: { alignItems: "center", justifyContent: "center" },
   errorText: {
-    color: "#D32F2F",
+    color: colors.text.error,
     fontSize: 16,
     textAlign: "center",
     marginBottom: 15,
     fontFamily: "System",
   },
   retryButton: {
-    backgroundColor: "#8B4513",
+    backgroundColor: colors.brand.accent,
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 8,
   },
-  retryText: { color: "white", fontWeight: "bold" },
+  retryText: { color: colors.text.inverse, fontWeight: "bold" },
 });

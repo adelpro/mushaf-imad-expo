@@ -10,6 +10,7 @@ import { AudioPlayerBar } from "../components/audio-player-bar";
 import { QuranPage } from "../components/quran-page";
 import { databaseService } from "../services/sqlite-service";
 import { QuranView } from "../components/quran";
+import { colors } from "../theme";
 
 const { height, width } = Dimensions.get("window");
 
@@ -97,6 +98,6 @@ export function MushafScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFF8E1",
+    backgroundColor: colors.background.default,
   },
 });
