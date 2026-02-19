@@ -20,7 +20,7 @@ import {
   VerseHighlight,
   ChapterHeader,
 } from "./types";
-import SuraNameBar from "../../assets/images/sura_name_bar.svg";
+import SuraNameBar from "../../../assets/images/sura_name_bar.svg";
 import { VerseFasel } from "../verse-fasel";
 import { QuranImages } from "../../constants/image-map";
 import { VersePopup } from "./verse-popup";
@@ -186,6 +186,8 @@ export function QuranView({
         pageNumber,
         position: { x, y },
       });
+      setSelectedVerse(verse);
+      setVersePopupVisible(true);
       const event: VersePressEvent = {
         verse,
         page: pageNumber,
