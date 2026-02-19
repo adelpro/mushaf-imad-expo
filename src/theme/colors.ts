@@ -7,6 +7,7 @@ export const palette = {
     grey600: "#888888",
     grey700: "#666666",
     grey900: "#1B1B1B",
+    greyHighlight: "rgba(120, 120, 120, 0.3)",
     greenDark: "#1B5E20",
     greenHighlight: "rgba(88, 168, 105, 0.4)",
     brown: "#8B4513",
@@ -39,8 +40,16 @@ export const colors = {
         accent: palette.brown,
     },
 
+    state: {
+        textSelection: palette.greyHighlight,
+    },
+
     border: {
         default: palette.grey200,
+    },
+
+    shadow: {
+        default: palette.black,
     },
 } as const;
 
