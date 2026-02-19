@@ -9,7 +9,7 @@ import {
   Text,
   StyleSheet,
 } from "react-native";
-import { useQuranData } from "./useQuranData";
+import { useQuranData } from "./use-quran-data";
 import { DEFAULT_CONFIG } from "./constants";
 import {
   QuranViewProps,
@@ -20,11 +20,11 @@ import {
   VerseHighlight,
   ChapterHeader,
 } from "./types";
-import SuraNameBar from "../../assets/images/sura_name_bar.svg";
-import { VerseFasel } from "../../components/VerseFasel";
-import { QuranImages } from "../../constants/imageMap";
-import { VersePopup } from "./VersePopup";
-import { ChapterPopup } from "./ChapterPopup";
+import SuraNameBar from "../../../assets/images/sura_name_bar.svg";
+import { VerseFasel } from "../verse-fasel";
+import { QuranImages } from "../../constants/image-map";
+import { VersePopup } from "./verse-popup";
+import { ChapterPopup } from "./chapter-popup";
 
 const { width } = Dimensions.get("window");
 
@@ -186,6 +186,8 @@ export function QuranView({
         pageNumber,
         position: { x, y },
       });
+      setSelectedVerse(verse);
+      setVersePopupVisible(true);
       const event: VersePressEvent = {
         verse,
         page: pageNumber,

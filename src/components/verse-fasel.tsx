@@ -1,7 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Fasel from "../../assets/images/fasel.svg";
-import { toArabicDigits } from "../utils/toArabicDigits";
+import { toArabicDigits } from "../utils/to-arabic-digits";
 
 const BALANCE = 3.69;
 const BASE_WIDTH = 21 * BALANCE;
@@ -31,10 +31,7 @@ export function VerseFasel({ number, scale }: Props) {
           {
             fontSize,
             paddingHorizontal,
-            transform: [
-              { translateX: -1 * scale },
-              { translateY: 1 * scale },
-            ],
+            transform: [{ translateX: -1 * scale }, { translateY: 1 * scale }],
           },
         ]}
       >
@@ -60,4 +57,3 @@ const styles = StyleSheet.create({
     color: "#000",
   },
 });
-

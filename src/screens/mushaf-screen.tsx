@@ -6,9 +6,10 @@ import {
   View,
   ViewToken,
 } from "react-native";
-import { AudioPlayerBar } from "../components/AudioPlayerBar";
-import { QuranPage } from "../components/QuranPage";
-import { databaseService } from "../services/SQLiteService";
+import { AudioPlayerBar } from "../components/audio-player-bar";
+import { QuranPage } from "../components/quran-page";
+import { databaseService } from "../services/sqlite-service";
+import { QuranView } from "../components/quran";
 
 const { height, width } = Dimensions.get("window");
 
@@ -72,7 +73,7 @@ export function MushafScreen() {
         removeClippedSubviews
         renderItem={({ item }) => (
           <View style={{ height: height - 60, width }}>
-            <QuranPage
+            <QuranView
               activeChapter={currentChapter}
               activeVerse={activeVerse}
               pageNumber={item}
