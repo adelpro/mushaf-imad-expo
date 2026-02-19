@@ -1,11 +1,12 @@
 import { useEffect } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { ActivityIndicator, StyleSheet, View, Text } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
 
 import { MushafScreen } from "./src/screens/MushafScreen";
+import React = require("react");
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
@@ -23,7 +24,45 @@ export default function App() {
   }, [fontsLoaded, fontError]);
 
   if (fontError) {
-    throw fontError;
+    return (
+      <View
+        style={{
+          flex: 1,
+          position: "relative",
+        }}
+      >
+        <View
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            borderRadius: 20,
+            zIndex: 10,
+            backgroundColor: "#252525",
+            borderColor: "white",
+            borderStyle: "solid",
+            borderWidth: 3,
+            width: "90%",
+            height: 50,
+            bottom: 10,
+            position: "absolute",
+            left: "50%",
+            transform: "translate(-50%)",
+          }}
+        >
+          <Text style={{ color: "white", fontWeight: "bold" }}>
+            {"\u2757"} تعذر تحميل الخط، الرجاء اعادة تشغيل التطبيق
+          </Text>
+          <Text style={{ color: "#D34E4E", fontWeight: "bold" }}>
+            {String(fontError)}
+          </Text>
+        </View>
+        <SafeAreaView style={styles.container}>
+          <StatusBar style="dark" />
+          <MushafScreen />
+        </SafeAreaView>
+      </View>
+    );
   }
 
   if (!fontsLoaded) {
