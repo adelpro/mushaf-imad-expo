@@ -14,7 +14,9 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "doctor:expo": "npx expo-doctor",
-    "doctor:react": "npx -y react-doctor@latest ."
+    "doctor:react": "npx -y react-doctor@latest .",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "expo": "54.0.33",
@@ -46,7 +48,8 @@
     "prettier": "^3.8.1",
     "react-native-svg-transformer": "^1.5.1",
     "typescript": "~5.9.2",
-    "typescript-eslint": "^8.56.0"
+    "typescript-eslint": "^8.56.0",
+    "vitest": "^4.0.18"
   },
   "private": true
 }
