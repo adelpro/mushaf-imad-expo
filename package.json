@@ -30,7 +30,8 @@
     "react": "19.1.0",
     "react-native": "0.81.5",
     "react-native-safe-area-context": "~5.6.0",
-    "react-native-svg": "15.12.1"
+    "react-native-svg": "15.12.1",
+    "zustand": "^5.0.0"
   },
   "devDependencies": {
     "@eslint-react/eslint-plugin": "^2.13.0",
