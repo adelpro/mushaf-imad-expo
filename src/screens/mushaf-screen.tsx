@@ -1,24 +1,21 @@
 import React, { useRef, useState } from "react";
 import {
-  Dimensions,
   FlatList,
   StyleSheet,
+  useWindowDimensions,
   View,
   ViewToken,
 } from "react-native";
-import { AudioPlayerBar } from "../components/audio-player-bar";
-import { QuranPage } from "../components/quran-page";
-import { databaseService } from "../services/sqlite-service";
 import { QuranView } from "../components/quran";
 import { colors } from "../theme";
-
-const { height, width } = Dimensions.get("window");
+import { databaseService } from "../services/sqlite-service";
 
 type ViewableItemsChangedInfo = {
   viewableItems: ViewToken[];
 };
 
 export function MushafScreen() {
+  const { width, height } = useWindowDimensions();
   const [currentChapter, setCurrentChapter] = useState(1);
   const [activeVerse, setActiveVerse] = useState<number | null>(null);
   const pages = Array.from({ length: 604 }, (_, i) => i + 1);

@@ -3,11 +3,11 @@ import React, { useState, useCallback, useMemo } from "react";
 import {
   View,
   Image,
-  Dimensions,
   TouchableOpacity,
   ActivityIndicator,
   Text,
   StyleSheet,
+  useWindowDimensions,
 } from "react-native";
 import { useQuranData } from "./use-quran-data";
 import { DEFAULT_CONFIG } from "./constants";
@@ -26,8 +26,6 @@ import { QuranImages } from "../../constants/image-map";
 import { VersePopup } from "./verse-popup";
 import { ChapterPopup } from "./chapter-popup";
 import { colors } from "../../theme";
-
-const { width } = Dimensions.get("window");
 
 interface VersePosition {
   verse: Verse;
@@ -49,6 +47,7 @@ export function QuranView({
   onChapterPress,
   onChapterLongPress,
 }: QuranViewProps) {
+  const { width } = useWindowDimensions();
   const { page, loading, error } = useQuranData(pageNumber);
 
   const [selectedVerse, setSelectedVerse] = useState<Verse | null>(null);

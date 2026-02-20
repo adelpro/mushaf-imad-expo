@@ -3,10 +3,10 @@ import {
   View,
   Image,
   StyleSheet,
-  Dimensions,
   ActivityIndicator,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
 } from "react-native";
 import { useQuranPage } from "../hooks/use-quran-page";
 import SuraNameBar from "../../assets/images/sura_name_bar.svg";
@@ -14,17 +14,10 @@ import { VerseFasel } from "./verse-fasel";
 import { QuranImages } from "../constants/image-map";
 import { colors } from "../theme";
 
-const { width } = Dimensions.get("window");
 const LINE_ASPECT_RATIO = 1440 / 232;
-const LINE_HEIGHT = width / LINE_ASPECT_RATIO;
-const SURA_NAME_BAR_WIDTH = width * 0.9;
-const SURA_NAME_BAR_HEIGHT = LINE_HEIGHT * 0.8;
-const LINE_SCALE = width / 1440;
 const FASEL_BALANCE = 3.69;
-const FASEL_WIDTH = 21 * FASEL_BALANCE * LINE_SCALE;
-const FASEL_HEIGHT = 27 * FASEL_BALANCE * LINE_SCALE;
-const SURA_NAME_BAR_CENTER_Y_OFFSET = 6 * LINE_SCALE;
-const FASEL_CENTER_Y_OFFSET = 8 * LINE_SCALE;
+const SURA_NAME_BAR_CENTER_Y_OFFSET_FACTOR = 6;
+const FASEL_CENTER_Y_OFFSET_FACTOR = 8;
 
 const resolveLineImage = (
   pageNumber: number,
@@ -46,7 +39,17 @@ export const QuranPage: React.FC<Props> = ({
   activeChapter,
   activeVerse,
 }) => {
+  const { width } = useWindowDimensions();
   const { page, loading, error, retry } = useQuranPage(pageNumber);
+
+  const lineHeight = width / LINE_ASPECT_RATIO;
+  const lineScale = width / 1440;
+  const suraNameBarWidth = width * 0.9;
+  const suraNameBarHeight = lineHeight * 0.8;
+  const suraNameBarCenterYOffset = SURA_NAME_BAR_CENTER_Y_OFFSET_FACTOR * lineScale;
+  const faselWidth = 21 * FASEL_BALANCE * lineScale;
+  const faselHeight = 27 * FASEL_BALANCE * lineScale;
+  const faselCenterYOffset = FASEL_CENTER_Y_OFFSET_FACTOR * lineScale;
 
   const markersByLine = React.useMemo(() => {
     const map = new Map<
@@ -91,10 +94,10 @@ export const QuranPage: React.FC<Props> = ({
     );
     return matchingHeaders.map((header, i) => {
       const centerX = width * header.centerX;
-      const centerY = LINE_HEIGHT * header.centerY;
-      const left = centerX - SURA_NAME_BAR_WIDTH / 2;
+      const centerY = lineHeight * header.centerY;
+      const left = centerX - suraNameBarWidth / 2;
       const top =
-        centerY - SURA_NAME_BAR_HEIGHT / 2 + SURA_NAME_BAR_CENTER_Y_OFFSET;
+        centerY - suraNameBarHeight / 2 + suraNameBarCenterYOffset;
       return (
         <View
           key={`surah-title-bg-${lineIndex}-${i}`}
@@ -102,8 +105,8 @@ export const QuranPage: React.FC<Props> = ({
           style={{ position: "absolute", left, top }}
         >
           <SuraNameBar
-            width={SURA_NAME_BAR_WIDTH}
-            height={SURA_NAME_BAR_HEIGHT}
+            width={suraNameBarWidth}
+            height={suraNameBarHeight}
           />
         </View>
       );
@@ -114,7 +117,7 @@ export const QuranPage: React.FC<Props> = ({
     if (!page) return null;
     const markers = markersByLine.get(lineIndex) ?? [];
     const scaledImageHeight = width / LINE_ASPECT_RATIO;
-    const cropOffset = (scaledImageHeight - LINE_HEIGHT) / 2;
+    const cropOffset = (scaledImageHeight - lineHeight) / 2;
     return markers.map((m) => {
       const x = width * m.centerX;
       const y = scaledImageHeight * m.centerY - cropOffset;
@@ -124,11 +127,11 @@ export const QuranPage: React.FC<Props> = ({
           pointerEvents="none"
           style={{
             position: "absolute",
-            left: x - FASEL_WIDTH / 2,
-            top: y - FASEL_HEIGHT / 2 + FASEL_CENTER_Y_OFFSET,
+            left: x - faselWidth / 2,
+            top: y - faselHeight / 2 + faselCenterYOffset,
           }}
         >
-          <VerseFasel number={m.number} scale={LINE_SCALE} />
+          <VerseFasel number={m.number} scale={lineScale} />
         </View>
       );
     });
@@ -166,11 +169,11 @@ export const QuranPage: React.FC<Props> = ({
     for (let i = 0; i < 15; i++) {
       const lineImageSource = resolveLineImage(pageNumber, i);
       lines.push(
-        <View key={i} style={{ width, height: LINE_HEIGHT }}>
+        <View key={i} style={{ width, height: lineHeight }}>
           {lineImageSource && (
             <Image
               source={lineImageSource}
-              style={{ width, height: LINE_HEIGHT }}
+              style={{ width, height: lineHeight }}
               resizeMode="stretch"
             />
           )}
