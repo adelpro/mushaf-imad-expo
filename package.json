@@ -9,11 +9,16 @@
     "android": "expo run:android -d",
     "ios": "expo run:ios",
     "web": "expo start --web",
+<<<<<<< chore/eslint-prettier-setup
     "doctor": "npx expo-doctor",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\""
+=======
+    "doctor:expo": "npx expo-doctor",
+    "doctor:react": "npx -y react-doctor@latest ."
+>>>>>>> develop
   },
   "dependencies": {
     "expo": "54.0.33",

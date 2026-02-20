@@ -5,7 +5,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
 
-import { MushafScreen } from "./src/screens/MushafScreen";
+import { MushafScreen } from "./src/screens/mushaf-screen";
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 

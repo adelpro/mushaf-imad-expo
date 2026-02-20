@@ -1,6 +1,6 @@
 // Quran Component - Data Hook
 import { useState, useEffect } from "react";
-import { databaseService } from "../../services/SQLiteService";
+import { databaseService } from "../../services/sqlite-service";
 import { Page } from "./types";
 
 interface UseQuranDataResult {

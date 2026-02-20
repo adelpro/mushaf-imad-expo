@@ -1,25 +1,30 @@
-import React, { useEffect, useState } from 'react';
-import { View, Button, StyleSheet, Text } from 'react-native';
-import { useAudioPlayer } from 'expo-audio';
-import { loadTiming } from '../services/AyahTimingService';
+import React, { useEffect, useState } from "react";
+import { View, Button, StyleSheet, Text } from "react-native";
+import { useAudioPlayer } from "expo-audio";
+import { loadTiming } from "../services/ayah-timing-service";
 
 interface Props {
   chapterNumber: number;
   onVerseChange: (verseNumber: number) => void;
 }
 
-export const AudioPlayerBar: React.FC<Props> = ({ chapterNumber, onVerseChange }) => {
-  const paddedChapter = chapterNumber.toString().padStart(3, '0');
+export const AudioPlayerBar: React.FC<Props> = ({
+  chapterNumber,
+  onVerseChange,
+}) => {
+  const paddedChapter = chapterNumber.toString().padStart(3, "0");
   const url = `https://server6.mp3quran.net/akdr/${paddedChapter}.mp3`;
-  
+
   const player = useAudioPlayer(url);
   const [timing, setTiming] = useState<any>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
-    loadTiming(1).then(data => {
+    loadTiming(1).then((data) => {
       if (data) {
-        const chapterData = data.chapters.find((c: any) => c.id === chapterNumber);
+        const chapterData = data.chapters.find(
+          (c: any) => c.id === chapterNumber,
+        );
         setTiming(chapterData);
       }
     });
@@ -31,7 +36,7 @@ export const AudioPlayerBar: React.FC<Props> = ({ chapterNumber, onVerseChange }
       // We assume player object is stable but its properties change.
       // However, hooks usually trigger re-render on change if they are stateful.
       // If useAudioPlayer returns a plain object ref, we need to poll.
-      
+
       const playing = player.playing;
       if (playing !== isPlaying) {
         setIsPlaying(playing);
@@ -39,7 +44,9 @@ export const AudioPlayerBar: React.FC<Props> = ({ chapterNumber, onVerseChange }
 
       if (playing && timing) {
         const timeMs = player.currentTime * 1000;
-        const verse = timing.aya_timing.find((t: any) => timeMs >= t.start_time && timeMs < t.end_time);
+        const verse = timing.aya_timing.find(
+          (t: any) => timeMs >= t.start_time && timeMs < t.end_time,
+        );
         if (verse) {
           onVerseChange(verse.ayah);
         }
@@ -68,9 +75,9 @@ export const AudioPlayerBar: React.FC<Props> = ({ chapterNumber, onVerseChange }
 const styles = StyleSheet.create({
   container: {
     padding: 10,
-    backgroundColor: '#eee',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    backgroundColor: "#eee",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
 });

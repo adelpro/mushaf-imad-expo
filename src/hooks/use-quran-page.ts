@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { databaseService, Page } from "../services/SQLiteService";
+import { databaseService, Page } from "../services/sqlite-service";
 
 export const useQuranPage = (pageNumber: number) => {
   const [page, setPage] = useState<Page | null>(null);

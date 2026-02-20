@@ -350,7 +350,7 @@ class DatabaseService {
       identifier: number;
       number: number;
       isRight: number;
-    }>("SELECT * FROM pages WHERE number = ? LIMIT 1", [pageNumber]);
+    }>("SELECT * FROM pages WHERE number = ? LIMIT 1", pageNumber);
 
     if (!pageResult) {
       return null;
@@ -372,7 +372,7 @@ class DatabaseService {
         quarter_id: number | null;
       }>(
         "SELECT * FROM page_headers WHERE page_id = ? AND layout_type = 1441 LIMIT 1",
-        [pageId],
+        pageId,
       ),
       db.getFirstAsync<{
         id: number;
@@ -380,7 +380,7 @@ class DatabaseService {
         quarter_id: number | null;
       }>(
         "SELECT * FROM page_headers WHERE page_id = ? AND layout_type = 1405 LIMIT 1",
-        [pageId],
+        pageId,
       ),
       db.getAllAsync<{
         id: number;
@@ -390,7 +390,7 @@ class DatabaseService {
         centerY: number;
       }>(
         "SELECT * FROM chapter_headers WHERE page_id = ? AND layout_type = 1441 ORDER BY line ASC",
-        [pageId],
+        pageId,
       ),
       db.getAllAsync<{
         id: number;
@@ -400,14 +400,16 @@ class DatabaseService {
         centerY: number;
       }>(
         "SELECT * FROM chapter_headers WHERE page_id = ? AND layout_type = 1405 ORDER BY line ASC",
-        [pageId],
+        pageId,
       ),
-      db.getAllAsync<VerseRow>("SELECT * FROM verses WHERE page1441_id = ?", [
+      db.getAllAsync<VerseRow>(
+        "SELECT * FROM verses WHERE page1441_id = ?",
         pageId,
-      ]),
-      db.getAllAsync<VerseRow>("SELECT * FROM verses WHERE page1405_id = ?", [
+      ),
+      db.getAllAsync<VerseRow>(
+        "SELECT * FROM verses WHERE page1405_id = ?",
         pageId,
-      ]),
+      ),
     ]);
 
     const verses1441 = await Promise.all(
@@ -419,7 +421,7 @@ class DatabaseService {
             right_position: number;
           }>(
             "SELECT * FROM verse_highlights WHERE verse_id = ? AND layout_type = 1441",
-            [verse.verseID],
+            verse.verseID,
           ),
           db.getAllAsync<{
             line: number;
@@ -427,7 +429,7 @@ class DatabaseService {
             right_position: number;
           }>(
             "SELECT * FROM verse_highlights WHERE verse_id = ? AND layout_type = 1405",
-            [verse.verseID],
+            verse.verseID,
           ),
         ]);
 
@@ -444,7 +446,7 @@ class DatabaseService {
             right_position: number;
           }>(
             "SELECT * FROM verse_highlights WHERE verse_id = ? AND layout_type = 1441",
-            [verse.verseID],
+            verse.verseID,
           ),
           db.getAllAsync<{
             line: number;
@@ -452,7 +454,7 @@ class DatabaseService {
             right_position: number;
           }>(
             "SELECT * FROM verse_highlights WHERE verse_id = ? AND layout_type = 1405",
-            [verse.verseID],
+            verse.verseID,
           ),
         ]);
 
@@ -525,7 +527,7 @@ class DatabaseService {
 
     const chapter = await db.getFirstAsync<Chapter>(
       "SELECT * FROM chapters WHERE number = ? LIMIT 1",
-      [chapterNumber],
+      chapterNumber,
     );
 
     return chapter;
