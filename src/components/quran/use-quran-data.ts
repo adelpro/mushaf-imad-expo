@@ -3,35 +3,34 @@ import { useState, useEffect } from "react";
 import { databaseService } from "../../services/sqlite-service";
 import { Page } from "./types";
 
-interface UseQuranDataResult {
+type QuranDataState = {
   page: Page | null;
   loading: boolean;
   error: Error | null;
-}
+};
 
-export function useQuranData(pageNumber: number): UseQuranDataResult {
-  const [page, setPage] = useState<Page | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+const INITIAL_STATE: QuranDataState = { page: null, loading: true, error: null };
+
+export function useQuranData(pageNumber: number): QuranDataState {
+  const [state, setState] = useState<QuranDataState>(INITIAL_STATE);
 
   useEffect(() => {
     let mounted = true;
 
     const loadPage = async () => {
+      setState(INITIAL_STATE);
       try {
-        setLoading(true);
-        setError(null);
         const pageData = await databaseService.getPageByNumber(pageNumber);
         if (mounted) {
-          setPage(pageData);
+          setState({ page: pageData, loading: false, error: null });
         }
       } catch (err) {
         if (mounted) {
-          setError(err instanceof Error ? err : new Error("Unknown error"));
-        }
-      } finally {
-        if (mounted) {
-          setLoading(false);
+          setState({
+            page: null,
+            loading: false,
+            error: err instanceof Error ? err : new Error("Unknown error"),
+          });
         }
       }
     };
@@ -43,5 +42,5 @@ export function useQuranData(pageNumber: number): UseQuranDataResult {
     };
   }, [pageNumber]);
 
-  return { page, loading, error };
+  return state;
 }
