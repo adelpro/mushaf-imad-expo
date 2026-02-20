@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef } from "react";
 import {
   Dimensions,
   FlatList,
@@ -9,6 +9,7 @@ import {
 import { AudioPlayerBar } from "../components/AudioPlayerBar";
 import { QuranPage } from "../components/QuranPage";
 import { databaseService } from "../services/SQLiteService";
+import { useMushafStore } from "../store/mushaf-store";
 
 const { height, width } = Dimensions.get("window");
 
@@ -17,8 +18,9 @@ type ViewableItemsChangedInfo = {
 };
 
 export function MushafScreen() {
-  const [currentChapter, setCurrentChapter] = useState(1);
-  const [activeVerse, setActiveVerse] = useState<number | null>(null);
+  const currentChapter = useMushafStore((s) => s.currentChapter);
+  const setCurrentChapter = useMushafStore((s) => s.setCurrentChapter);
+  const activeVerse = useMushafStore((s) => s.activeVerse);
   const pages = Array.from({ length: 604 }, (_, i) => i + 1);
 
   async function updateChapter(pageNumber: number) {
@@ -29,9 +31,7 @@ export function MushafScreen() {
       if (chapterNum) {
         const chapter = await databaseService.getChapterByNumber(chapterNum);
         if (chapter) {
-          setCurrentChapter((prev) =>
-            chapter.number !== prev ? chapter.number : prev,
-          );
+          setCurrentChapter(chapter.number);
         }
       }
     } catch (error) {
@@ -84,10 +84,7 @@ export function MushafScreen() {
         windowSize={3}
       />
       <View style={{ height: 60 }}>
-        {/* <AudioPlayerBar
-          chapterNumber={currentChapter}
-          onVerseChange={(verse) => setActiveVerse(verse)}
-        /> */}
+        {/* <AudioPlayerBar /> */}
       </View>
     </View>
   );
