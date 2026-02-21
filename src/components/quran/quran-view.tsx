@@ -25,6 +25,7 @@ import { VerseFasel } from "../verse-fasel";
 import { QuranImages } from "../../constants/image-map";
 import { VersePopup } from "./verse-popup";
 import { ChapterPopup } from "./chapter-popup";
+import { colors } from "../../theme";
 
 const { width } = Dimensions.get("window");
 
@@ -42,7 +43,7 @@ export function QuranView({
   showSuraName = true,
   showVerseMarkers = true,
   showHighlights = true,
-  highlightColor = "rgba(120, 120, 120, 0.3)",
+  highlightColor = colors.state.textSelection,
   onVersePress,
   onVerseLongPress,
   onChapterPress,
@@ -416,7 +417,7 @@ export function QuranView({
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#1B5E20" />
+        <ActivityIndicator size="large" color={colors.brand.default} />
       </View>
     );
   }
@@ -482,7 +483,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   errorText: {
-    color: "red",
+    color: colors.text.error,
     fontSize: 16,
   },
 });

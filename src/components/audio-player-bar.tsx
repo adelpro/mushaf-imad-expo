@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, Button, StyleSheet, Text } from "react-native";
 import { useAudioPlayer } from "expo-audio";
 import { loadTiming } from "../services/ayah-timing-service";
+import { colors } from "../theme";
 
 interface Props {
   chapterNumber: number;
@@ -75,7 +76,7 @@ export const AudioPlayerBar: React.FC<Props> = ({
 const styles = StyleSheet.create({
   container: {
     padding: 10,
-    backgroundColor: "#eee",
+    backgroundColor: colors.background.subtle,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",

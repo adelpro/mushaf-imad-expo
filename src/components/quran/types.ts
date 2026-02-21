@@ -1,5 +1,7 @@
 // Quran Component - Types
 
+import { colors } from "../../theme";
+
 // Page Types
 export interface VerseMarker {
   numberCodePoint: string | null;
@@ -104,8 +106,8 @@ export const DEFAULT_CONFIG: QuranConfig = {
   suraNameBarCenterYOffset: 6,
   verseMarkerBalance: 3.69,
   verseMarkerCenterYOffset: 8,
-  backgroundColor: "#FFF8E1",
-  highlightColor: "rgba(88, 168, 105, 0.4)",
+  backgroundColor: colors.background.default,
+  highlightColor: colors.brand.highlight,
   defaultLayout: 1441,
 };
 

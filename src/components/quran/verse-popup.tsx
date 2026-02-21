@@ -9,6 +9,7 @@ import {
   ScrollView,
 } from "react-native";
 import { Verse, Chapter } from "./types";
+import { colors } from "../../theme";
 
 interface VersePopupProps {
   visible: boolean;
@@ -143,17 +144,17 @@ export const ChapterPopup: React.FC<ChapterPopupProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: colors.background.overlay,
     justifyContent: "center",
     alignItems: "center",
   },
   modal: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.background.surface,
     borderRadius: 16,
     width: "85%",
     maxHeight: "70%",
     overflow: "hidden",
-    shadowColor: "#000",
+    shadowColor: colors.shadow.default,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
@@ -162,22 +163,22 @@ const styles = StyleSheet.create({
   header: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#E0E0E0",
+    borderBottomColor: colors.border.default,
     alignItems: "center",
   },
   chapterName: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#1B5E20",
+    color: colors.brand.default,
     marginBottom: 4,
   },
   verseNumber: {
     fontSize: 14,
-    color: "#666",
+    color: colors.text.secondary,
   },
   englishName: {
     fontSize: 14,
-    color: "#888",
+    color: colors.text.tertiary,
     marginTop: 2,
   },
   content: {
@@ -187,14 +188,14 @@ const styles = StyleSheet.create({
   arabicText: {
     fontSize: 24,
     textAlign: "center",
-    color: "#1B1B1B",
+    color: colors.text.primary,
     marginBottom: 12,
     lineHeight: 40,
   },
   transliteration: {
     fontSize: 14,
     textAlign: "center",
-    color: "#666",
+    color: colors.text.secondary,
     fontStyle: "italic",
   },
   infoRow: {
@@ -207,20 +208,20 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 12,
-    color: "#888",
+    color: colors.text.tertiary,
     marginBottom: 4,
   },
   infoValue: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#1B5E20",
+    color: colors.brand.default,
   },
   footer: {
     flexDirection: "row",
     justifyContent: "space-around",
     padding: 12,
     borderTopWidth: 1,
-    borderTopColor: "#E0E0E0",
+    borderTopColor: colors.border.default,
   },
   button: {
     paddingVertical: 10,
@@ -228,14 +229,14 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   primaryButton: {
-    backgroundColor: "#1B5E20",
+    backgroundColor: colors.brand.default,
   },
   buttonText: {
     fontSize: 16,
-    color: "#666",
+    color: colors.text.secondary,
   },
   primaryButtonText: {
-    color: "#FFFFFF",
+    color: colors.text.inverse,
     fontWeight: "600",
   },
 });

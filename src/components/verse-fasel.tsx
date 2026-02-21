@@ -2,6 +2,7 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Fasel from "../../assets/images/fasel.svg";
 import { toArabicDigits } from "../utils/to-arabic-digits";
+import { colors } from "../theme";
 
 const BALANCE = 3.69;
 const BASE_WIDTH = 21 * BALANCE;
@@ -54,6 +55,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     textAlignVertical: "center",
     fontFamily: "uthman_tn1_bold",
-    color: "#000",
+    color: colors.text.primary,
   },
 });
