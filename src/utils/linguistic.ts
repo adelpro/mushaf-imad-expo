@@ -9,7 +9,7 @@ const ARABIC_DIGIT_MAP = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', 
  */
 export function toArabicDigits(value: number): string {
   return value
-    .toString(10)
+    .toString()
     .split('')
     .map((ch) => (ch >= '0' && ch <= '9' ? ARABIC_DIGIT_MAP[Number(ch)] : ch))
     .join('');

@@ -51,23 +51,23 @@ describe('toArabicDigits', () => {
       expect(toArabicDigits(111)).toBe('١١١');
     });
 
-    it('should handle numbers with leading zeros when stringified', () => {
+    it('should convert numbers with only zeros after leading digit', () => {
       // 100 → "100" → "١٠٠"
       expect(toArabicDigits(100)).toBe('١٠٠');
     });
   });
 
   describe('Quranic context values', () => {
-    it('should convert surah Al-Fatiha number (1)', () => {
-      expect(toArabicDigits(1)).toBe('١');
+    it('should convert surah An-Nisa number (4)', () => {
+      expect(toArabicDigits(4)).toBe('٤');
     });
 
     it('should convert surah Al-Baqara number (2)', () => {
       expect(toArabicDigits(2)).toBe('٢');
     });
 
-    it('should convert surah An-Nas number (114)', () => {
-      expect(toArabicDigits(114)).toBe('١١٤');
+    it('should convert surah An-Nisa verse count (176)', () => {
+      expect(toArabicDigits(176)).toBe('١٧٦');
     });
 
     it('should convert juz count (30)', () => {
