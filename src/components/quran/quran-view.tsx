@@ -132,25 +132,33 @@ export function QuranView({
 
       if (!verseHighlights || verseHighlights.length === 0) return;
 
-      const lines = new Set<number>();
-      let minX = 1;
-      let maxX = 0;
-
+      // Group highlights by line to compute per-line bounds
+      const highlightsByLine = new Map<number, VerseHighlight[]>();
       verseHighlights.forEach((h) => {
-        lines.add(h.line);
-        if (h.left_position < minX) minX = h.left_position;
-        if (h.right_position > maxX) maxX = h.right_position;
+        const lineList = highlightsByLine.get(h.line) ?? [];
+        lineList.push(h);
+        highlightsByLine.set(h.line, lineList);
       });
 
-      const list = map.get(verseHighlights[0].line) ?? [];
-      list.push({
-        verse,
-        highlights: verseHighlights,
-        minX,
-        maxX,
-        lines: Array.from(lines).sort((a, b) => a - b),
+      // Add a content area entry for each line the verse spans
+      highlightsByLine.forEach((lineHighlights, line) => {
+        let lineMinX = 1;
+        let lineMaxX = 0;
+        lineHighlights.forEach((h) => {
+          if (h.left_position < lineMinX) lineMinX = h.left_position;
+          if (h.right_position > lineMaxX) lineMaxX = h.right_position;
+        });
+
+        const list = map.get(line) ?? [];
+        list.push({
+          verse,
+          highlights: lineHighlights,
+          minX: lineMinX,
+          maxX: lineMaxX,
+          lines: [line],
+        });
+        map.set(line, list);
       });
-      map.set(verseHighlights[0].line, list);
     });
 
     return map;
