@@ -1,7 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Fasel from "../../assets/images/fasel.svg";
-import { toArabicDigits } from "../utils/to-arabic-digits";
+import { toArabicDigits } from "../utils/linguistic";
 import { colors } from "../theme";
 
 const BALANCE = 3.69;
