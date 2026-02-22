@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Build & generated
+dist/
+web-build/
+.expo/
+ios/
+android/
+coverage/
+
+# Assets (images, fonts, realm DB, audio timings)
+assets/
+
+# Scripts (Node.js utilities)
+scripts/
+
+# Lock files
+yarn.lock
+package-lock.json
