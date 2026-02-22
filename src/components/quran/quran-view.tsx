@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Text,
   StyleSheet,
+  Pressable,
 } from "react-native";
 import { useQuranData } from "./use-quran-data";
 import { DEFAULT_CONFIG } from "./constants";
@@ -28,14 +29,6 @@ import { ChapterPopup } from "./chapter-popup";
 import { colors } from "../../theme";
 
 const { width } = Dimensions.get("window");
-
-interface VersePosition {
-  verse: Verse;
-  highlights: VerseHighlight[];
-  minX: number;
-  maxX: number;
-  lines: number[];
-}
 
 export function QuranView({
   pageNumber,
@@ -116,43 +109,6 @@ export function QuranView({
         (a, b) => a.centerX - b.centerX || a.verse.number - b.verse.number,
       );
     }
-
-    return map;
-  }, [page, layout]);
-
-  const versePositionsByLine = useMemo(() => {
-    const map = new Map<number, VersePosition[]>();
-
-    if (!page) return map;
-
-    const verses = layout === 1441 ? page.verses1441 : page.verses1405;
-    const highlightsKey = layout === 1441 ? "highlights1441" : "highlights1405";
-
-    verses.forEach((verse: Verse) => {
-      const verseHighlights = verse[highlightsKey] as VerseHighlight[];
-
-      if (!verseHighlights || verseHighlights.length === 0) return;
-
-      const lines = new Set<number>();
-      let minX = 1;
-      let maxX = 0;
-
-      verseHighlights.forEach((h) => {
-        lines.add(h.line);
-        if (h.left_position < minX) minX = h.left_position;
-        if (h.right_position > maxX) maxX = h.right_position;
-      });
-
-      const list = map.get(verseHighlights[0].line) ?? [];
-      list.push({
-        verse,
-        highlights: verseHighlights,
-        minX,
-        maxX,
-        lines: Array.from(lines).sort((a, b) => a - b),
-      });
-      map.set(verseHighlights[0].line, list);
-    });
 
     return map;
   }, [page, layout]);
@@ -346,40 +302,35 @@ export function QuranView({
     });
   };
 
-  const renderVerseContentAreas = (lineIndex: number) => {
-    if (!page || !showHighlights) return null;
+  // Whenever a line is clicked, we search for a verse that has a highlight on that line number,
+  // and check whether the X position of the click falls between the start and end positions of that verse’s highlight.
+  const onLineClicked = useCallback(
+    (lineIndex: number, locationX: number) => {
+      const xIndex = locationX / width;
 
-    const versesOnLine = versePositionsByLine.get(lineIndex);
-    if (!versesOnLine) return [];
+      if (!page) return;
 
-    return versesOnLine.map((vp, i) => (
-      <TouchableOpacity
-        key={`verse-content-${vp.verse.verseID}-${i}`}
-        style={{
-          position: "absolute",
-          left: vp.minX * width,
-          width: (vp.maxX - vp.minX) * width,
-          height: "100%",
-          backgroundColor: "transparent",
-        }}
-        hitSlop={{ top: 5, bottom: 5, left: 10, right: 10 }}
-        onPress={(e) =>
-          handleVersePress(
-            vp.verse,
-            e.nativeEvent.locationX,
-            e.nativeEvent.locationY,
-          )
-        }
-        onLongPress={(e) =>
-          handleVerseLongPress(
-            vp.verse,
-            e.nativeEvent.locationX,
-            e.nativeEvent.locationY,
-          )
-        }
-      />
-    ));
-  };
+      const verses = layout === 1441 ? page.verses1441 : page.verses1405;
+      const highlightsKey =
+        layout === 1441 ? "highlights1441" : "highlights1405";
+
+      const targetVerse = verses.findLast((v) => {
+        const highlights = v[highlightsKey] as VerseHighlight[];
+        return highlights.some(
+          (h) =>
+            h.line === lineIndex &&
+            h.left_position <= xIndex &&
+            h.right_position >= xIndex,
+        );
+      });
+
+      if (!targetVerse) return;
+
+      setSelectedVerse(targetVerse);
+      setVersePopupVisible(true);
+    },
+    [width, page, layout, setSelectedVerse, setVersePopupVisible],
+  );
 
   const renderLines = () => {
     const lines: React.ReactNode[] = [];
@@ -388,7 +339,21 @@ export function QuranView({
       const lineImageSource = resolveLineImage(i);
 
       lines.push(
-        <View key={i} style={{ width, height: lineHeight }}>
+        <Pressable
+          key={i}
+          style={{
+            width,
+            height: lineHeight,
+            backgroundColor: "transparent",
+            marginBottom: 4,
+          }}
+          onPress={(e) => {
+            onLineClicked(i, e.nativeEvent.locationX);
+          }}
+          onLongPress={(e) => {
+            onLineClicked(i, e.nativeEvent.locationX);
+          }}
+        >
           <View style={{ width, height: lineHeight, position: "absolute" }}>
             {lineImageSource && (
               <Image
@@ -405,9 +370,8 @@ export function QuranView({
             {renderSuraNameBars(i)}
             {renderVerseMarkers(i)}
             {renderVerseHighlights(i)}
-            {renderVerseContentAreas(i)}
           </View>
-        </View>,
+        </Pressable>,
       );
     }
 
