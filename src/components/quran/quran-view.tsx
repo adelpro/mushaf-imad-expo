@@ -418,6 +418,7 @@ export function QuranView({
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color={colors.brand.default} />
+        <Text style={styles.loadingText}>جارٍ تحميل الصفحة...</Text>
       </View>
     );
   }
@@ -485,5 +486,11 @@ const styles = StyleSheet.create({
   errorText: {
     color: colors.text.error,
     fontSize: 16,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: colors.text.secondary,
+    fontFamily: "uthman_tn1_bold",
   },
 });

@@ -187,6 +187,7 @@ export const QuranPage: React.FC<Props> = ({
     return (
       <View style={[styles.container, styles.center]}>
         <ActivityIndicator size="large" color={colors.brand.accent} />
+        <Text style={styles.loadingText}>جارٍ تحميل الصفحة...</Text>
       </View>
     );
   }
@@ -227,4 +228,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   retryText: { color: colors.text.inverse, fontWeight: "bold" },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: colors.text.secondary,
+    fontFamily: "uthman_tn1_bold",
+  },
 });
