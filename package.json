@@ -9,7 +9,6 @@
     "android": "expo run:android -d",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "doctor": "npx expo-doctor",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
