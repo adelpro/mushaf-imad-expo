@@ -25,6 +25,8 @@ const FASEL_WIDTH = 21 * FASEL_BALANCE * LINE_SCALE;
 const FASEL_HEIGHT = 27 * FASEL_BALANCE * LINE_SCALE;
 const SURA_NAME_BAR_CENTER_Y_OFFSET = 6 * LINE_SCALE;
 const FASEL_CENTER_Y_OFFSET = 8 * LINE_SCALE;
+const SCALED_IMAGE_HEIGHT = width / LINE_ASPECT_RATIO;
+const CROP_OFFSET = (SCALED_IMAGE_HEIGHT - LINE_HEIGHT) / 2;
 
 const resolveLineImage = (
   pageNumber: number,
@@ -35,121 +37,118 @@ const resolveLineImage = (
   return pageImages[lineIndex];
 };
 
-interface Props {
-  pageNumber: number;
-  activeChapter?: number;
-  activeVerse?: number | null;
-}
+// ---------------------------------------------------------------------------
+// Memoized layer components — only re-render when their own props change
+// ---------------------------------------------------------------------------
 
-export const QuranPage: React.FC<Props> = ({
-  pageNumber,
-  activeChapter,
-  activeVerse,
-}) => {
-  const { page, loading, error, retry } = useQuranPage(pageNumber);
+type SurahHeader = {
+  line: number;
+  centerX: number;
+  centerY: number;
+  chapter_id: number | null;
+};
 
-  const markersByLine = React.useMemo(() => {
-    const map = new Map<
-      number,
-      Array<{
-        verseID: number;
-        number: number;
-        centerX: number;
-        centerY: number;
-      }>
-    >();
-    if (page) {
-      page.verses1441.forEach((verse) => {
-        const marker = verse.marker1441;
-        if (
-          !marker ||
-          marker.line === null ||
-          marker.centerX === null ||
-          marker.centerY === null
-        )
-          return;
-        const list = map.get(marker.line) ?? [];
-        list.push({
-          verseID: verse.verseID,
-          number: verse.number,
-          centerX: marker.centerX,
-          centerY: marker.centerY,
-        });
-        map.set(marker.line, list);
-      });
-    }
-    for (const list of map.values()) {
-      list.sort((a, b) => a.centerX - b.centerX || a.number - b.number);
-    }
-    return map;
-  }, [page]);
+const SurahTitlesLayer = React.memo(function SurahTitlesLayer({
+  headers,
+  lineIndex,
+}: {
+  headers: SurahHeader[];
+  lineIndex: number;
+}) {
+  const matching = headers.filter((h) => h.line === lineIndex);
+  if (matching.length === 0) return null;
 
-  const renderSurahTitleBackgrounds = (lineIndex: number) => {
-    if (!page) return null;
-    const matchingHeaders = page.chapterHeaders1441.filter(
-      (header) => header.line === lineIndex,
-    );
-    return matchingHeaders.map((header, i) => {
-      const centerX = width * header.centerX;
-      const centerY = LINE_HEIGHT * header.centerY;
-      const left = centerX - SURA_NAME_BAR_WIDTH / 2;
-      const top =
-        centerY - SURA_NAME_BAR_HEIGHT / 2 + SURA_NAME_BAR_CENTER_Y_OFFSET;
-      return (
-        <View
-          key={`surah-title-bg-${lineIndex}-${i}`}
-          pointerEvents="none"
-          style={{ position: "absolute", left, top }}
-        >
-          <SuraNameBar
-            width={SURA_NAME_BAR_WIDTH}
-            height={SURA_NAME_BAR_HEIGHT}
-          />
-        </View>
-      );
-    });
-  };
+  return (
+    <>
+      {matching.map((header, i) => {
+        const cx = width * header.centerX;
+        const cy = LINE_HEIGHT * header.centerY;
+        return (
+          <View
+            key={`surah-title-bg-${lineIndex}-${i}`}
+            pointerEvents="none"
+            style={{
+              position: "absolute",
+              left: cx - SURA_NAME_BAR_WIDTH / 2,
+              top: cy - SURA_NAME_BAR_HEIGHT / 2 + SURA_NAME_BAR_CENTER_Y_OFFSET,
+            }}
+          >
+            <SuraNameBar
+              width={SURA_NAME_BAR_WIDTH}
+              height={SURA_NAME_BAR_HEIGHT}
+            />
+          </View>
+        );
+      })}
+    </>
+  );
+});
 
-  const renderVerseMarkers = (lineIndex: number) => {
-    if (!page) return null;
-    const markers = markersByLine.get(lineIndex) ?? [];
-    const scaledImageHeight = width / LINE_ASPECT_RATIO;
-    const cropOffset = (scaledImageHeight - LINE_HEIGHT) / 2;
-    return markers.map((m) => {
-      const x = width * m.centerX;
-      const y = scaledImageHeight * m.centerY - cropOffset;
-      return (
-        <View
-          key={`fasel-${m.verseID}`}
-          pointerEvents="none"
-          style={{
-            position: "absolute",
-            left: x - FASEL_WIDTH / 2,
-            top: y - FASEL_HEIGHT / 2 + FASEL_CENTER_Y_OFFSET,
-          }}
-        >
-          <VerseFasel number={m.number} scale={LINE_SCALE} />
-        </View>
-      );
-    });
-  };
+type MarkerEntry = {
+  verseID: number;
+  number: number;
+  centerX: number;
+  centerY: number;
+};
 
-  const renderHighlights = (lineIndex: number) => {
-    if (!page || !activeVerse || !activeChapter) return null;
-    const versesToHighlight = page.verses1441.filter(
-      (v) => v.chapter_id === activeChapter && v.number === activeVerse,
-    );
-    return versesToHighlight.map((v) => {
-      const highlights = v.highlights1441.filter((h) => h.line === lineIndex);
-      return highlights.map((h, i) => {
+const VerseMarkersLayer = React.memo(function VerseMarkersLayer({
+  markers,
+}: {
+  markers: MarkerEntry[];
+}) {
+  if (markers.length === 0) return null;
+
+  return (
+    <>
+      {markers.map((m) => {
+        const x = width * m.centerX;
+        const y = SCALED_IMAGE_HEIGHT * m.centerY - CROP_OFFSET;
+        return (
+          <View
+            key={`fasel-${m.verseID}`}
+            pointerEvents="none"
+            style={{
+              position: "absolute",
+              left: x - FASEL_WIDTH / 2,
+              top: y - FASEL_HEIGHT / 2 + FASEL_CENTER_Y_OFFSET,
+            }}
+          >
+            <VerseFasel number={m.number} scale={LINE_SCALE} />
+          </View>
+        );
+      })}
+    </>
+  );
+});
+
+type HighlightEntry = {
+  verseID: number;
+  left_position: number;
+  right_position: number;
+  line: number;
+};
+
+const HighlightsLayer = React.memo(function HighlightsLayer({
+  highlights,
+  lineIndex,
+}: {
+  highlights: HighlightEntry[];
+  lineIndex: number;
+}) {
+  const lineHighlights = highlights.filter((h) => h.line === lineIndex);
+  if (lineHighlights.length === 0) return null;
+
+  return (
+    <>
+      {lineHighlights.map((h, i) => {
         const left = width * h.left_position;
         const w = width * (h.right_position - h.left_position);
         return (
           <View
-            key={`${v.verseID}-${i}`}
+            key={`${h.verseID}-${i}`}
             style={{
               position: "absolute",
-              left: left,
+              left,
               width: w,
               height: "100%",
               backgroundColor: colors.brand.highlight,
@@ -157,15 +156,75 @@ export const QuranPage: React.FC<Props> = ({
             }}
           />
         );
-      });
-    });
-  };
+      })}
+    </>
+  );
+});
 
-  const renderLines = () => {
-    const lines: React.ReactNode[] = [];
+// ---------------------------------------------------------------------------
+// Main component
+// ---------------------------------------------------------------------------
+
+interface Props {
+  pageNumber: number;
+  activeChapter?: number;
+  activeVerse?: number | null;
+}
+
+export const QuranPage = React.memo<Props>(function QuranPage({
+  pageNumber,
+  activeChapter,
+  activeVerse,
+}) {
+  const { page, loading, error, retry } = useQuranPage(pageNumber);
+
+  const markersByLine = React.useMemo(() => {
+    const map = new Map<number, MarkerEntry[]>();
+    if (!page) return map;
+
+    for (const verse of page.verses1441) {
+      const marker = verse.marker1441;
+      if (
+        !marker ||
+        marker.line === null ||
+        marker.centerX === null ||
+        marker.centerY === null
+      )
+        continue;
+      const list = map.get(marker.line) ?? [];
+      list.push({
+        verseID: verse.verseID,
+        number: verse.number,
+        centerX: marker.centerX,
+        centerY: marker.centerY,
+      });
+      map.set(marker.line, list);
+    }
+
+    for (const list of map.values()) {
+      list.sort((a, b) => a.centerX - b.centerX || a.number - b.number);
+    }
+    return map;
+  }, [page]);
+
+  const activeHighlights = React.useMemo<HighlightEntry[]>(() => {
+    if (!page || !activeVerse || !activeChapter) return [];
+    return page.verses1441
+      .filter((v) => v.chapter_id === activeChapter && v.number === activeVerse)
+      .flatMap((v) =>
+        v.highlights1441.map((h) => ({ ...h, verseID: v.verseID })),
+      );
+  }, [page, activeChapter, activeVerse]);
+
+  const lines = React.useMemo(() => {
+    const result: React.ReactNode[] = [];
+    const headers = page?.chapterHeaders1441 ?? [];
+
     for (let i = 0; i < 15; i++) {
       const lineImageSource = resolveLineImage(pageNumber, i);
-      lines.push(
+      const markers = markersByLine.get(i) ?? [];
+
+      result.push(
         <View key={i} style={{ width, height: LINE_HEIGHT }}>
           {lineImageSource && (
             <Image
@@ -174,19 +233,20 @@ export const QuranPage: React.FC<Props> = ({
               resizeMode="stretch"
             />
           )}
-          {renderSurahTitleBackgrounds(i)}
-          {renderVerseMarkers(i)}
-          {renderHighlights(i)}
+          <SurahTitlesLayer headers={headers} lineIndex={i} />
+          <VerseMarkersLayer markers={markers} />
+          <HighlightsLayer highlights={activeHighlights} lineIndex={i} />
         </View>,
       );
     }
-    return lines;
-  };
+    return result;
+  }, [pageNumber, page, markersByLine, activeHighlights]);
 
   if (loading) {
     return (
       <View style={[styles.container, styles.center]}>
         <ActivityIndicator size="large" color={colors.brand.accent} />
+        <Text style={styles.loadingText}>جارٍ تحميل الصفحة...</Text>
       </View>
     );
   }
@@ -204,10 +264,10 @@ export const QuranPage: React.FC<Props> = ({
 
   return (
     <View style={styles.container}>
-      <View style={styles.linesContainer}>{renderLines()}</View>
+      <View style={styles.linesContainer}>{lines}</View>
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background.default, justifyContent: "center" },
@@ -227,4 +287,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   retryText: { color: colors.text.inverse, fontWeight: "bold" },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: colors.text.secondary,
+    fontFamily: "uthman_tn1_bold",
+  },
 });
