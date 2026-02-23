@@ -23,10 +23,6 @@ export default function App() {
     }
   }, [fontsLoaded, fontError]);
 
-  if (fontError) {
-    throw fontError;
-  }
-
   if (!fontsLoaded) {
     return (
       <View style={styles.loader}>
