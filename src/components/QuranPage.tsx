@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Image,
@@ -12,9 +12,12 @@ import { useQuranPage } from "../hooks/useQuranPage";
 import SuraNameBar from "../../assets/images/sura_name_bar.svg";
 import { VerseFasel } from "./VerseFasel";
 import { QuranImages } from "../constants/imageMap";
+import { VersePopup } from "./quran/VersePopup";
+import { databaseService } from "../services/SQLiteService";
+import type { Verse, Chapter } from "./quran/types";
 
 const { width } = Dimensions.get("window");
- const LINE_ASPECT_RATIO = 1440 / 232;
+const LINE_ASPECT_RATIO = 1440 / 232;
 const LINE_HEIGHT = width / LINE_ASPECT_RATIO;
 const SURA_NAME_BAR_WIDTH = width * 0.9;
 const SURA_NAME_BAR_HEIGHT = LINE_HEIGHT * 0.8;
@@ -25,7 +28,10 @@ const FASEL_HEIGHT = 27 * FASEL_BALANCE * LINE_SCALE;
 const SURA_NAME_BAR_CENTER_Y_OFFSET = 6 * LINE_SCALE;
 const FASEL_CENTER_Y_OFFSET = 8 * LINE_SCALE;
 
-const resolveLineImage = (pageNumber: number, lineIndex: number): number | undefined => {
+const resolveLineImage = (
+  pageNumber: number,
+  lineIndex: number,
+): number | undefined => {
   const pageImages = QuranImages[pageNumber];
   if (!pageImages) return undefined;
   return pageImages[lineIndex];
@@ -37,17 +43,72 @@ interface Props {
   activeVerse?: number | null;
 }
 
-export const QuranPage: React.FC<Props> = ({ pageNumber, activeChapter, activeVerse }) => {
+export const QuranPage: React.FC<Props> = ({
+  pageNumber,
+  activeChapter,
+  activeVerse,
+}) => {
   const { page, loading, error, retry } = useQuranPage(pageNumber);
 
-   const markersByLine = React.useMemo(() => {
-    const map = new Map<number, Array<{ verseID: number; number: number; centerX: number; centerY: number; }>>();
+  const [selectedVerse, setSelectedVerse] = useState<Verse | null>(null);
+  const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
+  const [popupVisible, setPopupVisible] = useState(false);
+
+  const handleVerseMarkerPress = useCallback(
+    async (verseID: number) => {
+      if (!page) return;
+      const verse = page.verses1441.find((v) => v.verseID === verseID);
+      if (!verse) return;
+
+      let chapter: Chapter | null = null;
+      if (verse.chapter_id !== null) {
+        try {
+          chapter = (await databaseService.getChapterByNumber(verse.chapter_id)) ?? null;
+        } catch {
+          chapter = null;
+        }
+      }
+
+      setSelectedVerse(verse);
+      setSelectedChapter(chapter);
+      setPopupVisible(true);
+    },
+    [page],
+  );
+
+  const handlePopupClose = useCallback(() => {
+    setPopupVisible(false);
+    setSelectedVerse(null);
+    setSelectedChapter(null);
+  }, []);
+
+  const markersByLine = React.useMemo(() => {
+    const map = new Map<
+      number,
+      Array<{
+        verseID: number;
+        number: number;
+        centerX: number;
+        centerY: number;
+      }>
+    >();
     if (page) {
       page.verses1441.forEach((verse) => {
         const marker = verse.marker1441;
-        if (!marker || marker.line === null || marker.centerX === null || marker.centerY === null) return;
+        if (
+          !marker ||
+          marker.line === null ||
+          marker.centerX === null ||
+          marker.centerY === null
+        )
+          return;
         const list = map.get(marker.line) ?? [];
-        list.push({ verseID: verse.verseID, number: verse.number, centerX: marker.centerX, centerY: marker.centerY });
+        list.push({
+          verseID: verse.verseID,
+          number: verse.number,
+          centerX: marker.centerX,
+          centerY: marker.centerY,
+        });
         map.set(marker.line, list);
       });
     }
@@ -59,15 +120,25 @@ export const QuranPage: React.FC<Props> = ({ pageNumber, activeChapter, activeVe
 
   const renderSurahTitleBackgrounds = (lineIndex: number) => {
     if (!page) return null;
-    const matchingHeaders = page.chapterHeaders1441.filter((header) => header.line === lineIndex);
+    const matchingHeaders = page.chapterHeaders1441.filter(
+      (header) => header.line === lineIndex,
+    );
     return matchingHeaders.map((header, i) => {
       const centerX = width * header.centerX;
       const centerY = LINE_HEIGHT * header.centerY;
       const left = centerX - SURA_NAME_BAR_WIDTH / 2;
-      const top = centerY - SURA_NAME_BAR_HEIGHT / 2 + SURA_NAME_BAR_CENTER_Y_OFFSET;
+      const top =
+        centerY - SURA_NAME_BAR_HEIGHT / 2 + SURA_NAME_BAR_CENTER_Y_OFFSET;
       return (
-        <View key={`surah-title-bg-${lineIndex}-${i}`} pointerEvents="none" style={{ position: "absolute", left, top }}>
-          <SuraNameBar width={SURA_NAME_BAR_WIDTH} height={SURA_NAME_BAR_HEIGHT} />
+        <View
+          key={`surah-title-bg-${lineIndex}-${i}`}
+          pointerEvents="none"
+          style={{ position: "absolute", left, top }}
+        >
+          <SuraNameBar
+            width={SURA_NAME_BAR_WIDTH}
+            height={SURA_NAME_BAR_HEIGHT}
+          />
         </View>
       );
     });
@@ -82,23 +153,44 @@ export const QuranPage: React.FC<Props> = ({ pageNumber, activeChapter, activeVe
       const x = width * m.centerX;
       const y = scaledImageHeight * m.centerY - cropOffset;
       return (
-        <View key={`fasel-${m.verseID}`} pointerEvents="none" style={{ position: "absolute", left: x - FASEL_WIDTH / 2, top: y - FASEL_HEIGHT / 2 + FASEL_CENTER_Y_OFFSET }}>
+        <TouchableOpacity
+          key={`fasel-${m.verseID}`}
+          style={{
+            position: "absolute",
+            left: x - FASEL_WIDTH / 2,
+            top: y - FASEL_HEIGHT / 2 + FASEL_CENTER_Y_OFFSET,
+          }}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          onPress={() => handleVerseMarkerPress(m.verseID)}
+        >
           <VerseFasel number={m.number} scale={LINE_SCALE} />
-        </View>
+        </TouchableOpacity>
       );
     });
   };
 
   const renderHighlights = (lineIndex: number) => {
     if (!page || !activeVerse || !activeChapter) return null;
-    const versesToHighlight = page.verses1441.filter((v) => v.chapter_id === activeChapter && v.number === activeVerse);
+    const versesToHighlight = page.verses1441.filter(
+      (v) => v.chapter_id === activeChapter && v.number === activeVerse,
+    );
     return versesToHighlight.map((v) => {
       const highlights = v.highlights1441.filter((h) => h.line === lineIndex);
       return highlights.map((h, i) => {
         const left = width * h.left_position;
         const w = width * (h.right_position - h.left_position);
         return (
-          <View key={`${v.verseID}-${i}`} style={{ position: "absolute", left: left, width: w, height: "100%", backgroundColor: "rgba(88, 168, 105, 0.4)", borderRadius: 4 }} />
+          <View
+            key={`${v.verseID}-${i}`}
+            style={{
+              position: "absolute",
+              left: left,
+              width: w,
+              height: "100%",
+              backgroundColor: "rgba(88, 168, 105, 0.4)",
+              borderRadius: 4,
+            }}
+          />
         );
       });
     });
@@ -111,7 +203,11 @@ export const QuranPage: React.FC<Props> = ({ pageNumber, activeChapter, activeVe
       lines.push(
         <View key={i} style={{ width, height: LINE_HEIGHT }}>
           {lineImageSource && (
-            <Image source={lineImageSource} style={{ width, height: LINE_HEIGHT }} resizeMode="stretch" />
+            <Image
+              source={lineImageSource}
+              style={{ width, height: LINE_HEIGHT }}
+              resizeMode="stretch"
+            />
           )}
           {renderSurahTitleBackgrounds(i)}
           {renderVerseMarkers(i)}
@@ -122,7 +218,7 @@ export const QuranPage: React.FC<Props> = ({ pageNumber, activeChapter, activeVe
     return lines;
   };
 
-   if (loading) {
+  if (loading) {
     return (
       <View style={[styles.container, styles.center]}>
         <ActivityIndicator size="large" color="#8B4513" />
@@ -130,7 +226,7 @@ export const QuranPage: React.FC<Props> = ({ pageNumber, activeChapter, activeVe
     );
   }
 
-   if (error) {
+  if (error) {
     return (
       <View style={[styles.container, styles.center, { padding: 20 }]}>
         <Text style={styles.errorText}>{error}</Text>
@@ -144,15 +240,38 @@ export const QuranPage: React.FC<Props> = ({ pageNumber, activeChapter, activeVe
   return (
     <View style={styles.container}>
       <View style={styles.linesContainer}>{renderLines()}</View>
+      {popupVisible && (
+        <VersePopup
+          visible={popupVisible}
+          verse={selectedVerse}
+          chapter={selectedChapter}
+          onClose={handlePopupClose}
+        />
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#FFF8E1", justifyContent: "center" },
+  container: {
+    flex: 1,
+    backgroundColor: "#FFF8E1",
+    justifyContent: "center",
+  },
   linesContainer: { flexDirection: "column", justifyContent: "center" },
   center: { alignItems: "center", justifyContent: "center" },
-  errorText: { color: "#D32F2F", fontSize: 16, textAlign: "center", marginBottom: 15, fontFamily: "System" },
-  retryButton: { backgroundColor: "#8B4513", paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 },
+  errorText: {
+    color: "#D32F2F",
+    fontSize: 16,
+    textAlign: "center",
+    marginBottom: 15,
+    fontFamily: "System",
+  },
+  retryButton: {
+    backgroundColor: "#8B4513",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
   retryText: { color: "white", fontWeight: "bold" },
 });
