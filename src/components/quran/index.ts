@@ -2,7 +2,12 @@
 
 export { QuranView } from "./QuranView";
 export { useQuranData } from "./useQuranData";
-export { VersePopup } from "./VersePopup";
+export {
+  VersePopup,
+  shareVerse,
+  copyVerse,
+  formatVerseForSharing,
+} from "./VersePopup";
 export { ChapterPopup } from "./ChapterPopup";
 
 // Types

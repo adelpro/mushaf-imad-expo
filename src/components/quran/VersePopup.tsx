@@ -7,15 +7,54 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  Share,
+  Alert,
 } from "react-native";
+import * as Clipboard from "expo-clipboard";
 import { Verse, Chapter } from "./types";
+
+export function formatVerseForSharing(
+  verse: Verse,
+  chapter: Chapter | null,
+): string {
+  const verseText = verse.text || verse.textWithoutTashkil || "";
+  const chapterName = chapter?.arabicTitle || "";
+  const reference = chapterName
+    ? `[سورة ${chapterName}، الآية ${verse.number}]`
+    : `[${verse.humanReadableID}]`;
+  return `﴿ ${verseText} ﴾\n${reference}`;
+}
+
+export async function shareVerse(
+  verse: Verse,
+  chapter: Chapter | null,
+): Promise<void> {
+  const message = formatVerseForSharing(verse, chapter);
+  try {
+    await Share.share({ message });
+  } catch {
+    Alert.alert("خطأ", "تعذرت المشاركة");
+  }
+}
+
+export async function copyVerse(
+  verse: Verse,
+  chapter: Chapter | null,
+): Promise<void> {
+  const message = formatVerseForSharing(verse, chapter);
+  try {
+    await Clipboard.setStringAsync(message);
+    Alert.alert("تم النسخ", "تم نسخ الآية إلى الحافظة");
+  } catch {
+    Alert.alert("خطأ", "تعذر النسخ");
+  }
+}
 
 interface VersePopupProps {
   visible: boolean;
   verse: Verse | null;
   chapter: Chapter | null;
   onClose: () => void;
-  onLongPress?: () => void;
 }
 
 export const VersePopup: React.FC<VersePopupProps> = ({
@@ -23,7 +62,6 @@ export const VersePopup: React.FC<VersePopupProps> = ({
   verse,
   chapter,
   onClose,
-  onLongPress,
 }) => {
   if (!verse) return null;
 
@@ -34,15 +72,17 @@ export const VersePopup: React.FC<VersePopupProps> = ({
       animationType="fade"
       onRequestClose={onClose}
     >
-      <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={onClose}>
+      <TouchableOpacity
+        style={styles.overlay}
+        activeOpacity={1}
+        onPress={onClose}
+      >
         <TouchableOpacity activeOpacity={1} style={styles.modal}>
           <View style={styles.header}>
             <Text style={styles.chapterName}>
               سورة {chapter?.arabicTitle || ""}
             </Text>
-            <Text style={styles.verseNumber}>
-              الآية {verse.number}
-            </Text>
+            <Text style={styles.verseNumber}>الآية {verse.number}</Text>
           </View>
 
           <ScrollView style={styles.content}>
@@ -57,80 +97,19 @@ export const VersePopup: React.FC<VersePopupProps> = ({
               <Text style={styles.buttonText}>إغلاق</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.button, styles.primaryButton]}
-              onPress={onLongPress}
+              style={[styles.button, styles.shareButton]}
+              onPress={() => shareVerse(verse, chapter)}
             >
-              <Text style={[styles.buttonText, styles.primaryButtonText]}>
-                نسخ
+              <Text style={[styles.buttonText, styles.shareButtonText]}>
+                مشاركة
               </Text>
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
-      </TouchableOpacity>
-    </Modal>
-  );
-};
-
-interface ChapterPopupProps {
-  visible: boolean;
-  chapter: Chapter | null;
-  pageNumber: number;
-  onClose: () => void;
-  onLongPress?: () => void;
-}
-
-export const ChapterPopup: React.FC<ChapterPopupProps> = ({
-  visible,
-  chapter,
-  pageNumber,
-  onClose,
-  onLongPress,
-}) => {
-  if (!chapter) return null;
-
-  return (
-    <Modal
-      transparent
-      visible={visible}
-      animationType="fade"
-      onRequestClose={onClose}
-    >
-      <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={onClose}>
-        <TouchableOpacity activeOpacity={1} style={styles.modal}>
-          <View style={styles.header}>
-            <Text style={styles.chapterName}>
-              سورة {chapter.arabicTitle}
-            </Text>
-            <Text style={styles.englishName}>{chapter.englishTitle}</Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>رقم السورة</Text>
-              <Text style={styles.infoValue}>{chapter.number}</Text>
-            </View>
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>نوع</Text>
-              <Text style={styles.infoValue}>
-                {chapter.isMeccan ? "مكية" : "مدنية"}
-              </Text>
-            </View>
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>الصفحة</Text>
-              <Text style={styles.infoValue}>{pageNumber}</Text>
-            </View>
-          </View>
-
-          <View style={styles.footer}>
-            <TouchableOpacity style={styles.button} onPress={onClose}>
-              <Text style={styles.buttonText}>إغلاق</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.button, styles.primaryButton]}
-              onPress={onLongPress}
+              onPress={() => copyVerse(verse, chapter)}
             >
               <Text style={[styles.buttonText, styles.primaryButtonText]}>
-                تفاصيل
+                نسخ
               </Text>
             </TouchableOpacity>
           </View>
@@ -175,11 +154,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#666",
   },
-  englishName: {
-    fontSize: 14,
-    color: "#888",
-    marginTop: 2,
-  },
   content: {
     padding: 16,
     maxHeight: 300,
@@ -197,24 +171,6 @@ const styles = StyleSheet.create({
     color: "#666",
     fontStyle: "italic",
   },
-  infoRow: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    padding: 16,
-  },
-  infoItem: {
-    alignItems: "center",
-  },
-  infoLabel: {
-    fontSize: 12,
-    color: "#888",
-    marginBottom: 4,
-  },
-  infoValue: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#1B5E20",
-  },
   footer: {
     flexDirection: "row",
     justifyContent: "space-around",
@@ -226,6 +182,13 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 24,
     borderRadius: 8,
+  },
+  shareButton: {
+    backgroundColor: "#0D47A1",
+  },
+  shareButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "600",
   },
   primaryButton: {
     backgroundColor: "#1B5E20",
