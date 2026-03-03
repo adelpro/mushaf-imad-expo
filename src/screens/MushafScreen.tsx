@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import {
   Dimensions,
   FlatList,
@@ -7,7 +7,8 @@ import {
   ViewToken,
 } from "react-native";
 import { AudioPlayerBar } from "../components/AudioPlayerBar";
-import { QuranPage } from "../components/QuranPage";
+import { QuranPage, VerseLongPressEvent } from "../components/QuranPage";
+import { TafsirPopup } from "../components/TafsirPopup";
 import { databaseService } from "../services/SQLiteService";
 
 const { height, width } = Dimensions.get("window");
@@ -19,6 +20,12 @@ type ViewableItemsChangedInfo = {
 export function MushafScreen() {
   const [currentChapter, setCurrentChapter] = useState(1);
   const [activeVerse, setActiveVerse] = useState<number | null>(null);
+  const [tafsirState, setTafsirState] = useState<{
+    visible: boolean;
+    chapterId: number | null;
+    verseNumber: number | null;
+    chapterName: string;
+  }>({ visible: false, chapterId: null, verseNumber: null, chapterName: "" });
   const pages = Array.from({ length: 604 }, (_, i) => i + 1);
 
   async function updateChapter(pageNumber: number) {
@@ -38,6 +45,27 @@ export function MushafScreen() {
       console.log("Error getting chapter", error);
     }
   }
+
+  const handleVerseLongPress = useCallback(
+    async (event: VerseLongPressEvent) => {
+      let chapterName = "";
+      try {
+        const chapter = await databaseService.getChapterByNumber(
+          event.chapterId,
+        );
+        chapterName = chapter?.arabicTitle ?? "";
+      } catch {
+        // Use empty chapter name if lookup fails
+      }
+      setTafsirState({
+        visible: true,
+        chapterId: event.chapterId,
+        verseNumber: event.verseNumber,
+        chapterName,
+      });
+    },
+    [],
+  );
 
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: ViewableItemsChangedInfo) => {
@@ -75,6 +103,7 @@ export function MushafScreen() {
             <QuranPage
               activeChapter={currentChapter}
               activeVerse={activeVerse}
+              onVerseLongPress={handleVerseLongPress}
               pageNumber={item}
             />
           </View>
@@ -89,6 +118,15 @@ export function MushafScreen() {
           onVerseChange={(verse) => setActiveVerse(verse)}
         /> */}
       </View>
+      <TafsirPopup
+        visible={tafsirState.visible}
+        chapterId={tafsirState.chapterId}
+        verseNumber={tafsirState.verseNumber}
+        chapterName={tafsirState.chapterName}
+        onClose={() =>
+          setTafsirState((prev) => ({ ...prev, visible: false }))
+        }
+      />
     </View>
   );
 }
