@@ -1,25 +1,28 @@
-import React, { useRef, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
-  Dimensions,
   FlatList,
   StyleSheet,
+  useWindowDimensions,
   View,
   ViewToken,
 } from "react-native";
-import { AudioPlayerBar } from "../components/AudioPlayerBar";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { QuranPage } from "../components/QuranPage";
 import { databaseService } from "../services/SQLiteService";
 
-const { height, width } = Dimensions.get("window");
+const BOTTOM_BAR_HEIGHT = 60;
 
 type ViewableItemsChangedInfo = {
   viewableItems: ViewToken[];
 };
 
 export function MushafScreen() {
+  const { height, width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const pageHeight = Math.max(0, height - insets.top - insets.bottom - BOTTOM_BAR_HEIGHT);
   const [currentChapter, setCurrentChapter] = useState(1);
   const [activeVerse, setActiveVerse] = useState<number | null>(null);
-  const pages = Array.from({ length: 604 }, (_, i) => i + 1);
+  const pages = useMemo(() => Array.from({ length: 604 }, (_, i) => i + 1), []);
 
   async function updateChapter(pageNumber: number) {
     try {
@@ -35,7 +38,7 @@ export function MushafScreen() {
         }
       }
     } catch (error) {
-      console.log("Error getting chapter", error);
+      console.error("Error getting chapter", error);
     }
   }
 
@@ -53,15 +56,25 @@ export function MushafScreen() {
     },
   ).current;
 
+  const getItemLayout = useCallback(
+    (_: ArrayLike<number> | null | undefined, index: number) => ({
+      index,
+      length: width,
+      offset: width * index,
+    }),
+    [width],
+  );
+
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <FlatList
         data={pages}
-        getItemLayout={(_, index) => ({
-          index,
-          length: width,
-          offset: width * index,
-        })}
+        getItemLayout={getItemLayout}
         horizontal
         initialNumToRender={1}
         inverted
@@ -71,7 +84,7 @@ export function MushafScreen() {
         pagingEnabled
         removeClippedSubviews
         renderItem={({ item }) => (
-          <View style={{ height: height - 60, width }}>
+          <View style={{ height: pageHeight, width }}>
             <QuranPage
               activeChapter={currentChapter}
               activeVerse={activeVerse}
@@ -83,7 +96,7 @@ export function MushafScreen() {
         viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
         windowSize={3}
       />
-      <View style={{ height: 60 }}>
+      <View style={{ height: BOTTOM_BAR_HEIGHT }}>
         {/* <AudioPlayerBar
           chapterNumber={currentChapter}
           onVerseChange={(verse) => setActiveVerse(verse)}
