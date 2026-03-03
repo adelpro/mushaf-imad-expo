@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Dimensions,
   FlatList,
@@ -9,6 +9,7 @@ import {
 import { AudioPlayerBar } from "../components/AudioPlayerBar";
 import { QuranPage } from "../components/QuranPage";
 import { databaseService } from "../services/SQLiteService";
+import { versePageIndex } from "../services/VersePageIndex";
 
 const { height, width } = Dimensions.get("window");
 
@@ -19,25 +20,39 @@ type ViewableItemsChangedInfo = {
 export function MushafScreen() {
   const [currentChapter, setCurrentChapter] = useState(1);
   const [activeVerse, setActiveVerse] = useState<number | null>(null);
+  const currentChapterRef = useRef(1);
+  const currentPageRef = useRef(1);
+  const flatListRef = useRef<FlatList<number>>(null);
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastScrollTargetRef = useRef<number | null>(null);
+  const updateGenRef = useRef(0);
   const pages = Array.from({ length: 604 }, (_, i) => i + 1);
 
-  async function updateChapter(pageNumber: number) {
+  useEffect(() => {
+    return () => {
+      if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+    };
+  }, []);
+
+  const updateChapter = useCallback(async (pageNumber: number) => {
+    const gen = ++updateGenRef.current;
     try {
       const page = await databaseService.getPageByNumber(pageNumber);
+      if (gen !== updateGenRef.current) return;
 
       const chapterNum = page?.verses1441?.[0]?.chapter_id ?? null;
       if (chapterNum) {
         const chapter = await databaseService.getChapterByNumber(chapterNum);
+        if (gen !== updateGenRef.current) return;
         if (chapter) {
-          setCurrentChapter((prev) =>
-            chapter.number !== prev ? chapter.number : prev,
-          );
+          currentChapterRef.current = chapter.number;
+          setCurrentChapter(chapter.number);
         }
       }
-    } catch (error) {
-      console.log("Error getting chapter", error);
+    } catch {
+      // Non-critical chapter lookup failure
     }
-  }
+  }, []);
 
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: ViewableItemsChangedInfo) => {
@@ -48,14 +63,36 @@ export function MushafScreen() {
           : Number.parseInt(first?.key ?? "", 10);
 
       if (Number.isFinite(pageNum)) {
+        currentPageRef.current = pageNum;
         void updateChapter(pageNum);
       }
     },
   ).current;
 
+  const handleVerseChange = useCallback(
+    (verseNumber: number | null) => {
+      setActiveVerse(verseNumber);
+      if (verseNumber === null || verseNumber === 0) return;
+
+      const chapter = currentChapterRef.current;
+      const page = currentPageRef.current;
+      versePageIndex
+        .getPageForVerse(chapter, verseNumber)
+        .then((targetPage) => {
+          if (!targetPage || targetPage === page) return;
+          const index = targetPage - 1;
+          lastScrollTargetRef.current = index;
+          flatListRef.current?.scrollToIndex({ index, animated: true });
+        })
+        .catch(() => {});
+    },
+    [],
+  );
+
   return (
     <View style={styles.container}>
       <FlatList
+        ref={flatListRef}
         data={pages}
         getItemLayout={(_, index) => ({
           index,
@@ -67,6 +104,14 @@ export function MushafScreen() {
         inverted
         keyExtractor={(item) => item.toString()}
         maxToRenderPerBatch={2}
+        onScrollToIndexFailed={({ index }) => {
+          if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+          retryTimerRef.current = setTimeout(() => {
+            if (lastScrollTargetRef.current === index) {
+              flatListRef.current?.scrollToIndex({ index, animated: true });
+            }
+          }, 500);
+        }}
         onViewableItemsChanged={onViewableItemsChanged}
         pagingEnabled
         removeClippedSubviews
@@ -83,12 +128,10 @@ export function MushafScreen() {
         viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
         windowSize={3}
       />
-      <View style={{ height: 60 }}>
-        {/* <AudioPlayerBar
-          chapterNumber={currentChapter}
-          onVerseChange={(verse) => setActiveVerse(verse)}
-        /> */}
-      </View>
+      <AudioPlayerBar
+        chapterNumber={currentChapter}
+        onVerseChange={handleVerseChange}
+      />
     </View>
   );
 }
