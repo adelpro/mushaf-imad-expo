@@ -1,30 +1,55 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
-  Dimensions,
   FlatList,
   StyleSheet,
   View,
   ViewToken,
+  useWindowDimensions,
 } from "react-native";
-import { AudioPlayerBar } from "../components/AudioPlayerBar";
+import * as ScreenOrientation from "expo-screen-orientation";
 import { QuranPage } from "../components/QuranPage";
 import { databaseService } from "../services/SQLiteService";
-
-const { height, width } = Dimensions.get("window");
 
 type ViewableItemsChangedInfo = {
   viewableItems: ViewToken[];
 };
 
 export function MushafScreen() {
+  const { height, width } = useWindowDimensions();
+  const [orientation, setOrientation] = useState<ScreenOrientation.Orientation>(
+    ScreenOrientation.Orientation.PORTRAIT_UP,
+  );
   const [currentChapter, setCurrentChapter] = useState(1);
   const [activeVerse, setActiveVerse] = useState<number | null>(null);
   const pages = Array.from({ length: 604 }, (_, i) => i + 1);
 
+  useEffect(() => {
+    // Get initial orientation
+    ScreenOrientation.getOrientationAsync().then(setOrientation);
+
+    // Listen for orientation changes
+    const subscription = ScreenOrientation.addOrientationChangeListener(
+      (event) => {
+        setOrientation(event.orientationInfo.orientation);
+      },
+    );
+
+    return () => {
+      ScreenOrientation.removeOrientationChangeListener(subscription);
+    };
+  }, []);
+
+  const isLandscape =
+    orientation === ScreenOrientation.Orientation.LANDSCAPE_LEFT ||
+    orientation === ScreenOrientation.Orientation.LANDSCAPE_RIGHT;
+
+  // Reserve less space for controls in landscape
+  const controlsHeight = isLandscape ? 40 : 60;
+  const pageHeight = height - controlsHeight;
+
   async function updateChapter(pageNumber: number) {
     try {
       const page = await databaseService.getPageByNumber(pageNumber);
-
       const chapterNum = page?.verses1441?.[0]?.chapter_id ?? null;
       if (chapterNum) {
         const chapter = await databaseService.getChapterByNumber(chapterNum);
@@ -71,7 +96,7 @@ export function MushafScreen() {
         pagingEnabled
         removeClippedSubviews
         renderItem={({ item }) => (
-          <View style={{ height: height - 60, width }}>
+          <View style={{ height: pageHeight, width }}>
             <QuranPage
               activeChapter={currentChapter}
               activeVerse={activeVerse}
@@ -83,12 +108,7 @@ export function MushafScreen() {
         viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
         windowSize={3}
       />
-      <View style={{ height: 60 }}>
-        {/* <AudioPlayerBar
-          chapterNumber={currentChapter}
-          onVerseChange={(verse) => setActiveVerse(verse)}
-        /> */}
-      </View>
+      <View style={{ height: controlsHeight }} />
     </View>
   );
 }

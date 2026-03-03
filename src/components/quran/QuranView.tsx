@@ -3,11 +3,11 @@ import React, { useState, useCallback, useMemo } from "react";
 import {
   View,
   Image,
-  Dimensions,
   TouchableOpacity,
   ActivityIndicator,
   Text,
   StyleSheet,
+  useWindowDimensions,
 } from "react-native";
 import { useQuranData } from "./useQuranData";
 import { DEFAULT_CONFIG } from "./constants";
@@ -25,8 +25,6 @@ import { VerseFasel } from "../../components/VerseFasel";
 import { QuranImages } from "../../constants/imageMap";
 import { VersePopup } from "./VersePopup";
 import { ChapterPopup } from "./ChapterPopup";
-
-const { width } = Dimensions.get("window");
 
 interface VersePosition {
   verse: Verse;
@@ -48,6 +46,7 @@ export function QuranView({
   onChapterPress,
   onChapterLongPress,
 }: QuranViewProps) {
+  const { width } = useWindowDimensions();
   const { page, loading, error } = useQuranData(pageNumber);
 
   const [selectedVerse, setSelectedVerse] = useState<Verse | null>(null);
@@ -78,14 +77,7 @@ export function QuranView({
   );
 
   const markersByLine = useMemo(() => {
-    const map = new Map<
-      number,
-      Array<{
-        verse: Verse;
-        centerX: number;
-        centerY: number;
-      }>
-    >();
+    const map = new Map<number, Array<{ verse: Verse; centerX: number; centerY: number }>>();
 
     if (!page) return map;
 
@@ -93,27 +85,16 @@ export function QuranView({
 
     verses.forEach((verse: Verse) => {
       const marker = layout === 1441 ? verse.marker1441 : verse.marker1405;
-      if (
-        !marker ||
-        marker.line === null ||
-        marker.centerX === null ||
-        marker.centerY === null
-      )
+      if (!marker || marker.line === null || marker.centerX === null || marker.centerY === null)
         return;
 
       const list = map.get(marker.line) ?? [];
-      list.push({
-        verse,
-        centerX: marker.centerX,
-        centerY: marker.centerY,
-      });
+      list.push({ verse, centerX: marker.centerX, centerY: marker.centerY });
       map.set(marker.line, list);
     });
 
     for (const list of map.values()) {
-      list.sort(
-        (a, b) => a.centerX - b.centerX || a.verse.number - b.verse.number,
-      );
+      list.sort((a, b) => a.centerX - b.centerX || a.verse.number - b.verse.number);
     }
 
     return map;
@@ -158,15 +139,8 @@ export function QuranView({
 
   const handleVersePress = useCallback(
     (verse: Verse, x: number, y: number) => {
-      console.log("[QuranView] onVersePress:", {
-        verseNumber: verse.number,
-        chapterId: verse.chapter_id,
-        pageNumber,
-        position: { x, y },
-      });
       setSelectedVerse(verse);
       setVersePopupVisible(true);
-
       const event: VersePressEvent = {
         verse,
         page: pageNumber,
@@ -180,12 +154,6 @@ export function QuranView({
 
   const handleVerseLongPress = useCallback(
     (verse: Verse, x: number, y: number) => {
-      console.log("[QuranView] onVerseLongPress:", {
-        verseNumber: verse.number,
-        chapterId: verse.chapter_id,
-        pageNumber,
-        position: { x, y },
-      });
       const event: VersePressEvent = {
         verse,
         page: pageNumber,
@@ -199,14 +167,8 @@ export function QuranView({
 
   const handleChapterPress = useCallback(
     (chapter: Chapter, x: number, y: number) => {
-      console.log("[QuranView] onChapterPress:", {
-        chapterNumber: chapter.number,
-        pageNumber,
-        position: { x, y },
-      });
       setSelectedChapter(chapter);
       setChapterPopupVisible(true);
-
       const event: ChapterPressEvent = {
         chapter,
         page: pageNumber,
@@ -219,11 +181,6 @@ export function QuranView({
 
   const handleChapterLongPress = useCallback(
     (chapter: Chapter, x: number, y: number) => {
-      console.log("[QuranView] onChapterLongPress:", {
-        chapterNumber: chapter.number,
-        pageNumber,
-        position: { x, y },
-      });
       const event: ChapterPressEvent = {
         chapter,
         page: pageNumber,
@@ -237,8 +194,7 @@ export function QuranView({
   const renderSuraNameBars = (lineIndex: number) => {
     if (!page || !showSuraName) return null;
 
-    const headers =
-      layout === 1441 ? page.chapterHeaders1441 : page.chapterHeaders1405;
+    const headers = layout === 1441 ? page.chapterHeaders1441 : page.chapterHeaders1405;
     const matchingHeaders = headers.filter(
       (header: ChapterHeader) => header.line === lineIndex,
     );
@@ -252,26 +208,10 @@ export function QuranView({
       return (
         <TouchableOpacity
           key={`surah-title-${lineIndex}-${i}`}
-          style={{
-            position: "absolute",
-            left,
-            top,
-          }}
+          style={{ position: "absolute", left, top }}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          onPress={() =>
-            handleChapterPress(
-              createChapter(header.chapter_id),
-              centerX,
-              centerY,
-            )
-          }
-          onLongPress={() =>
-            handleChapterLongPress(
-              createChapter(header.chapter_id),
-              centerX,
-              centerY,
-            )
-          }
+          onPress={() => handleChapterPress(createChapter(header.chapter_id), centerX, centerY)}
+          onLongPress={() => handleChapterLongPress(createChapter(header.chapter_id), centerX, centerY)}
         >
           <SuraNameBar width={suraNameBarWidth} height={suraNameBarHeight} />
         </TouchableOpacity>
@@ -360,20 +300,8 @@ export function QuranView({
           backgroundColor: "transparent",
         }}
         hitSlop={{ top: 5, bottom: 5, left: 10, right: 10 }}
-        onPress={(e) =>
-          handleVersePress(
-            vp.verse,
-            e.nativeEvent.locationX,
-            e.nativeEvent.locationY,
-          )
-        }
-        onLongPress={(e) =>
-          handleVerseLongPress(
-            vp.verse,
-            e.nativeEvent.locationX,
-            e.nativeEvent.locationY,
-          )
-        }
+        onPress={(e) => handleVersePress(vp.verse, e.nativeEvent.locationX, e.nativeEvent.locationY)}
+        onLongPress={(e) => handleVerseLongPress(vp.verse, e.nativeEvent.locationX, e.nativeEvent.locationY)}
       />
     ));
   };
@@ -422,9 +350,7 @@ export function QuranView({
   if (error || !page) {
     return (
       <View style={styles.center}>
-        <Text style={styles.errorText}>
-          {error?.message || "Page not found"}
-        </Text>
+        <Text style={styles.errorText}>{error?.message || "Page not found"}</Text>
       </View>
     );
   }

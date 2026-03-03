@@ -3,27 +3,17 @@ import {
   View,
   Image,
   StyleSheet,
-  Dimensions,
   ActivityIndicator,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
 } from "react-native";
 import { useQuranPage } from "../hooks/useQuranPage";
 import SuraNameBar from "../../assets/images/sura_name_bar.svg";
 import { VerseFasel } from "./VerseFasel";
 import { QuranImages } from "../constants/imageMap";
 
-const { width } = Dimensions.get("window");
- const LINE_ASPECT_RATIO = 1440 / 232;
-const LINE_HEIGHT = width / LINE_ASPECT_RATIO;
-const SURA_NAME_BAR_WIDTH = width * 0.9;
-const SURA_NAME_BAR_HEIGHT = LINE_HEIGHT * 0.8;
-const LINE_SCALE = width / 1440;
-const FASEL_BALANCE = 3.69;
-const FASEL_WIDTH = 21 * FASEL_BALANCE * LINE_SCALE;
-const FASEL_HEIGHT = 27 * FASEL_BALANCE * LINE_SCALE;
-const SURA_NAME_BAR_CENTER_Y_OFFSET = 6 * LINE_SCALE;
-const FASEL_CENTER_Y_OFFSET = 8 * LINE_SCALE;
+const LINE_ASPECT_RATIO = 1440 / 232;
 
 const resolveLineImage = (pageNumber: number, lineIndex: number): number | undefined => {
   const pageImages = QuranImages[pageNumber];
@@ -38,9 +28,20 @@ interface Props {
 }
 
 export const QuranPage: React.FC<Props> = ({ pageNumber, activeChapter, activeVerse }) => {
+  const { width } = useWindowDimensions();
   const { page, loading, error, retry } = useQuranPage(pageNumber);
 
-   const markersByLine = React.useMemo(() => {
+  const LINE_HEIGHT = width / LINE_ASPECT_RATIO;
+  const SURA_NAME_BAR_WIDTH = width * 0.9;
+  const SURA_NAME_BAR_HEIGHT = LINE_HEIGHT * 0.8;
+  const LINE_SCALE = width / 1440;
+  const FASEL_BALANCE = 3.69;
+  const FASEL_WIDTH = 21 * FASEL_BALANCE * LINE_SCALE;
+  const FASEL_HEIGHT = 27 * FASEL_BALANCE * LINE_SCALE;
+  const SURA_NAME_BAR_CENTER_Y_OFFSET = 6 * LINE_SCALE;
+  const FASEL_CENTER_Y_OFFSET = 8 * LINE_SCALE;
+
+  const markersByLine = React.useMemo(() => {
     const map = new Map<number, Array<{ verseID: number; number: number; centerX: number; centerY: number; }>>();
     if (page) {
       page.verses1441.forEach((verse) => {
@@ -122,7 +123,7 @@ export const QuranPage: React.FC<Props> = ({ pageNumber, activeChapter, activeVe
     return lines;
   };
 
-   if (loading) {
+  if (loading) {
     return (
       <View style={[styles.container, styles.center]}>
         <ActivityIndicator size="large" color="#8B4513" />
@@ -130,7 +131,7 @@ export const QuranPage: React.FC<Props> = ({ pageNumber, activeChapter, activeVe
     );
   }
 
-   if (error) {
+  if (error) {
     return (
       <View style={[styles.container, styles.center, { padding: 20 }]}>
         <Text style={styles.errorText}>{error}</Text>
