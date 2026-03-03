@@ -1,13 +1,15 @@
 import React, { useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Dimensions,
   FlatList,
   StyleSheet,
   View,
   ViewToken,
 } from "react-native";
-import { AudioPlayerBar } from "../components/AudioPlayerBar";
 import { QuranPage } from "../components/QuranPage";
+import { ProgressBar } from "../components/ProgressBar";
+import { useReadingProgress, TOTAL_PAGES } from "../hooks/useReadingProgress";
 import { databaseService } from "../services/SQLiteService";
 
 const { height, width } = Dimensions.get("window");
@@ -19,7 +21,10 @@ type ViewableItemsChangedInfo = {
 export function MushafScreen() {
   const [currentChapter, setCurrentChapter] = useState(1);
   const [activeVerse, setActiveVerse] = useState<number | null>(null);
-  const pages = Array.from({ length: 604 }, (_, i) => i + 1);
+  const { lastReadPage, saveProgress, progressPercent } = useReadingProgress();
+  const [currentPage, setCurrentPage] = useState<number | null>(null);
+  const flatListRef = useRef<FlatList<number>>(null);
+  const pages = Array.from({ length: TOTAL_PAGES }, (_, i) => i + 1);
 
   async function updateChapter(pageNumber: number) {
     try {
@@ -35,7 +40,7 @@ export function MushafScreen() {
         }
       }
     } catch (error) {
-      console.log("Error getting chapter", error);
+      console.error("Error getting chapter", error);
     }
   }
 
@@ -48,14 +53,25 @@ export function MushafScreen() {
           : Number.parseInt(first?.key ?? "", 10);
 
       if (Number.isFinite(pageNum)) {
+        setCurrentPage(pageNum);
+        saveProgress(pageNum);
         void updateChapter(pageNum);
       }
     },
   ).current;
 
+  if (lastReadPage === null) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <ActivityIndicator size="large" color="#8B4513" />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <FlatList
+        ref={flatListRef}
         data={pages}
         getItemLayout={(_, index) => ({
           index,
@@ -64,6 +80,7 @@ export function MushafScreen() {
         })}
         horizontal
         initialNumToRender={1}
+        initialScrollIndex={lastReadPage - 1}
         inverted
         keyExtractor={(item) => item.toString()}
         maxToRenderPerBatch={2}
@@ -84,10 +101,11 @@ export function MushafScreen() {
         windowSize={3}
       />
       <View style={{ height: 60 }}>
-        {/* <AudioPlayerBar
-          chapterNumber={currentChapter}
-          onVerseChange={(verse) => setActiveVerse(verse)}
-        /> */}
+        <ProgressBar
+          percent={progressPercent}
+          currentPage={currentPage ?? lastReadPage ?? 1}
+          totalPages={TOTAL_PAGES}
+        />
       </View>
     </View>
   );
@@ -97,5 +115,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#FFF8E1",
+  },
+  center: {
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
