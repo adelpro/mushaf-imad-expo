@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
 
 import { MushafScreen } from "./src/screens/MushafScreen";
@@ -28,17 +28,21 @@ export default function App() {
 
   if (!fontsLoaded) {
     return (
-      <View style={styles.loader}>
-        <ActivityIndicator size="large" />
-      </View>
+      <SafeAreaProvider>
+        <View style={styles.loader}>
+          <ActivityIndicator size="large" />
+        </View>
+      </SafeAreaProvider>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" />
-      <MushafScreen />
-    </SafeAreaView>
+    <SafeAreaProvider>
+      <View style={styles.container}>
+        <StatusBar style="dark" />
+        <MushafScreen />
+      </View>
+    </SafeAreaProvider>
   );
 }
 
