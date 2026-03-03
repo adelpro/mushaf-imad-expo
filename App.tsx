@@ -6,6 +6,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
 
 import { MushafScreen } from "./src/screens/MushafScreen";
+import { DbLoadingScreen } from "./src/components/DbLoadingScreen";
+import { useDbInit } from "./src/hooks/useDbInit";
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
@@ -15,12 +17,15 @@ export default function App() {
   const [fontsLoaded, fontError] = useFonts({
     uthmanTn1Bold: require("./assets/fonts/UthmanTN1B-Ver20.ttf"),
   });
+  const { loading: dbLoading, error: dbError, retry: retryDb } = useDbInit();
 
   useEffect(() => {
-    if (fontsLoaded || fontError) {
+    if (fontError) {
+      void SplashScreen.hideAsync();
+    } else if (fontsLoaded && !dbLoading) {
       void SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, fontError]);
+  }, [fontsLoaded, fontError, dbLoading]);
 
   if (fontError) {
     throw fontError;
@@ -31,6 +36,15 @@ export default function App() {
       <View style={styles.loader}>
         <ActivityIndicator size="large" />
       </View>
+    );
+  }
+
+  if (dbLoading || dbError) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar style="dark" />
+        <DbLoadingScreen error={dbError} onRetry={retryDb} />
+      </SafeAreaView>
     );
   }
 
@@ -45,7 +59,7 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#FFF8E1",
   },
   loader: {
     flex: 1,
