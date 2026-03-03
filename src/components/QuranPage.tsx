@@ -31,13 +31,21 @@ const resolveLineImage = (pageNumber: number, lineIndex: number): number | undef
   return pageImages[lineIndex];
 };
 
+export interface VerseLongPressEvent {
+  verseID: number;
+  verseNumber: number;
+  chapterId: number;
+  pageNumber: number;
+}
+
 interface Props {
   pageNumber: number;
   activeChapter?: number;
   activeVerse?: number | null;
+  onVerseLongPress?: (event: VerseLongPressEvent) => void;
 }
 
-export const QuranPage: React.FC<Props> = ({ pageNumber, activeChapter, activeVerse }) => {
+export const QuranPage: React.FC<Props> = ({ pageNumber, activeChapter, activeVerse, onVerseLongPress }) => {
   const { page, loading, error, retry } = useQuranPage(pageNumber);
 
    const markersByLine = React.useMemo(() => {
@@ -56,6 +64,61 @@ export const QuranPage: React.FC<Props> = ({ pageNumber, activeChapter, activeVe
     }
     return map;
   }, [page]);
+
+  const verseContentByLine = React.useMemo(() => {
+    const map = new Map<number, Array<{ verseID: number; number: number; chapterId: number; minX: number; maxX: number }>>();
+    if (!page) return map;
+
+    for (const verse of page.verses1441) {
+      if (verse.chapter_id === null) continue;
+      for (const h of verse.highlights1441) {
+        const list = map.get(h.line) ?? [];
+        const existing = list.find((v) => v.verseID === verse.verseID);
+        if (existing) {
+          existing.minX = Math.min(existing.minX, h.left_position);
+          existing.maxX = Math.max(existing.maxX, h.right_position);
+        } else {
+          list.push({
+            verseID: verse.verseID,
+            number: verse.number,
+            chapterId: verse.chapter_id,
+            minX: h.left_position,
+            maxX: h.right_position,
+          });
+        }
+        map.set(h.line, list);
+      }
+    }
+    return map;
+  }, [page]);
+
+  const renderVerseContentAreas = (lineIndex: number) => {
+    if (!onVerseLongPress) return null;
+    const items = verseContentByLine.get(lineIndex);
+    if (!items) return null;
+
+    return items.map((v, i) => (
+      <TouchableOpacity
+        key={`verse-area-${v.verseID}-${lineIndex}-${i}`}
+        style={{
+          position: "absolute",
+          left: v.minX * width,
+          width: (v.maxX - v.minX) * width,
+          height: "100%",
+          backgroundColor: "transparent",
+        }}
+        activeOpacity={1}
+        onLongPress={() =>
+          onVerseLongPress({
+            verseID: v.verseID,
+            verseNumber: v.number,
+            chapterId: v.chapterId,
+            pageNumber,
+          })
+        }
+      />
+    ));
+  };
 
   const renderSurahTitleBackgrounds = (lineIndex: number) => {
     if (!page) return null;
@@ -116,6 +179,7 @@ export const QuranPage: React.FC<Props> = ({ pageNumber, activeChapter, activeVe
           {renderSurahTitleBackgrounds(i)}
           {renderVerseMarkers(i)}
           {renderHighlights(i)}
+          {renderVerseContentAreas(i)}
         </View>,
       );
     }
