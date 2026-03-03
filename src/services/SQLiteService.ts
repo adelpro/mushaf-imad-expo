@@ -127,6 +127,7 @@ class DatabaseService {
         );
 
         if (chapterCount && chapterCount.count > 0) {
+          await this.ensureUserProgressTable(existingDb);
           return existingDb;
         }
 
@@ -145,15 +146,19 @@ class DatabaseService {
         );
         await FileSystem.copyAsync({ from: asset.localUri, to: dbPath });
 
-        return SQLite.openDatabaseAsync(DB_NAME);
+        const copiedDb = await SQLite.openDatabaseAsync(DB_NAME);
+        await this.ensureUserProgressTable(copiedDb);
+        return copiedDb;
       }
 
       const newDb = await SQLite.openDatabaseAsync(DB_NAME);
       await this.initializeDatabase(newDb);
+      await this.ensureUserProgressTable(newDb);
       return newDb;
     } catch {
       const db = await SQLite.openDatabaseAsync(DB_NAME);
       await this.runMigrations(db);
+      await this.ensureUserProgressTable(db);
       return db;
     }
   }
@@ -518,6 +523,41 @@ class DatabaseService {
       highlights1441,
       highlights1405,
     };
+  }
+
+  async getLastReadPage(): Promise<number> {
+    const db = await this.getDb();
+    try {
+      const row = await db.getFirstAsync<{ last_read_page: number }>(
+        "SELECT last_read_page FROM user_progress WHERE id = 1",
+      );
+      const page = row?.last_read_page ?? 1;
+      return Math.max(1, Math.min(604, page));
+    } catch {
+      return 1;
+    }
+  }
+
+  async saveLastReadPage(page: number): Promise<void> {
+    if (!Number.isFinite(page) || page < 1 || page > 604) return;
+    const db = await this.getDb();
+    try {
+      await db.runAsync(
+        "INSERT INTO user_progress (id, last_read_page) VALUES (1, ?) ON CONFLICT(id) DO UPDATE SET last_read_page = excluded.last_read_page",
+        [page],
+      );
+    } catch (err) {
+      if (__DEV__) console.warn("[saveLastReadPage] failed:", err);
+    }
+  }
+
+  private async ensureUserProgressTable(db: SQLiteDb): Promise<void> {
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS user_progress (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        last_read_page INTEGER NOT NULL DEFAULT 1
+      );
+    `);
   }
 
   async getChapterByNumber(chapterNumber: number): Promise<Chapter | null> {
