@@ -11,6 +11,7 @@ import {
 import { useQuranPage } from "../hooks/useQuranPage";
 import SuraNameBar from "../../assets/images/sura_name_bar.svg";
 import { VerseFasel } from "./VerseFasel";
+import { ZoomableView } from "./ZoomableView";
 import { QuranImages } from "../constants/imageMap";
 
 const { width } = Dimensions.get("window");
@@ -35,9 +36,12 @@ interface Props {
   pageNumber: number;
   activeChapter?: number;
   activeVerse?: number | null;
+  onZoomChange?: (isZoomed: boolean) => void;
+  containerWidth?: number;
+  containerHeight?: number;
 }
 
-export const QuranPage: React.FC<Props> = ({ pageNumber, activeChapter, activeVerse }) => {
+export const QuranPage: React.FC<Props> = ({ pageNumber, activeChapter, activeVerse, onZoomChange, containerWidth, containerHeight }) => {
   const { page, loading, error, retry } = useQuranPage(pageNumber);
 
    const markersByLine = React.useMemo(() => {
@@ -143,7 +147,14 @@ export const QuranPage: React.FC<Props> = ({ pageNumber, activeChapter, activeVe
 
   return (
     <View style={styles.container}>
-      <View style={styles.linesContainer}>{renderLines()}</View>
+      <ZoomableView
+        pageNumber={pageNumber}
+        containerWidth={containerWidth ?? width}
+        containerHeight={containerHeight ?? width}
+        onZoomChange={onZoomChange}
+      >
+        <View style={styles.linesContainer}>{renderLines()}</View>
+      </ZoomableView>
     </View>
   );
 };

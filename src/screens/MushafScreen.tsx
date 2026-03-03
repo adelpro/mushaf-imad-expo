@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import {
   Dimensions,
   FlatList,
@@ -19,6 +19,11 @@ type ViewableItemsChangedInfo = {
 export function MushafScreen() {
   const [currentChapter, setCurrentChapter] = useState(1);
   const [activeVerse, setActiveVerse] = useState<number | null>(null);
+  const [isZoomed, setIsZoomed] = useState(false);
+
+  const handleZoomChange = useCallback((zoomed: boolean) => {
+    setIsZoomed(zoomed);
+  }, []);
   const pages = Array.from({ length: 604 }, (_, i) => i + 1);
 
   async function updateChapter(pageNumber: number) {
@@ -41,6 +46,7 @@ export function MushafScreen() {
 
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: ViewableItemsChangedInfo) => {
+      setIsZoomed(false);
       const first = viewableItems[0];
       const pageNum =
         typeof first?.item === "number"
@@ -70,12 +76,16 @@ export function MushafScreen() {
         onViewableItemsChanged={onViewableItemsChanged}
         pagingEnabled
         removeClippedSubviews
+        scrollEnabled={!isZoomed}
         renderItem={({ item }) => (
           <View style={{ height: height - 60, width }}>
             <QuranPage
               activeChapter={currentChapter}
               activeVerse={activeVerse}
               pageNumber={item}
+              onZoomChange={handleZoomChange}
+              containerWidth={width}
+              containerHeight={height - 60}
             />
           </View>
         )}
