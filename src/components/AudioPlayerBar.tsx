@@ -1,76 +1,112 @@
-import React, { useEffect, useState } from 'react';
-import { View, Button, StyleSheet, Text } from 'react-native';
-import { useAudioPlayer } from 'expo-audio';
-import { loadTiming } from '../services/AyahTimingService';
+import React, { useEffect } from "react";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useRecitationPlayer } from "../hooks/useRecitationPlayer";
 
 interface Props {
   chapterNumber: number;
-  onVerseChange: (verseNumber: number) => void;
+  onVerseChange: (verseNumber: number | null) => void;
 }
 
-export const AudioPlayerBar: React.FC<Props> = ({ chapterNumber, onVerseChange }) => {
-  const paddedChapter = chapterNumber.toString().padStart(3, '0');
-  const url = `https://server6.mp3quran.net/akdr/${paddedChapter}.mp3`;
-  
-  const player = useAudioPlayer(url);
-  const [timing, setTiming] = useState<any>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+export function AudioPlayerBar({ chapterNumber, onVerseChange }: Props) {
+  const {
+    isPlaying,
+    isLoaded,
+    activeVerse,
+    currentTimeMs,
+    durationMs,
+    progress,
+    hasEnded,
+    toggle,
+  } = useRecitationPlayer(chapterNumber);
 
   useEffect(() => {
-    loadTiming(1).then(data => {
-      if (data) {
-        const chapterData = data.chapters.find((c: any) => c.id === chapterNumber);
-        setTiming(chapterData);
-      }
-    });
-  }, [chapterNumber]);
+    onVerseChange(activeVerse);
+  }, [activeVerse, onVerseChange]);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // Check if player is playing. Note: player.playing might be a getter.
-      // We assume player object is stable but its properties change.
-      // However, hooks usually trigger re-render on change if they are stateful.
-      // If useAudioPlayer returns a plain object ref, we need to poll.
-      
-      const playing = player.playing;
-      if (playing !== isPlaying) {
-        setIsPlaying(playing);
-      }
-
-      if (playing && timing) {
-        const timeMs = player.currentTime * 1000;
-        const verse = timing.aya_timing.find((t: any) => timeMs >= t.start_time && timeMs < t.end_time);
-        if (verse) {
-          onVerseChange(verse.ayah);
-        }
-      }
-    }, 200);
-
-    return () => clearInterval(interval);
-  }, [player, timing, isPlaying, onVerseChange]);
-
-  const togglePlay = () => {
-    if (player.playing) {
-      player.pause();
-    } else {
-      player.play();
-    }
+  const formatTime = (ms: number): string => {
+    const totalSec = Math.floor(ms / 1000);
+    const min = Math.floor(totalSec / 60);
+    const sec = totalSec % 60;
+    return `${min}:${sec.toString().padStart(2, "0")}`;
   };
+
+  const buttonLabel = hasEnded ? "↻" : isPlaying ? "⏸" : "▶";
 
   return (
     <View style={styles.container}>
-      <Button title={isPlaying ? "Pause" : "Play"} onPress={togglePlay} />
-      <Text>{isPlaying ? "Playing" : "Paused"}</Text>
+      <TouchableOpacity
+        style={styles.playButton}
+        onPress={toggle}
+        disabled={!isLoaded}
+        accessibilityLabel={
+          hasEnded ? "إعادة التشغيل" : isPlaying ? "إيقاف مؤقت" : "تشغيل"
+        }
+        accessibilityRole="button"
+      >
+        <Text style={[styles.playIcon, !isLoaded && styles.disabled]}>
+          {buttonLabel}
+        </Text>
+      </TouchableOpacity>
+
+      <View style={styles.progressSection}>
+        <View style={styles.progressBar}>
+          <View style={[styles.progressFill, { flex: progress }]} />
+          <View style={{ flex: 1 - progress }} />
+        </View>
+        <View style={styles.timeRow}>
+          <Text style={styles.timeText}>{formatTime(currentTimeMs)}</Text>
+          <Text style={styles.timeText}>{formatTime(durationMs)}</Text>
+        </View>
+      </View>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
-    padding: 10,
-    backgroundColor: '#eee',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    height: 60,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#1B5E20",
+    paddingHorizontal: 12,
+  },
+  playButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  playIcon: {
+    fontSize: 18,
+    color: "#fff",
+  },
+  disabled: {
+    opacity: 0.4,
+  },
+  progressSection: {
+    flex: 1,
+  },
+  progressBar: {
+    height: 4,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    borderRadius: 2,
+    flexDirection: "row",
+    overflow: "hidden",
+  },
+  progressFill: {
+    backgroundColor: "#A5D6A7",
+    borderRadius: 2,
+  },
+  timeRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 4,
+  },
+  timeText: {
+    fontSize: 11,
+    color: "rgba(255,255,255,0.7)",
   },
 });
