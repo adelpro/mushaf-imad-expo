@@ -99,6 +99,20 @@ type SQLiteDb = Awaited<ReturnType<typeof SQLite.openDatabaseAsync>>;
 class DatabaseService {
   private db: SQLiteDb | null = null;
   private initPromise: Promise<SQLiteDb> | null = null;
+  private initGeneration = 0;
+
+  async initialize(): Promise<void> {
+    await this.getDb();
+  }
+
+  reset(): void {
+    this.initGeneration++;
+    if (this.db) {
+      this.db.closeAsync().catch(() => {});
+    }
+    this.db = null;
+    this.initPromise = null;
+  }
 
   async getDb(): Promise<SQLiteDb> {
     if (this.db) {
@@ -109,8 +123,14 @@ class DatabaseService {
       return this.initPromise;
     }
 
+    const generation = this.initGeneration;
     this.initPromise = this.initDatabase();
-    this.db = await this.initPromise;
+    const db = await this.initPromise;
+    if (this.initGeneration !== generation) {
+      db.closeAsync().catch(() => {});
+      throw new Error("DB init cancelled by reset");
+    }
+    this.db = db;
     return this.db;
   }
 
@@ -154,6 +174,15 @@ class DatabaseService {
     } catch {
       const db = await SQLite.openDatabaseAsync(DB_NAME);
       await this.runMigrations(db);
+      const count = await db.getFirstAsync<{ count: number }>(
+        "SELECT COUNT(*) as count FROM chapters",
+      );
+      if (!count || count.count === 0) {
+        await db.closeAsync().catch(() => {});
+        throw new Error(
+          "فشل في تحميل قاعدة البيانات: البيانات غير موجودة",
+        );
+      }
       return db;
     }
   }
