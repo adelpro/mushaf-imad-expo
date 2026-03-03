@@ -8,6 +8,7 @@ import {
   StyleSheet,
 } from "react-native";
 import { Chapter } from "./types";
+import { useTheme } from "../../theme";
 
 interface ChapterPopupProps {
   visible: boolean;
@@ -24,6 +25,8 @@ export const ChapterPopup: React.FC<ChapterPopupProps> = ({
   onClose,
   onLongPress,
 }) => {
+  const { colors } = useTheme();
+
   if (!chapter) return null;
 
   return (
@@ -33,41 +36,102 @@ export const ChapterPopup: React.FC<ChapterPopupProps> = ({
       animationType="fade"
       onRequestClose={onClose}
     >
-      <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={onClose}>
-        <TouchableOpacity activeOpacity={1} style={styles.modal}>
-          <View style={styles.header}>
-            <Text style={styles.chapterName}>
+      <TouchableOpacity
+        style={[styles.overlay, { backgroundColor: colors.modalOverlay }]}
+        activeOpacity={1}
+        onPress={onClose}
+      >
+        <TouchableOpacity
+          activeOpacity={1}
+          style={[
+            styles.modal,
+            {
+              backgroundColor: colors.modalBackground,
+              shadowColor: colors.modalShadow,
+            },
+          ]}
+        >
+          <View
+            style={[
+              styles.header,
+              { borderBottomColor: colors.modalBorder },
+            ]}
+          >
+            <Text style={[styles.chapterName, { color: colors.accentText }]}>
               سورة {chapter.arabicTitle}
             </Text>
-            <Text style={styles.englishName}>{chapter.englishTitle}</Text>
+            <Text
+              style={[styles.englishName, { color: colors.tertiaryText }]}
+            >
+              {chapter.englishTitle}
+            </Text>
           </View>
 
           <View style={styles.infoRow}>
             <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>رقم السورة</Text>
-              <Text style={styles.infoValue}>{chapter.number}</Text>
+              <Text
+                style={[styles.infoLabel, { color: colors.tertiaryText }]}
+              >
+                رقم السورة
+              </Text>
+              <Text
+                style={[styles.infoValue, { color: colors.accentText }]}
+              >
+                {chapter.number}
+              </Text>
             </View>
             <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>نوع</Text>
-              <Text style={styles.infoValue}>
+              <Text
+                style={[styles.infoLabel, { color: colors.tertiaryText }]}
+              >
+                نوع
+              </Text>
+              <Text
+                style={[styles.infoValue, { color: colors.accentText }]}
+              >
                 {chapter.isMeccan ? "مكية" : "مدنية"}
               </Text>
             </View>
             <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>الصفحة</Text>
-              <Text style={styles.infoValue}>{pageNumber}</Text>
+              <Text
+                style={[styles.infoLabel, { color: colors.tertiaryText }]}
+              >
+                الصفحة
+              </Text>
+              <Text
+                style={[styles.infoValue, { color: colors.accentText }]}
+              >
+                {pageNumber}
+              </Text>
             </View>
           </View>
 
-          <View style={styles.footer}>
+          <View
+            style={[styles.footer, { borderTopColor: colors.modalBorder }]}
+          >
             <TouchableOpacity style={styles.button} onPress={onClose}>
-              <Text style={styles.buttonText}>إغلاق</Text>
+              <Text
+                style={[
+                  styles.buttonText,
+                  { color: colors.secondaryButtonText },
+                ]}
+              >
+                إغلاق
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.button, styles.primaryButton]}
+              style={[
+                styles.button,
+                { backgroundColor: colors.primaryButton },
+              ]}
               onPress={onLongPress}
             >
-              <Text style={[styles.buttonText, styles.primaryButtonText]}>
+              <Text
+                style={[
+                  styles.buttonText,
+                  { color: colors.primaryButtonText },
+                ]}
+              >
                 تفاصيل
               </Text>
             </TouchableOpacity>
@@ -81,16 +145,13 @@ export const ChapterPopup: React.FC<ChapterPopupProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "center",
     alignItems: "center",
   },
   modal: {
-    backgroundColor: "#FFFFFF",
     borderRadius: 16,
     width: "85%",
     overflow: "hidden",
-    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
@@ -99,18 +160,15 @@ const styles = StyleSheet.create({
   header: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#E0E0E0",
     alignItems: "center",
   },
   chapterName: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#1B5E20",
     marginBottom: 4,
   },
   englishName: {
     fontSize: 14,
-    color: "#888",
     marginTop: 2,
   },
   infoRow: {
@@ -123,35 +181,24 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 12,
-    color: "#888",
     marginBottom: 4,
   },
   infoValue: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#1B5E20",
   },
   footer: {
     flexDirection: "row",
     justifyContent: "space-around",
     padding: 12,
     borderTopWidth: 1,
-    borderTopColor: "#E0E0E0",
   },
   button: {
     paddingVertical: 10,
     paddingHorizontal: 24,
     borderRadius: 8,
   },
-  primaryButton: {
-    backgroundColor: "#1B5E20",
-  },
   buttonText: {
     fontSize: 16,
-    color: "#666",
-  },
-  primaryButtonText: {
-    color: "#FFFFFF",
-    fontWeight: "600",
   },
 });

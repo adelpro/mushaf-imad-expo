@@ -12,6 +12,7 @@ import { useQuranPage } from "../hooks/useQuranPage";
 import SuraNameBar from "../../assets/images/sura_name_bar.svg";
 import { VerseFasel } from "./VerseFasel";
 import { QuranImages } from "../constants/imageMap";
+import { useTheme } from "../theme";
 
 const { width } = Dimensions.get("window");
  const LINE_ASPECT_RATIO = 1440 / 232;
@@ -39,6 +40,7 @@ interface Props {
 
 export const QuranPage: React.FC<Props> = ({ pageNumber, activeChapter, activeVerse }) => {
   const { page, loading, error, retry } = useQuranPage(pageNumber);
+  const { colors } = useTheme();
 
    const markersByLine = React.useMemo(() => {
     const map = new Map<number, Array<{ verseID: number; number: number; centerX: number; centerY: number; }>>();
@@ -98,7 +100,7 @@ export const QuranPage: React.FC<Props> = ({ pageNumber, activeChapter, activeVe
         const left = width * h.left_position;
         const w = width * (h.right_position - h.left_position);
         return (
-          <View key={`${v.verseID}-${i}`} style={{ position: "absolute", left: left, width: w, height: "100%", backgroundColor: "rgba(88, 168, 105, 0.4)", borderRadius: 4 }} />
+          <View key={`${v.verseID}-${i}`} style={{ position: "absolute", left: left, width: w, height: "100%", backgroundColor: colors.highlightColor, borderRadius: 4 }} />
         );
       });
     });
@@ -124,35 +126,35 @@ export const QuranPage: React.FC<Props> = ({ pageNumber, activeChapter, activeVe
 
    if (loading) {
     return (
-      <View style={[styles.container, styles.center]}>
-        <ActivityIndicator size="large" color="#8B4513" />
+      <View style={[styles.container, styles.center, { backgroundColor: colors.pageBackground }]}>
+        <ActivityIndicator size="large" color={colors.loadingIndicator} />
       </View>
     );
   }
 
    if (error) {
     return (
-      <View style={[styles.container, styles.center, { padding: 20 }]}>
-        <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={retry}>
-          <Text style={styles.retryText}>إعادة المحاولة</Text>
+      <View style={[styles.container, styles.center, { backgroundColor: colors.pageBackground, padding: 20 }]}>
+        <Text style={[styles.errorText, { color: colors.errorText }]}>{error}</Text>
+        <TouchableOpacity style={[styles.retryButton, { backgroundColor: colors.retryButton }]} onPress={retry}>
+          <Text style={[styles.retryText, { color: colors.retryButtonText }]}>إعادة المحاولة</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.pageBackground }]}>
       <View style={styles.linesContainer}>{renderLines()}</View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#FFF8E1", justifyContent: "center" },
+  container: { flex: 1, justifyContent: "center" },
   linesContainer: { flexDirection: "column", justifyContent: "center" },
   center: { alignItems: "center", justifyContent: "center" },
-  errorText: { color: "#D32F2F", fontSize: 16, textAlign: "center", marginBottom: 15, fontFamily: "System" },
-  retryButton: { backgroundColor: "#8B4513", paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 },
-  retryText: { color: "white", fontWeight: "bold" },
+  errorText: { fontSize: 16, textAlign: "center", marginBottom: 15, fontFamily: "System" },
+  retryButton: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 },
+  retryText: { fontWeight: "bold" },
 });

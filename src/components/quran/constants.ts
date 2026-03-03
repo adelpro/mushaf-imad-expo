@@ -9,8 +9,6 @@ export const DEFAULT_CONFIG: QuranConfig = {
   suraNameBarCenterYOffset: 6,
   verseMarkerBalance: 3.69,
   verseMarkerCenterYOffset: 8,
-  backgroundColor: "#FFF8E1",
-  highlightColor: "rgba(88, 168, 105, 0.4)",
   defaultLayout: 1441,
 };
 

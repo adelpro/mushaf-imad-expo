@@ -23,6 +23,7 @@ import {
 import SuraNameBar from "../../assets/images/sura_name_bar.svg";
 import { VerseFasel } from "../../components/VerseFasel";
 import { QuranImages } from "../../constants/imageMap";
+import { useTheme } from "../../theme";
 import { VersePopup } from "./VersePopup";
 import { ChapterPopup } from "./ChapterPopup";
 
@@ -42,13 +43,14 @@ export function QuranView({
   showSuraName = true,
   showVerseMarkers = true,
   showHighlights = true,
-  highlightColor = "rgba(120, 120, 120, 0.3)",
+  highlightColor,
   onVersePress,
   onVerseLongPress,
   onChapterPress,
   onChapterLongPress,
 }: QuranViewProps) {
   const { page, loading, error } = useQuranData(pageNumber);
+  const { colors } = useTheme();
 
   const [selectedVerse, setSelectedVerse] = useState<Verse | null>(null);
   const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
@@ -334,7 +336,7 @@ export function QuranView({
               left,
               width: w,
               height: "100%",
-              backgroundColor: highlightColor,
+              backgroundColor: highlightColor ?? colors.highlightColor,
               borderRadius: 4,
             }}
           />
@@ -413,16 +415,16 @@ export function QuranView({
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#1B5E20" />
+      <View style={[styles.center, { backgroundColor: colors.pageBackground }]}>
+        <ActivityIndicator size="large" color={colors.loadingIndicator} />
       </View>
     );
   }
 
   if (error || !page) {
     return (
-      <View style={styles.center}>
-        <Text style={styles.errorText}>
+      <View style={[styles.center, { backgroundColor: colors.pageBackground }]}>
+        <Text style={[styles.errorText, { color: colors.errorText }]}>
           {error?.message || "Page not found"}
         </Text>
       </View>
@@ -430,7 +432,7 @@ export function QuranView({
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.pageBackground }]}>
       <View style={styles.linesContainer}>{renderLines()}</View>
 
       <VersePopup
@@ -467,7 +469,6 @@ function createChapter(id: number | null): Chapter {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: DEFAULT_CONFIG.backgroundColor,
     justifyContent: "center",
   },
   linesContainer: {
@@ -480,7 +481,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   errorText: {
-    color: "red",
     fontSize: 16,
   },
 });

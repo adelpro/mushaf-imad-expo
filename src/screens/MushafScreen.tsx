@@ -9,6 +9,7 @@ import {
 import { AudioPlayerBar } from "../components/AudioPlayerBar";
 import { QuranPage } from "../components/QuranPage";
 import { databaseService } from "../services/SQLiteService";
+import { useTheme } from "../theme";
 
 const { height, width } = Dimensions.get("window");
 
@@ -17,6 +18,7 @@ type ViewableItemsChangedInfo = {
 };
 
 export function MushafScreen() {
+  const { colors } = useTheme();
   const [currentChapter, setCurrentChapter] = useState(1);
   const [activeVerse, setActiveVerse] = useState<number | null>(null);
   const pages = Array.from({ length: 604 }, (_, i) => i + 1);
@@ -54,7 +56,7 @@ export function MushafScreen() {
   ).current;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.pageBackground }]}>
       <FlatList
         data={pages}
         getItemLayout={(_, index) => ({
@@ -96,6 +98,5 @@ export function MushafScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFF8E1",
   },
 });

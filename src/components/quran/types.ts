@@ -88,26 +88,9 @@ export interface QuranConfig {
   verseMarkerBalance: number;
   verseMarkerCenterYOffset: number;
 
-  // Theme
-  backgroundColor: string;
-  highlightColor: string;
-
   // Data
   defaultLayout: 1441 | 1405;
 }
-
-export const DEFAULT_CONFIG: QuranConfig = {
-  lineCount: 15,
-  lineAspectRatio: 1440 / 232,
-  suraNameBarWidthRatio: 0.9,
-  suraNameBarHeightRatio: 0.8,
-  suraNameBarCenterYOffset: 6,
-  verseMarkerBalance: 3.69,
-  verseMarkerCenterYOffset: 8,
-  backgroundColor: "#FFF8E1",
-  highlightColor: "rgba(88, 168, 105, 0.4)",
-  defaultLayout: 1441,
-};
 
 // Event Types
 export interface VersePressEvent {
@@ -143,7 +126,6 @@ export interface QuranViewProps {
   showHighlights?: boolean;
 
   // Theme
-  backgroundColor?: string;
   highlightColor?: string;
 
   // Selection
