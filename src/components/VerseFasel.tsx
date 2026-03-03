@@ -12,9 +12,10 @@ const BASE_PADDING = 2 * BALANCE;
 type Props = {
   number: number;
   scale: number;
+  isBookmarked?: boolean;
 };
 
-export function VerseFasel({ number, scale }: Props) {
+export function VerseFasel({ number, scale, isBookmarked }: Props) {
   const width = BASE_WIDTH * scale;
   const height = BASE_HEIGHT * scale;
   const fontSize = BASE_FONT_SIZE * scale;
@@ -40,6 +41,19 @@ export function VerseFasel({ number, scale }: Props) {
       >
         {toArabicDigits(number)}
       </Text>
+      {isBookmarked && (
+        <View
+          style={{
+            position: "absolute",
+            top: 2 * scale,
+            right: 2 * scale,
+            width: 6 * scale,
+            height: 6 * scale,
+            borderRadius: 3 * scale,
+            backgroundColor: "#D4AF37",
+          }}
+        />
+      )}
     </View>
   );
 }

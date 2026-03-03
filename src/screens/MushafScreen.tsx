@@ -3,11 +3,14 @@ import {
   Dimensions,
   FlatList,
   StyleSheet,
+  Text,
+  TouchableOpacity,
   View,
   ViewToken,
 } from "react-native";
 import { AudioPlayerBar } from "../components/AudioPlayerBar";
 import { QuranPage } from "../components/QuranPage";
+import { BookmarksListModal } from "../components/BookmarksListModal";
 import { databaseService } from "../services/SQLiteService";
 
 const { height, width } = Dimensions.get("window");
@@ -19,6 +22,8 @@ type ViewableItemsChangedInfo = {
 export function MushafScreen() {
   const [currentChapter, setCurrentChapter] = useState(1);
   const [activeVerse, setActiveVerse] = useState<number | null>(null);
+  const [bookmarksVisible, setBookmarksVisible] = useState(false);
+  const flatListRef = useRef<FlatList>(null);
   const pages = Array.from({ length: 604 }, (_, i) => i + 1);
 
   async function updateChapter(pageNumber: number) {
@@ -53,9 +58,28 @@ export function MushafScreen() {
     },
   ).current;
 
+  const handleNavigateToPage = (pageNumber: number) => {
+    const index = pageNumber - 1;
+    if (index < 0 || index > 603) return;
+    flatListRef.current?.scrollToIndex({
+      index,
+      animated: true,
+    });
+  };
+
+  const onScrollToIndexFailed = useRef(
+    (info: { index: number; averageItemLength: number }) => {
+      flatListRef.current?.scrollToOffset({
+        offset: info.averageItemLength * info.index,
+        animated: true,
+      });
+    },
+  ).current;
+
   return (
     <View style={styles.container}>
       <FlatList
+        ref={flatListRef}
         data={pages}
         getItemLayout={(_, index) => ({
           index,
@@ -67,6 +91,7 @@ export function MushafScreen() {
         inverted
         keyExtractor={(item) => item.toString()}
         maxToRenderPerBatch={2}
+        onScrollToIndexFailed={onScrollToIndexFailed}
         onViewableItemsChanged={onViewableItemsChanged}
         pagingEnabled
         removeClippedSubviews
@@ -89,6 +114,21 @@ export function MushafScreen() {
           onVerseChange={(verse) => setActiveVerse(verse)}
         /> */}
       </View>
+
+      <TouchableOpacity
+        style={styles.bookmarkFab}
+        onPress={() => setBookmarksVisible(true)}
+        accessibilityLabel="العلامات المرجعية"
+        accessibilityRole="button"
+      >
+        <Text style={styles.bookmarkFabText}>🔖</Text>
+      </TouchableOpacity>
+
+      <BookmarksListModal
+        visible={bookmarksVisible}
+        onClose={() => setBookmarksVisible(false)}
+        onNavigateToPage={handleNavigateToPage}
+      />
     </View>
   );
 }
@@ -97,5 +137,24 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#FFF8E1",
+  },
+  bookmarkFab: {
+    position: "absolute",
+    bottom: 70,
+    left: 16,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "#1B5E20",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  bookmarkFabText: {
+    fontSize: 22,
   },
 });
