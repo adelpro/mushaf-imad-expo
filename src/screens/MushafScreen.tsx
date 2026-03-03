@@ -1,13 +1,15 @@
-import React, { useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import {
   Dimensions,
   FlatList,
   StyleSheet,
+  Text,
+  TouchableOpacity,
   View,
   ViewToken,
 } from "react-native";
-import { AudioPlayerBar } from "../components/AudioPlayerBar";
 import { QuranPage } from "../components/QuranPage";
+import { SearchModal } from "../components/SearchModal";
 import { databaseService } from "../services/SQLiteService";
 
 const { height, width } = Dimensions.get("window");
@@ -19,7 +21,14 @@ type ViewableItemsChangedInfo = {
 export function MushafScreen() {
   const [currentChapter, setCurrentChapter] = useState(1);
   const [activeVerse, setActiveVerse] = useState<number | null>(null);
+  const [searchVisible, setSearchVisible] = useState(false);
+  const flatListRef = useRef<FlatList<number>>(null);
   const pages = Array.from({ length: 604 }, (_, i) => i + 1);
+
+  const navigateToPage = useCallback((pageNumber: number) => {
+    const index = pageNumber - 1;
+    flatListRef.current?.scrollToIndex({ index, animated: true });
+  }, []);
 
   async function updateChapter(pageNumber: number) {
     try {
@@ -56,6 +65,7 @@ export function MushafScreen() {
   return (
     <View style={styles.container}>
       <FlatList
+        ref={flatListRef}
         data={pages}
         getItemLayout={(_, index) => ({
           index,
@@ -67,6 +77,11 @@ export function MushafScreen() {
         inverted
         keyExtractor={(item) => item.toString()}
         maxToRenderPerBatch={2}
+        onScrollToIndexFailed={({ index }) => {
+          setTimeout(() => {
+            flatListRef.current?.scrollToIndex({ index, animated: true });
+          }, 500);
+        }}
         onViewableItemsChanged={onViewableItemsChanged}
         pagingEnabled
         removeClippedSubviews
@@ -89,6 +104,20 @@ export function MushafScreen() {
           onVerseChange={(verse) => setActiveVerse(verse)}
         /> */}
       </View>
+      <TouchableOpacity
+        style={styles.searchButton}
+        onPress={() => setSearchVisible(true)}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        accessibilityLabel="البحث في القرآن"
+        accessibilityRole="button"
+      >
+        <Text style={styles.searchIcon}>&#x1F50D;</Text>
+      </TouchableOpacity>
+      <SearchModal
+        visible={searchVisible}
+        onClose={() => setSearchVisible(false)}
+        onSelectResult={navigateToPage}
+      />
     </View>
   );
 }
@@ -97,5 +126,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#FFF8E1",
+  },
+  searchButton: {
+    position: "absolute",
+    top: 12,
+    left: 16,
+    zIndex: 10,
+    backgroundColor: "rgba(255,255,255,0.85)",
+    borderRadius: 20,
+    padding: 8,
+  },
+  searchIcon: {
+    fontSize: 22,
   },
 });

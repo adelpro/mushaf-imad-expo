@@ -80,6 +80,17 @@ export type Page = {
   verses1405: Verse[];
 };
 
+export type SearchResult = {
+  verseID: number;
+  number: number;
+  humanReadableID: string;
+  searchableText: string;
+  chapter_id: number | null;
+  chapterArabicTitle: string;
+  chapterEnglishTitle: string;
+  page1441_id: number | null;
+};
+
 type VerseRow = Omit<
   Verse,
   "marker1441" | "marker1405" | "highlights1441" | "highlights1405"
@@ -111,6 +122,8 @@ class DatabaseService {
 
     this.initPromise = this.initDatabase();
     this.db = await this.initPromise;
+    // Pre-warm FTS index in background after DB is ready
+    this.ensureFtsTable().catch(() => {});
     return this.db;
   }
 
@@ -539,6 +552,67 @@ class DatabaseService {
     );
 
     return chapters;
+  }
+
+  private ftsInitPromise: Promise<void> | null = null;
+
+  private ensureFtsTable(): Promise<void> {
+    if (!this.ftsInitPromise) {
+      this.ftsInitPromise = this.getDb().then((db) => this.buildFtsTable(db));
+    }
+    return this.ftsInitPromise;
+  }
+
+  private async buildFtsTable(db: SQLiteDb): Promise<void> {
+    const exists = await db.getFirstAsync<{ count: number }>(
+      "SELECT COUNT(*) as count FROM sqlite_master WHERE type='table' AND name='verses_fts'",
+    );
+
+    if (exists && exists.count > 0) return;
+
+    await db.execAsync(
+      "CREATE VIRTUAL TABLE IF NOT EXISTS verses_fts " +
+        "USING fts5(verseID UNINDEXED, searchableText, content=verses, content_rowid=verseID)",
+    );
+    await db.execAsync(
+      "INSERT INTO verses_fts(verses_fts) VALUES('rebuild')",
+    );
+  }
+
+  private static stripTashkil(text: string): string {
+    return text.replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06DC\u06DF-\u06E4\u06E7\u06E8\u06EA-\u06ED]/g, "");
+  }
+
+  async searchVerses(query: string, limit = 30): Promise<SearchResult[]> {
+    const trimmed = query.trim();
+    if (!trimmed) return [];
+
+    await this.ensureFtsTable();
+    const db = await this.getDb();
+
+    const stripped = DatabaseService.stripTashkil(trimmed).replace(/"/g, "");
+    if (!stripped) return [];
+    const sanitized = stripped.length > 200 ? stripped.slice(0, 200) : stripped;
+    const ftsQuery = `"${sanitized}"*`;
+
+    return db.getAllAsync<SearchResult>(
+      `SELECT
+         v.verseID,
+         v.number,
+         v.humanReadableID,
+         v.searchableText,
+         v.chapter_id,
+         c.arabicTitle  AS chapterArabicTitle,
+         c.englishTitle AS chapterEnglishTitle,
+         v.page1441_id
+       FROM verses_fts
+       JOIN verses  v ON v.verseID = verses_fts.rowid
+       LEFT JOIN chapters c ON c.identifier = v.chapter_id
+       WHERE verses_fts MATCH ?
+       ORDER BY rank
+       LIMIT ?`,
+      [ftsQuery, limit],
+    );
   }
 }
 
