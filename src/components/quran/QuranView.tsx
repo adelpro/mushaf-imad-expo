@@ -23,6 +23,8 @@ import {
 import SuraNameBar from "../../assets/images/sura_name_bar.svg";
 import { VerseFasel } from "../../components/VerseFasel";
 import { QuranImages } from "../../constants/imageMap";
+import { useBookmarks } from "../../hooks/useBookmarks";
+import { BookmarkEditorModal } from "../../components/BookmarkEditorModal";
 import { VersePopup } from "./VersePopup";
 import { ChapterPopup } from "./ChapterPopup";
 
@@ -49,11 +51,13 @@ export function QuranView({
   onChapterLongPress,
 }: QuranViewProps) {
   const { page, loading, error } = useQuranData(pageNumber);
+  const { bookmarkedVerseIds, getBookmarkForVerse } = useBookmarks();
 
   const [selectedVerse, setSelectedVerse] = useState<Verse | null>(null);
   const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
   const [versePopupVisible, setVersePopupVisible] = useState(false);
   const [chapterPopupVisible, setChapterPopupVisible] = useState(false);
+  const [bookmarkEditorVisible, setBookmarkEditorVisible] = useState(false);
 
   const config = DEFAULT_CONFIG;
   const lineHeight = width / config.lineAspectRatio;
@@ -302,7 +306,11 @@ export function QuranView({
           onPress={() => handleVersePress(m.verse, x, y)}
           onLongPress={() => handleVerseLongPress(m.verse, x, y)}
         >
-          <VerseFasel number={m.verse.number} scale={lineScale} />
+          <VerseFasel
+            number={m.verse.number}
+            scale={lineScale}
+            isBookmarked={bookmarkedVerseIds.has(m.verse.verseID)}
+          />
         </TouchableOpacity>
       );
     });
@@ -437,7 +445,24 @@ export function QuranView({
         visible={versePopupVisible}
         verse={selectedVerse}
         chapter={selectedChapter as Chapter | null}
+        pageNumber={pageNumber}
         onClose={() => setVersePopupVisible(false)}
+        onBookmarkPress={() => {
+          setVersePopupVisible(false);
+          setBookmarkEditorVisible(true);
+        }}
+      />
+
+      <BookmarkEditorModal
+        visible={bookmarkEditorVisible}
+        verseId={selectedVerse?.verseID ?? null}
+        chapterId={selectedVerse?.chapter_id ?? 0}
+        verseNumber={selectedVerse?.number ?? 0}
+        pageNumber={pageNumber}
+        existingBookmark={
+          selectedVerse ? getBookmarkForVerse(selectedVerse.verseID) ?? null : null
+        }
+        onClose={() => setBookmarkEditorVisible(false)}
       />
 
       <ChapterPopup

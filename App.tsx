@@ -6,6 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
 
 import { MushafScreen } from "./src/screens/MushafScreen";
+import { BookmarkProvider } from "./src/contexts/BookmarkContext";
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
@@ -37,7 +38,9 @@ export default function App() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="dark" />
-      <MushafScreen />
+      <BookmarkProvider>
+        <MushafScreen />
+      </BookmarkProvider>
     </SafeAreaView>
   );
 }

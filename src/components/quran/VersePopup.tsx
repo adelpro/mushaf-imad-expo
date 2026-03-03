@@ -9,23 +9,32 @@ import {
   ScrollView,
 } from "react-native";
 import { Verse, Chapter } from "./types";
+import { useBookmarks } from "../../hooks/useBookmarks";
 
 interface VersePopupProps {
   visible: boolean;
   verse: Verse | null;
   chapter: Chapter | null;
+  pageNumber: number;
   onClose: () => void;
   onLongPress?: () => void;
+  onBookmarkPress?: () => void;
 }
 
 export const VersePopup: React.FC<VersePopupProps> = ({
   visible,
   verse,
   chapter,
+  pageNumber,
   onClose,
   onLongPress,
+  onBookmarkPress,
 }) => {
+  const { getBookmarkForVerse } = useBookmarks();
+
   if (!verse) return null;
+
+  const existingBookmark = getBookmarkForVerse(verse.verseID);
 
   return (
     <Modal
@@ -57,80 +66,19 @@ export const VersePopup: React.FC<VersePopupProps> = ({
               <Text style={styles.buttonText}>إغلاق</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.button, styles.primaryButton]}
-              onPress={onLongPress}
+              style={[styles.button, styles.bookmarkButton]}
+              onPress={() => onBookmarkPress?.()}
             >
-              <Text style={[styles.buttonText, styles.primaryButtonText]}>
-                نسخ
+              <Text style={[styles.buttonText, styles.bookmarkButtonText]}>
+                {existingBookmark ? "تعديل العلامة" : "حفظ علامة"}
               </Text>
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
-      </TouchableOpacity>
-    </Modal>
-  );
-};
-
-interface ChapterPopupProps {
-  visible: boolean;
-  chapter: Chapter | null;
-  pageNumber: number;
-  onClose: () => void;
-  onLongPress?: () => void;
-}
-
-export const ChapterPopup: React.FC<ChapterPopupProps> = ({
-  visible,
-  chapter,
-  pageNumber,
-  onClose,
-  onLongPress,
-}) => {
-  if (!chapter) return null;
-
-  return (
-    <Modal
-      transparent
-      visible={visible}
-      animationType="fade"
-      onRequestClose={onClose}
-    >
-      <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={onClose}>
-        <TouchableOpacity activeOpacity={1} style={styles.modal}>
-          <View style={styles.header}>
-            <Text style={styles.chapterName}>
-              سورة {chapter.arabicTitle}
-            </Text>
-            <Text style={styles.englishName}>{chapter.englishTitle}</Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>رقم السورة</Text>
-              <Text style={styles.infoValue}>{chapter.number}</Text>
-            </View>
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>نوع</Text>
-              <Text style={styles.infoValue}>
-                {chapter.isMeccan ? "مكية" : "مدنية"}
-              </Text>
-            </View>
-            <View style={styles.infoItem}>
-              <Text style={styles.infoLabel}>الصفحة</Text>
-              <Text style={styles.infoValue}>{pageNumber}</Text>
-            </View>
-          </View>
-
-          <View style={styles.footer}>
-            <TouchableOpacity style={styles.button} onPress={onClose}>
-              <Text style={styles.buttonText}>إغلاق</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.button, styles.primaryButton]}
               onPress={onLongPress}
             >
               <Text style={[styles.buttonText, styles.primaryButtonText]}>
-                تفاصيل
+                نسخ
               </Text>
             </TouchableOpacity>
           </View>
@@ -175,11 +123,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#666",
   },
-  englishName: {
-    fontSize: 14,
-    color: "#888",
-    marginTop: 2,
-  },
   content: {
     padding: 16,
     maxHeight: 300,
@@ -197,24 +140,6 @@ const styles = StyleSheet.create({
     color: "#666",
     fontStyle: "italic",
   },
-  infoRow: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    padding: 16,
-  },
-  infoItem: {
-    alignItems: "center",
-  },
-  infoLabel: {
-    fontSize: 12,
-    color: "#888",
-    marginBottom: 4,
-  },
-  infoValue: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#1B5E20",
-  },
   footer: {
     flexDirection: "row",
     justifyContent: "space-around",
@@ -230,12 +155,19 @@ const styles = StyleSheet.create({
   primaryButton: {
     backgroundColor: "#1B5E20",
   },
+  bookmarkButton: {
+    backgroundColor: "#FFF3E0",
+  },
   buttonText: {
     fontSize: 16,
     color: "#666",
   },
   primaryButtonText: {
     color: "#FFFFFF",
+    fontWeight: "600",
+  },
+  bookmarkButtonText: {
+    color: "#D4AF37",
     fontWeight: "600",
   },
 });
