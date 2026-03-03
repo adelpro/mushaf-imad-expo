@@ -6,6 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
 
 import { MushafScreen } from "./src/screens/MushafScreen";
+import { ThemeProvider, useTheme } from "./src/theme";
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
@@ -35,8 +36,18 @@ export default function App() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" />
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
+  );
+}
+
+function AppContent() {
+  const { mode, colors } = useTheme();
+
+  return (
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.pageBackground }]}>
+      <StatusBar style={mode === "dark" ? "light" : "dark"} />
       <MushafScreen />
     </SafeAreaView>
   );
@@ -45,7 +56,6 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
   },
   loader: {
     flex: 1,
