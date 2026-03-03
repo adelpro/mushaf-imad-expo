@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useRef } from "react";
 import {
   View,
   Image,
@@ -8,9 +8,10 @@ import {
   Text,
   TouchableOpacity,
 } from "react-native";
+import * as Haptics from "expo-haptics";
 import { useQuranPage } from "../hooks/useQuranPage";
 import SuraNameBar from "../../assets/images/sura_name_bar.svg";
-import { VerseFasel } from "./VerseFasel";
+import { VerseFasel, VerseFaselHandle } from "./VerseFasel";
 import { QuranImages } from "../constants/imageMap";
 
 const { width } = Dimensions.get("window");
@@ -39,6 +40,17 @@ interface Props {
 
 export const QuranPage: React.FC<Props> = ({ pageNumber, activeChapter, activeVerse }) => {
   const { page, loading, error, retry } = useQuranPage(pageNumber);
+  const faselRefs = useRef(new Map<number, VerseFaselHandle>()).current;
+  const lastHapticRef = useRef(0);
+
+  const handleMarkerPress = useCallback((verseID: number) => {
+    const now = Date.now();
+    if (now - lastHapticRef.current > 100) {
+      lastHapticRef.current = now;
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    faselRefs.get(verseID)?.pulse();
+  }, []); // faselRefs, lastHapticRef are stable (useRef)
 
    const markersByLine = React.useMemo(() => {
     const map = new Map<number, Array<{ verseID: number; number: number; centerX: number; centerY: number; }>>();
@@ -82,9 +94,27 @@ export const QuranPage: React.FC<Props> = ({ pageNumber, activeChapter, activeVe
       const x = width * m.centerX;
       const y = scaledImageHeight * m.centerY - cropOffset;
       return (
-        <View key={`fasel-${m.verseID}`} pointerEvents="none" style={{ position: "absolute", left: x - FASEL_WIDTH / 2, top: y - FASEL_HEIGHT / 2 + FASEL_CENTER_Y_OFFSET }}>
-          <VerseFasel number={m.number} scale={LINE_SCALE} />
-        </View>
+        <TouchableOpacity
+          key={`fasel-${m.verseID}`}
+          accessibilityLabel={`آية ${m.number}`}
+          accessibilityRole="button"
+          activeOpacity={0.7}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          style={{ position: "absolute", left: x - FASEL_WIDTH / 2, top: y - FASEL_HEIGHT / 2 + FASEL_CENTER_Y_OFFSET }}
+          onPress={() => handleMarkerPress(m.verseID)}
+        >
+          <VerseFasel
+            ref={(handle) => {
+              if (handle) {
+                faselRefs.set(m.verseID, handle);
+              } else {
+                faselRefs.delete(m.verseID);
+              }
+            }}
+            number={m.number}
+            scale={LINE_SCALE}
+          />
+        </TouchableOpacity>
       );
     });
   };

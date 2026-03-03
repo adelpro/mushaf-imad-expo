@@ -1,5 +1,5 @@
 // Quran Component - Main View with Content Press Support
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useRef } from "react";
 import {
   View,
   Image,
@@ -21,7 +21,8 @@ import {
   ChapterHeader,
 } from "./types";
 import SuraNameBar from "../../assets/images/sura_name_bar.svg";
-import { VerseFasel } from "../../components/VerseFasel";
+import * as Haptics from "expo-haptics";
+import { VerseFasel, VerseFaselHandle } from "../../components/VerseFasel";
 import { QuranImages } from "../../constants/imageMap";
 import { VersePopup } from "./VersePopup";
 import { ChapterPopup } from "./ChapterPopup";
@@ -49,6 +50,8 @@ export function QuranView({
   onChapterLongPress,
 }: QuranViewProps) {
   const { page, loading, error } = useQuranData(pageNumber);
+  const faselRefs = useRef(new Map<number, VerseFaselHandle>()).current;
+  const lastHapticRef = useRef(0);
 
   const [selectedVerse, setSelectedVerse] = useState<Verse | null>(null);
   const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
@@ -158,6 +161,13 @@ export function QuranView({
 
   const handleVersePress = useCallback(
     (verse: Verse, x: number, y: number) => {
+      const now = Date.now();
+      if (now - lastHapticRef.current > 100) {
+        lastHapticRef.current = now;
+        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+      faselRefs.get(verse.verseID)?.pulse();
+
       console.log("[QuranView] onVersePress:", {
         verseNumber: verse.number,
         chapterId: verse.chapter_id,
@@ -293,6 +303,9 @@ export function QuranView({
       return (
         <TouchableOpacity
           key={`fasel-${m.verse.verseID}`}
+          accessibilityLabel={`آية ${m.verse.number}`}
+          accessibilityRole="button"
+          activeOpacity={0.7}
           style={{
             position: "absolute",
             left: x - faselWidth / 2,
@@ -302,7 +315,17 @@ export function QuranView({
           onPress={() => handleVersePress(m.verse, x, y)}
           onLongPress={() => handleVerseLongPress(m.verse, x, y)}
         >
-          <VerseFasel number={m.verse.number} scale={lineScale} />
+          <VerseFasel
+            ref={(handle) => {
+              if (handle) {
+                faselRefs.set(m.verse.verseID, handle);
+              } else {
+                faselRefs.delete(m.verse.verseID);
+              }
+            }}
+            number={m.verse.number}
+            scale={lineScale}
+          />
         </TouchableOpacity>
       );
     });
