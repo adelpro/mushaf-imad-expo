@@ -1,7 +1,7 @@
 import React, { forwardRef } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Verse, Chapter } from "./types";
-import { colors } from "../../theme";
+import { toArabicDigits } from "../../utils/linguistic";
 
 interface ShareVerseCardProps {
   verse: Verse;
@@ -13,30 +13,50 @@ export const ShareVerseCard = forwardRef<View, ShareVerseCardProps>(
     const surahName = chapter?.arabicTitle || "";
 
     return (
-      <View
-        ref={ref}
-        collapsable={false}
-        style={styles.card}
-      >
-        <View style={styles.ornamentTop}>
-          <Text style={styles.ornamentText}>﷽</Text>
+      <View ref={ref} collapsable={false} style={styles.card}>
+        {/* Decorative top border accent */}
+        <View style={styles.topAccent} />
+
+        {/* Ornamental header */}
+        <View style={styles.headerSection}>
+          <View style={styles.ornamentLine}>
+            <View style={styles.ornamentDash} />
+            <Text style={styles.ornamentStar}>✦</Text>
+            <View style={styles.ornamentDash} />
+          </View>
+          <Text style={styles.bismillah}>﷽</Text>
+          <View style={styles.ornamentLine}>
+            <View style={styles.ornamentDash} />
+            <Text style={styles.ornamentDiamond}>◆</Text>
+            <View style={styles.ornamentDash} />
+          </View>
         </View>
 
-        <View style={styles.verseContainer}>
-          <Text style={styles.verseText}>
-            ﴿{verse.text}﴾
-          </Text>
+        {/* Verse body */}
+        <View style={styles.verseSection}>
+          <Text style={styles.bracketOpen}>﴿</Text>
+          <Text style={styles.verseText}>{verse.text}</Text>
+          <Text style={styles.bracketClose}>﴾</Text>
         </View>
 
-        <View style={styles.referenceContainer}>
-          <Text style={styles.referenceText}>
-            سورة {surahName} — الآية {verse.number}
-          </Text>
+        {/* Surah reference pill */}
+        <View style={styles.referenceSection}>
+          <View style={styles.referencePill}>
+            <Text style={styles.referenceText}>
+              سورة {surahName}
+            </Text>
+            <View style={styles.referenceDot} />
+            <Text style={styles.referenceText}>
+              الآية {toArabicDigits(verse.number)}
+            </Text>
+          </View>
         </View>
 
-        <View style={styles.brandingContainer}>
-          <View style={styles.divider} />
-          <Text style={styles.brandingText}>Powered By Mushaf Imad</Text>
+        {/* Branding footer */}
+        <View style={styles.brandingSection}>
+          <View style={styles.brandingLine} />
+          <Text style={styles.brandingText}>مصحف عماد</Text>
+          <Text style={styles.brandingSubtext}>Mushaf Imad</Text>
         </View>
       </View>
     );
@@ -45,59 +65,129 @@ export const ShareVerseCard = forwardRef<View, ShareVerseCardProps>(
 
 const styles = StyleSheet.create({
   card: {
-    width: 600,
-    backgroundColor: "#FFF8E1",
-    borderRadius: 20,
-    padding: 32,
-    borderWidth: 3,
-    borderColor: "#1B5E20",
+    width: 620,
+    backgroundColor: "#FFFDF5",
+    borderRadius: 24,
+    overflow: "hidden",
   },
-  ornamentTop: {
+  topAccent: {
+    height: 6,
+    backgroundColor: "#1B5E20",
+  },
+
+  // Header
+  headerSection: {
     alignItems: "center",
-    marginBottom: 16,
+    paddingTop: 28,
+    paddingBottom: 8,
   },
-  ornamentText: {
-    fontSize: 32,
+  bismillah: {
+    fontSize: 36,
     color: "#1B5E20",
+    marginVertical: 8,
   },
-  verseContainer: {
+  ornamentLine: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  ornamentDash: {
+    width: 60,
+    height: 1,
+    backgroundColor: "#C5A55A",
+  },
+  ornamentStar: {
+    fontSize: 12,
+    color: "#C5A55A",
+  },
+  ornamentDiamond: {
+    fontSize: 8,
+    color: "#C5A55A",
+  },
+
+  // Verse
+  verseSection: {
+    marginHorizontal: 28,
+    marginVertical: 16,
     backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    padding: 24,
-    marginBottom: 16,
+    borderRadius: 16,
+    padding: 28,
     borderWidth: 1,
-    borderColor: "#E0E0E0",
+    borderColor: "rgba(27, 94, 32, 0.12)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  bracketOpen: {
+    fontSize: 32,
+    color: "#C5A55A",
+    textAlign: "center",
+    marginBottom: 4,
   },
   verseText: {
-    fontSize: 28,
-    lineHeight: 52,
+    fontSize: 30,
+    lineHeight: 56,
     textAlign: "center",
     color: "#1B1B1B",
     fontFamily: "uthmanTn1Bold",
   },
-  referenceContainer: {
+  bracketClose: {
+    fontSize: 32,
+    color: "#C5A55A",
+    textAlign: "center",
+    marginTop: 4,
+  },
+
+  // Reference
+  referenceSection: {
     alignItems: "center",
     marginBottom: 20,
   },
+  referencePill: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(27, 94, 32, 0.08)",
+    paddingVertical: 8,
+    paddingHorizontal: 24,
+    borderRadius: 20,
+    gap: 10,
+  },
   referenceText: {
-    fontSize: 18,
+    fontSize: 17,
     color: "#1B5E20",
     fontWeight: "600",
   },
-  brandingContainer: {
-    alignItems: "center",
+  referenceDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "#C5A55A",
   },
-  divider: {
-    width: "60%",
+
+  // Branding
+  brandingSection: {
+    alignItems: "center",
+    paddingBottom: 24,
+    paddingTop: 4,
+  },
+  brandingLine: {
+    width: 100,
     height: 1,
-    backgroundColor: "#1B5E20",
-    opacity: 0.3,
-    marginBottom: 10,
+    backgroundColor: "rgba(27, 94, 32, 0.15)",
+    marginBottom: 12,
   },
   brandingText: {
-    fontSize: 14,
-    color: "#888888",
-    fontWeight: "500",
-    letterSpacing: 1,
+    fontSize: 16,
+    color: "#1B5E20",
+    fontWeight: "700",
+    marginBottom: 2,
+  },
+  brandingSubtext: {
+    fontSize: 11,
+    color: "#999999",
+    letterSpacing: 2,
+    textTransform: "uppercase",
   },
 });
