@@ -24,20 +24,21 @@ export function VerseFasel({ number, scale }: Props) {
   return (
     <View style={[styles.container, { width, height }]}>
       <Fasel width={width} height={height} />
-      <Text
-        adjustsFontSizeToFit
-        minimumFontScale={0.8}
-        style={[
-          styles.text,
-          {
-            fontSize,
-            paddingHorizontal,
-            transform: [{ translateX: -1 * scale }, { translateY: 1 * scale }],
-          },
-        ]}
-      >
-        {toArabicDigits(number)}
-      </Text>
+      <View style={styles.textContainer}>
+        <Text
+          adjustsFontSizeToFit
+          minimumFontScale={0.8}
+          style={[
+            styles.text,
+            {
+              fontSize,
+              paddingHorizontal,
+            },
+          ]}
+        >
+          {toArabicDigits(number)}
+        </Text>
+      </View>
     </View>
   );
 }
@@ -46,14 +47,17 @@ const styles = StyleSheet.create({
   container: {
     position: "relative",
   },
-  text: {
+  textContainer: {
     position: "absolute",
     left: 0,
     right: 0,
     top: 0,
     bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  text: {
     textAlign: "center",
-    textAlignVertical: "center",
     fontFamily: "uthman_tn1_bold",
     color: colors.text.primary,
   },
