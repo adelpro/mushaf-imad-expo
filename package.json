@@ -16,7 +16,8 @@
     "doctor:expo": "npx expo-doctor",
     "doctor:react": "npx -y react-doctor@latest .",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "docs:start": "cd docs && npx fumapress"
   },
   "dependencies": {
     "expo": "54.0.33",
