@@ -6,9 +6,8 @@ import {
   View,
   ViewToken,
 } from "react-native";
-import { AudioPlayerBar } from "../components/audio-player-bar";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PageJumpInput } from "../components/page-jump-input";
-import { QuranPage } from "../components/quran-page";
 import { databaseService } from "../services/sqlite-service";
 import { QuranView } from "../components/quran";
 import { colors } from "../theme";
@@ -21,6 +20,7 @@ type ViewableItemsChangedInfo = {
 };
 
 export function MushafScreen() {
+  const insets = useSafeAreaInsets();
   const currentChapter = useMushafStore((s) => s.currentChapter);
   const setCurrentChapter = useMushafStore((s) => s.setCurrentChapter);
   const activeVerse = useMushafStore((s) => s.activeVerse);
@@ -86,7 +86,7 @@ export function MushafScreen() {
         pagingEnabled
         removeClippedSubviews
         renderItem={({ item }) => (
-          <View style={{ height: height - 60, width }}>
+          <View style={{ height: height - insets.top - insets.bottom, width }}>
             <QuranView
               activeChapter={currentChapter}
               activeVerse={activeVerse}
@@ -99,9 +99,6 @@ export function MushafScreen() {
         windowSize={3}
       />
       <PageJumpInput currentPage={currentPage} onJumpToPage={handleJumpToPage} />
-      <View style={{ height: 60 }}>
-        {/* <AudioPlayerBar /> */}
-      </View>
     </View>
   );
 }

@@ -10,6 +10,7 @@ import {
   StyleSheet,
   Pressable,
   Share,
+  ScrollView,
 } from "react-native";
 import { captureRef } from "react-native-view-shot";
 import * as Sharing from "expo-sharing";
@@ -56,6 +57,7 @@ export function QuranView({
   const [chapterPopupVisible, setChapterPopupVisible] = useState(false);
 
   const config = DEFAULT_CONFIG;
+  const LINE_GAP = 4;
   const lineHeight = width / config.lineAspectRatio;
   const lineScale = width / 1440;
 
@@ -281,12 +283,10 @@ export function QuranView({
     if (!page || !showVerseMarkers) return null;
 
     const markers = markersByLine.get(lineIndex) ?? [];
-    const scaledImageHeight = width / config.lineAspectRatio;
-    const cropOffset = (scaledImageHeight - lineHeight) / 2;
 
     return markers.map((m) => {
       const x = width * m.centerX;
-      const y = scaledImageHeight * m.centerY - cropOffset;
+      const y = lineHeight * m.centerY;
 
       return (
         <TouchableOpacity
@@ -385,7 +385,7 @@ export function QuranView({
             width,
             height: lineHeight,
             backgroundColor: "transparent",
-            marginBottom: 4,
+            marginBottom: i < config.lineCount - 1 ? LINE_GAP : 0,
           }}
           onPress={(e) => {
             onLineClicked(i, e.nativeEvent.locationX);
@@ -439,7 +439,14 @@ export function QuranView({
 
   return (
     <View style={styles.container}>
-      <View style={styles.linesContainer}>{renderLines()}</View>
+      <ScrollView
+        contentContainerStyle={styles.linesContainer}
+        showsVerticalScrollIndicator={true}
+        indicatorStyle="black"
+        flashScrollIndicators
+      >
+        {renderLines()}
+      </ScrollView>
 
       <VersePopup
         visible={versePopupVisible}
@@ -489,11 +496,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: DEFAULT_CONFIG.backgroundColor,
-    justifyContent: "center",
   },
   linesContainer: {
     flexDirection: "column",
-    justifyContent: "center",
+    alignItems: "center",
   },
   offScreen: {
     position: "absolute",
