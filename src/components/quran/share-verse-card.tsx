@@ -34,9 +34,11 @@ export const ShareVerseCard = forwardRef<View, ShareVerseCardProps>(
 
         {/* Verse body */}
         <View style={styles.verseSection}>
-          <Text style={styles.bracketOpen}>﴿</Text>
-          <Text style={styles.verseText}>{verse.text}</Text>
-          <Text style={styles.bracketClose}>﴾</Text>
+          <Text style={styles.verseText}>
+            <Text style={styles.bracket}> ﴿</Text>
+            {verse.text}
+            <Text style={styles.bracket}>﴾ </Text>
+          </Text>
         </View>
 
         {/* Surah reference pill */}
@@ -120,12 +122,6 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  bracketOpen: {
-    fontSize: 32,
-    color: "#C5A55A",
-    textAlign: "center",
-    marginBottom: 4,
-  },
   verseText: {
     fontSize: 30,
     lineHeight: 56,
@@ -133,11 +129,9 @@ const styles = StyleSheet.create({
     color: "#1B1B1B",
     fontFamily: "uthmanTn1Bold",
   },
-  bracketClose: {
+  bracket: {
     fontSize: 32,
     color: "#C5A55A",
-    textAlign: "center",
-    marginTop: 4,
   },
 
   // Reference
