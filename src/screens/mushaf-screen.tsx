@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import {
   Dimensions,
   FlatList,
@@ -7,6 +7,7 @@ import {
   ViewToken,
 } from "react-native";
 import { AudioPlayerBar } from "../components/audio-player-bar";
+import { PageJumpInput } from "../components/page-jump-input";
 import { QuranPage } from "../components/quran-page";
 import { databaseService } from "../services/sqlite-service";
 import { QuranView } from "../components/quran";
@@ -24,6 +25,8 @@ export function MushafScreen() {
   const setCurrentChapter = useMushafStore((s) => s.setCurrentChapter);
   const activeVerse = useMushafStore((s) => s.activeVerse);
   const pages = Array.from({ length: 604 }, (_, i) => i + 1);
+  const [currentPage, setCurrentPage] = useState(1);
+  const flatListRef = useRef<FlatList<number>>(null);
 
   async function updateChapter(pageNumber: number) {
     try {
@@ -50,14 +53,24 @@ export function MushafScreen() {
           : Number.parseInt(first?.key ?? "", 10);
 
       if (Number.isFinite(pageNum)) {
+        setCurrentPage(pageNum);
         void updateChapter(pageNum);
       }
     },
   ).current;
 
+  const handleJumpToPage = useCallback(
+    (page: number) => {
+      const index = page - 1;
+      flatListRef.current?.scrollToIndex({ index, animated: false });
+    },
+    [],
+  );
+
   return (
     <View style={styles.container}>
       <FlatList
+        ref={flatListRef}
         data={pages}
         getItemLayout={(_, index) => ({
           index,
@@ -85,6 +98,7 @@ export function MushafScreen() {
         viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
         windowSize={3}
       />
+      <PageJumpInput currentPage={currentPage} onJumpToPage={handleJumpToPage} />
       <View style={{ height: 60 }}>
         {/* <AudioPlayerBar /> */}
       </View>
