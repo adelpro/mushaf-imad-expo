@@ -17,6 +17,8 @@ interface VersePopupProps {
   chapter: Chapter | null;
   onClose: () => void;
   onLongPress?: () => void;
+  onShareText?: () => void;
+  onShareImage?: () => void;
 }
 
 export const VersePopup: React.FC<VersePopupProps> = ({
@@ -25,6 +27,8 @@ export const VersePopup: React.FC<VersePopupProps> = ({
   chapter,
   onClose,
   onLongPress,
+  onShareText,
+  onShareImage,
 }) => {
   if (!verse) return null;
 
@@ -54,17 +58,37 @@ export const VersePopup: React.FC<VersePopupProps> = ({
           </ScrollView>
 
           <View style={styles.footer}>
-            <TouchableOpacity style={styles.button} onPress={onClose}>
-              <Text style={styles.buttonText}>إغلاق</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.button, styles.primaryButton]}
-              onPress={onLongPress}
-            >
-              <Text style={[styles.buttonText, styles.primaryButtonText]}>
-                نسخ
-              </Text>
-            </TouchableOpacity>
+            {/* Share actions row */}
+            <View style={styles.shareRow}>
+              <TouchableOpacity
+                style={[styles.shareActionButton, styles.shareTextButton]}
+                onPress={onShareText}
+              >
+                <Text style={styles.shareActionLabel}>📤 مشاركة نص</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.shareActionButton, styles.shareImageButton]}
+                onPress={onShareImage}
+              >
+                <Text style={styles.shareActionLabel}>🖼️ مشاركة صورة</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Utility actions row */}
+            <View style={styles.utilRow}>
+              <TouchableOpacity
+                style={styles.utilButton}
+                onPress={onLongPress}
+              >
+                <Text style={styles.utilButtonText}>نسخ</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.utilButton}
+                onPress={onClose}
+              >
+                <Text style={styles.utilButtonText}>إغلاق</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </TouchableOpacity>
       </TouchableOpacity>
@@ -122,15 +146,15 @@ export const ChapterPopup: React.FC<ChapterPopupProps> = ({
             </View>
           </View>
 
-          <View style={styles.footer}>
-            <TouchableOpacity style={styles.button} onPress={onClose}>
-              <Text style={styles.buttonText}>إغلاق</Text>
+          <View style={styles.chapterFooter}>
+            <TouchableOpacity style={styles.utilButton} onPress={onClose}>
+              <Text style={styles.utilButtonText}>إغلاق</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.button, styles.primaryButton]}
+              style={styles.chapterDetailButton}
               onPress={onLongPress}
             >
-              <Text style={[styles.buttonText, styles.primaryButtonText]}>
+              <Text style={styles.chapterDetailText}>
                 تفاصيل
               </Text>
             </TouchableOpacity>
@@ -217,26 +241,62 @@ const styles = StyleSheet.create({
     color: colors.brand.default,
   },
   footer: {
+    borderTopWidth: 1,
+    borderTopColor: colors.border.default,
+    padding: 12,
+    gap: 8,
+  },
+  shareRow: {
     flexDirection: "row",
-    justifyContent: "space-around",
+    gap: 8,
+  },
+  shareActionButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  shareTextButton: {
+    backgroundColor: colors.brand.default,
+  },
+  shareImageButton: {
+    backgroundColor: colors.brand.accent,
+  },
+  shareActionLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.text.inverse,
+  },
+  utilRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 16,
+  },
+  utilButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+  },
+  utilButtonText: {
+    fontSize: 14,
+    color: colors.text.tertiary,
+  },
+  chapterFooter: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 12,
     padding: 12,
     borderTopWidth: 1,
     borderTopColor: colors.border.default,
   },
-  button: {
+  chapterDetailButton: {
+    backgroundColor: colors.brand.default,
     paddingVertical: 10,
     paddingHorizontal: 24,
-    borderRadius: 8,
+    borderRadius: 10,
   },
-  primaryButton: {
-    backgroundColor: colors.brand.default,
-  },
-  buttonText: {
-    fontSize: 16,
-    color: colors.text.secondary,
-  },
-  primaryButtonText: {
-    color: colors.text.inverse,
+  chapterDetailText: {
+    fontSize: 14,
     fontWeight: "600",
+    color: colors.text.inverse,
   },
 });

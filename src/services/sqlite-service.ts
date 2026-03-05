@@ -533,6 +533,17 @@ class DatabaseService {
     return chapter;
   }
 
+  async getChapterByIdentifier(identifier: number): Promise<Chapter | null> {
+    const db = await this.getDb();
+
+    const chapter = await db.getFirstAsync<Chapter>(
+      "SELECT * FROM chapters WHERE identifier = ? LIMIT 1",
+      identifier,
+    );
+
+    return chapter;
+  }
+
   async getChapters(): Promise<Chapter[]> {
     const db = await this.getDb();
 

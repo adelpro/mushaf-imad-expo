@@ -1,5 +1,5 @@
 // Quran Component - Main View with Content Press Support
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useRef } from "react";
 import {
   View,
   Image,
@@ -9,7 +9,12 @@ import {
   Text,
   StyleSheet,
   Pressable,
+  Share,
 } from "react-native";
+import { captureRef } from "react-native-view-shot";
+import * as Sharing from "expo-sharing";
+import { databaseService } from "../../services/sqlite-service";
+import { ShareVerseCard } from "./share-verse-card";
 import { useQuranData } from "./use-quran-data";
 import { DEFAULT_CONFIG } from "./constants";
 import {
@@ -46,6 +51,7 @@ export function QuranView({
 
   const [selectedVerse, setSelectedVerse] = useState<Verse | null>(null);
   const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
+  const shareCardRef = useRef<View>(null);
   const [versePopupVisible, setVersePopupVisible] = useState(false);
   const [chapterPopupVisible, setChapterPopupVisible] = useState(false);
 
@@ -113,6 +119,37 @@ export function QuranView({
     return map;
   }, [page, layout]);
 
+  const resolveChapterForVerse = useCallback(async (verse: Verse) => {
+    if (verse.chapter_id) {
+      const chapter = await databaseService.getChapterByIdentifier(verse.chapter_id);
+      if (chapter) setSelectedChapter(chapter);
+    }
+  }, []);
+
+  const handleShareText = useCallback(async () => {
+    if (!selectedVerse) return;
+    const chapterName = selectedChapter?.arabicTitle || "";
+    const surahRef = chapterName ? `سورة ${chapterName}` : "";
+    const message = `﴿${selectedVerse.text}﴾\n[${surahRef} - الآية ${selectedVerse.number}]`;
+    await Share.share({ message });
+  }, [selectedVerse, selectedChapter]);
+
+  const handleShareImage = useCallback(async () => {
+    if (!selectedVerse || !shareCardRef.current) return;
+    try {
+      const uri = await captureRef(shareCardRef, {
+        format: "png",
+        quality: 1,
+      });
+      await Sharing.shareAsync(uri, {
+        mimeType: "image/png",
+        dialogTitle: "مشاركة الآية كصورة",
+      });
+    } catch (err) {
+      console.error("[QuranView] Share image error:", err);
+    }
+  }, [selectedVerse]);
+
   const handleVersePress = useCallback(
     (verse: Verse, x: number, y: number) => {
       console.log("[QuranView] onVersePress:", {
@@ -122,6 +159,7 @@ export function QuranView({
         position: { x, y },
       });
       setSelectedVerse(verse);
+      resolveChapterForVerse(verse);
       setVersePopupVisible(true);
 
       const event: VersePressEvent = {
@@ -132,7 +170,7 @@ export function QuranView({
       };
       onVersePress?.(event);
     },
-    [pageNumber, onVersePress],
+    [pageNumber, onVersePress, resolveChapterForVerse],
   );
 
   const handleVerseLongPress = useCallback(
@@ -144,6 +182,7 @@ export function QuranView({
         position: { x, y },
       });
       setSelectedVerse(verse);
+      resolveChapterForVerse(verse);
       setVersePopupVisible(true);
       const event: VersePressEvent = {
         verse,
@@ -153,7 +192,7 @@ export function QuranView({
       };
       onVerseLongPress?.(event);
     },
-    [pageNumber, onVerseLongPress],
+    [pageNumber, onVerseLongPress, resolveChapterForVerse],
   );
 
   const handleChapterPress = useCallback(
@@ -327,9 +366,10 @@ export function QuranView({
       if (!targetVerse) return;
 
       setSelectedVerse(targetVerse);
+      resolveChapterForVerse(targetVerse);
       setVersePopupVisible(true);
     },
-    [width, page, layout, setSelectedVerse, setVersePopupVisible],
+    [width, page, layout, setSelectedVerse, setVersePopupVisible, resolveChapterForVerse],
   );
 
   const renderLines = () => {
@@ -406,7 +446,20 @@ export function QuranView({
         verse={selectedVerse}
         chapter={selectedChapter as Chapter | null}
         onClose={() => setVersePopupVisible(false)}
+        onShareText={handleShareText}
+        onShareImage={handleShareImage}
       />
+
+      {/* Off-screen card for image capture */}
+      {selectedVerse && (
+        <View style={styles.offScreen} pointerEvents="none">
+          <ShareVerseCard
+            ref={shareCardRef}
+            verse={selectedVerse}
+            chapter={selectedChapter as Chapter | null}
+          />
+        </View>
+      )}
 
       <ChapterPopup
         visible={chapterPopupVisible}
@@ -441,6 +494,11 @@ const styles = StyleSheet.create({
   linesContainer: {
     flexDirection: "column",
     justifyContent: "center",
+  },
+  offScreen: {
+    position: "absolute",
+    left: -9999,
+    top: -9999,
   },
   center: {
     flex: 1,
