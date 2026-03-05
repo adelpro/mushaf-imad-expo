@@ -17,6 +17,8 @@ interface VersePopupProps {
   chapter: Chapter | null;
   onClose: () => void;
   onLongPress?: () => void;
+  onShareText?: () => void;
+  onShareImage?: () => void;
 }
 
 export const VersePopup: React.FC<VersePopupProps> = ({
@@ -25,6 +27,8 @@ export const VersePopup: React.FC<VersePopupProps> = ({
   chapter,
   onClose,
   onLongPress,
+  onShareText,
+  onShareImage,
 }) => {
   if (!verse) return null;
 
@@ -63,6 +67,22 @@ export const VersePopup: React.FC<VersePopupProps> = ({
             >
               <Text style={[styles.buttonText, styles.primaryButtonText]}>
                 نسخ
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.button, styles.shareButton]}
+              onPress={onShareText}
+            >
+              <Text style={[styles.buttonText, styles.shareButtonText]}>
+                مشاركة نص
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.button, styles.shareButton]}
+              onPress={onShareImage}
+            >
+              <Text style={[styles.buttonText, styles.shareButtonText]}>
+                مشاركة صورة
               </Text>
             </TouchableOpacity>
           </View>
@@ -218,17 +238,22 @@ const styles = StyleSheet.create({
   },
   footer: {
     flexDirection: "row",
-    justifyContent: "space-around",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: 8,
     padding: 12,
     borderTopWidth: 1,
     borderTopColor: colors.border.default,
   },
   button: {
     paddingVertical: 10,
-    paddingHorizontal: 24,
+    paddingHorizontal: 16,
     borderRadius: 8,
   },
   primaryButton: {
+    backgroundColor: colors.brand.default,
+  },
+  shareButton: {
     backgroundColor: colors.brand.default,
   },
   buttonText: {
@@ -236,6 +261,10 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
   },
   primaryButtonText: {
+    color: colors.text.inverse,
+    fontWeight: "600",
+  },
+  shareButtonText: {
     color: colors.text.inverse,
     fontWeight: "600",
   },
