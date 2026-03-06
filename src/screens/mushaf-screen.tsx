@@ -6,9 +6,7 @@ import {
   View,
   ViewToken,
 } from "react-native";
-import { AudioPlayerBar } from "../components/audio-player-bar";
 import { PageJumpInput } from "../components/page-jump-input";
-import { QuranPage } from "../components/quran-page";
 import { databaseService } from "../services/sqlite-service";
 import { QuranView } from "../components/quran";
 import { colors } from "../theme";
@@ -20,13 +18,21 @@ type ViewableItemsChangedInfo = {
   viewableItems: ViewToken[];
 };
 
-export function MushafScreen() {
+type MushafScreenProps = {
+  onContentTap?: () => void;
+};
+
+export function MushafScreen({ onContentTap }: MushafScreenProps) {
   const currentChapter = useMushafStore((s) => s.currentChapter);
   const setCurrentChapter = useMushafStore((s) => s.setCurrentChapter);
   const activeVerse = useMushafStore((s) => s.activeVerse);
   const pages = Array.from({ length: 604 }, (_, i) => i + 1);
   const [currentPage, setCurrentPage] = useState(1);
   const flatListRef = useRef<FlatList<number>>(null);
+
+  const handleContentTap = useCallback(() => {
+    onContentTap?.();
+  }, [onContentTap]);
 
   async function updateChapter(pageNumber: number) {
     try {
@@ -86,10 +92,11 @@ export function MushafScreen() {
         pagingEnabled
         removeClippedSubviews
         renderItem={({ item }) => (
-          <View style={{ height: height - 60, width }}>
+          <View style={{ height, width }}>
             <QuranView
               activeChapter={currentChapter}
               activeVerse={activeVerse}
+              onContentTap={handleContentTap}
               pageNumber={item}
             />
           </View>
