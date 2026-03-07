@@ -9,6 +9,7 @@ import {
 import { PageJumpInput } from "../components/page-jump-input";
 import { databaseService } from "../services/sqlite-service";
 import { setLastRead } from "../services/last-read-service";
+import { addReadPage } from "../services/read-pages-service";
 import { QuranView } from "../components/quran";
 import { colors } from "../theme";
 import { useMushafStore } from "../store/mushaf-store";
@@ -16,7 +17,7 @@ import { useMushafStore } from "../store/mushaf-store";
 const { height, width } = Dimensions.get("window");
 
 /** Minimum time (ms) on a page before it counts as "read" for Continue Reading */
-const MIN_DWELL_MS = 60_000;
+const MIN_DWELL_MS = 12_000;
 
 /** Debounce (ms) before updating chapter highlight to reduce DB queries during fast scroll */
 const CHAPTER_UPDATE_DEBOUNCE_MS = 250;
@@ -159,6 +160,7 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
       dwellTimerRef.current = setTimeout(() => {
         dwellTimerRef.current = null;
         void persistLastRead(pageNum);
+        void addReadPage(pageNum);
       }, MIN_DWELL_MS);
     },
   ).current;

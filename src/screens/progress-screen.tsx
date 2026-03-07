@@ -8,7 +8,13 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ContinueReadingCard } from "../components/continue-reading-card";
+import { OverallProgress } from "../components/overall-progress";
+import { StatsCards } from "../components/stats-cards";
 import { getLastRead, type LastRead } from "../services/last-read-service";
+import {
+  getReadPages,
+  getReadPagesCount,
+} from "../services/read-pages-service";
 import { databaseService } from "../services/sqlite-service";
 import { useMushafStore } from "../store/mushaf-store";
 import { colors } from "../theme";
@@ -45,13 +51,34 @@ export function ProgressScreen({ onContinueReading }: ProgressScreenProps) {
   const [lastReadData, setLastReadData] = useState<LastReadWithChapter | null>(
     null,
   );
+  const [readCount, setReadCount] = useState(0);
+  const [verseCount, setVerseCount] = useState<number | null>(null);
+  const [stats, setStats] = useState({
+    juzCount: 0,
+    rubCount: 0,
+    hizbCount: 0,
+  });
   const [loading, setLoading] = useState(true);
   const setJumpToPage = useMushafStore((s) => s.setJumpToPage);
 
   const loadLastRead = useCallback(async () => {
     setLoading(true);
     try {
-      const lastRead = await getLastRead();
+      const [lastRead, readPages] = await Promise.all([
+        getLastRead(),
+        getReadPages(),
+      ]);
+      setReadCount(readPages.length);
+      const verses =
+        readPages.length > 0
+          ? await databaseService.getVerseCountForPageNumbers(readPages)
+          : 0;
+      setVerseCount(verses);
+      const juzRubHizb =
+        readPages.length > 0
+          ? await databaseService.getPartQuarterHizbForPageNumbers(readPages)
+          : { juzCount: 0, rubCount: 0, hizbCount: 0 };
+      setStats(juzRubHizb);
       if (!lastRead) {
         setLastReadData(null);
         return;
@@ -87,18 +114,33 @@ export function ProgressScreen({ onContinueReading }: ProgressScreenProps) {
 
   const renderContent = () => {
     if (loading) return <ProgressLoading />;
-    if (!lastReadData) return <ProgressEmpty />;
     return (
       <View style={styles.sections}>
-        <ContinueReadingCard
-          data={{
-            surahArabicName: lastReadData.surahArabicName,
-            ayah: lastReadData.ayah,
-            page: lastReadData.page,
-          }}
-          onContinue={handleContinue}
-        />
-        {/* Add more progress sections here as needed */}
+        {lastReadData ? (
+          <ContinueReadingCard
+            data={{
+              surahArabicName: lastReadData.surahArabicName,
+              ayah: lastReadData.ayah,
+              page: lastReadData.page,
+            }}
+            onContinue={handleContinue}
+          />
+        ) : (
+          <ProgressEmpty />
+        )}
+        {/* <View style={styles.statsWrapper}>
+          <StatsCards
+            juzCount={stats.juzCount}
+            rubCount={stats.rubCount}
+            hizbCount={stats.hizbCount}
+          />
+        </View> */}
+        <View style={styles.overallProgressWrapper}>
+          <OverallProgress
+            readCount={readCount}
+            verseCount={verseCount ?? undefined}
+          />
+        </View>
       </View>
     );
   };
@@ -129,6 +171,12 @@ const styles = StyleSheet.create({
   },
   sections: {
     flex: 1,
+  },
+  statsWrapper: {
+    marginTop: 20,
+  },
+  overallProgressWrapper: {
+    marginTop: 0,
   },
   loading: {
     flex: 1,

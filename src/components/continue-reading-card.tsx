@@ -46,7 +46,6 @@ export function ContinueReadingCard({ data, onContinue }: ContinueReadingCardPro
 
         <View style={styles.cardContent}>
           <View style={styles.cardHeader}>
-            <Text style={styles.continueLabel}>أَكْمِل الْقِرَاءَة</Text>
             <View style={styles.iconBox}>
               <Feather
                 name="book-open"
@@ -54,6 +53,7 @@ export function ContinueReadingCard({ data, onContinue }: ContinueReadingCardPro
                 color={colors.text.inverse}
               />
             </View>
+            <Text style={styles.continueLabel}>أكمل القراءة</Text>
           </View>
 
           <View style={styles.cardBody}>
