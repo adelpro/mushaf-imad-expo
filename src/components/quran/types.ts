@@ -143,7 +143,7 @@ export interface QuranViewProps {
   showSuraName?: boolean;
   showVerseMarkers?: boolean;
   showHighlights?: boolean;
-  useArabicDigits?: boolean;
+  digitsFormat?: boolean;
 
   // Theme
   backgroundColor?: string;
