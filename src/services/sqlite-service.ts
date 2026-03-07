@@ -555,52 +555,6 @@ class DatabaseService {
   }
 
   /**
-   * Returns counts of unique Juz (part), Rub (quarter), and Hizb for the given page numbers.
-   * Used for progress stats (e.g. "5/30 أجزاء", "12/240 ربع", "3/60 حزب").
-   */
-  async getPartQuarterHizbForPageNumbers(
-    pageNumbers: number[],
-  ): Promise<{ juzCount: number; rubCount: number; hizbCount: number }> {
-    const db = await this.getDb();
-
-    if (pageNumbers.length === 0) {
-      return { juzCount: 0, rubCount: 0, hizbCount: 0 };
-    }
-
-    const placeholders = pageNumbers.map(() => "?").join(",");
-    const rows = await db.getAllAsync<{ part_id: number | null; quarter_id: number | null }>(
-      `SELECT ph.part_id, ph.quarter_id
-       FROM page_headers ph
-       INNER JOIN pages p ON p.identifier = ph.page_id
-       WHERE p.number IN (${placeholders}) AND ph.layout_type = 1441`,
-      ...pageNumbers,
-    );
-
-    const partIds = new Set<number>();
-    const quarterIds = new Set<number>();
-    for (const row of rows) {
-      if (row.part_id != null) partIds.add(row.part_id);
-      if (row.quarter_id != null) quarterIds.add(row.quarter_id);
-    }
-
-    let hizbCount = 0;
-    if (quarterIds.size > 0) {
-      const qPlaceholders = [...quarterIds].map(() => "?").join(",");
-      const hizbRows = await db.getAllAsync<{ hizbNumber: number }>(
-        `SELECT DISTINCT hizbNumber FROM quarters WHERE identifier IN (${qPlaceholders})`,
-        ...quarterIds,
-      );
-      hizbCount = hizbRows.length;
-    }
-
-    return {
-      juzCount: partIds.size,
-      rubCount: quarterIds.size,
-      hizbCount,
-    };
-  }
-
-  /**
    * Returns the actual count of verses on the given page numbers (1441 layout).
    */
   async getVerseCountForPageNumbers(

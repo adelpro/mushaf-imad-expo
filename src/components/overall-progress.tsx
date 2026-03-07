@@ -29,7 +29,11 @@ function StatItem({ label, value, total, unit }: StatItemProps) {
   return (
     <View style={styles.statItem}>
       <Text style={styles.statLabel}>{label}</Text>
-      <Text style={styles.statValue}>
+      <Text
+        style={styles.statValue}
+        numberOfLines={1}
+        ellipsizeMode="tail"
+      >
         {total !== undefined ? (
           <>
             {value}
@@ -38,7 +42,9 @@ function StatItem({ label, value, total, unit }: StatItemProps) {
         ) : (
           value
         )}
-        {unit && <Text style={styles.statUnitInline}> {unit}</Text>}
+        {unit != null && unit !== "" ? (
+          <Text style={styles.statUnitInline}> {unit}</Text>
+        ) : null}
       </Text>
     </View>
   );
@@ -171,6 +177,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 6,
     alignItems: "center",
+    justifyContent: "space-between",
   },
   statDivider: {
     width: 1,

@@ -9,11 +9,9 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ContinueReadingCard } from "../components/continue-reading-card";
 import { OverallProgress } from "../components/overall-progress";
-import { StatsCards } from "../components/stats-cards";
 import { getLastRead, type LastRead } from "../services/last-read-service";
 import {
   getReadPages,
-  getReadPagesCount,
 } from "../services/read-pages-service";
 import { databaseService } from "../services/sqlite-service";
 import { useMushafStore } from "../store/mushaf-store";
@@ -53,11 +51,6 @@ export function ProgressScreen({ onContinueReading }: ProgressScreenProps) {
   );
   const [readCount, setReadCount] = useState(0);
   const [verseCount, setVerseCount] = useState<number | null>(null);
-  const [stats, setStats] = useState({
-    juzCount: 0,
-    rubCount: 0,
-    hizbCount: 0,
-  });
   const [loading, setLoading] = useState(true);
   const setJumpToPage = useMushafStore((s) => s.setJumpToPage);
 
@@ -74,11 +67,6 @@ export function ProgressScreen({ onContinueReading }: ProgressScreenProps) {
           ? await databaseService.getVerseCountForPageNumbers(readPages)
           : 0;
       setVerseCount(verses);
-      const juzRubHizb =
-        readPages.length > 0
-          ? await databaseService.getPartQuarterHizbForPageNumbers(readPages)
-          : { juzCount: 0, rubCount: 0, hizbCount: 0 };
-      setStats(juzRubHizb);
       if (!lastRead) {
         setLastReadData(null);
         return;
@@ -97,6 +85,8 @@ export function ProgressScreen({ onContinueReading }: ProgressScreenProps) {
       });
     } catch {
       setLastReadData(null);
+      setReadCount(0);
+      setVerseCount(null);
     } finally {
       setLoading(false);
     }
@@ -128,13 +118,6 @@ export function ProgressScreen({ onContinueReading }: ProgressScreenProps) {
         ) : (
           <ProgressEmpty />
         )}
-        {/* <View style={styles.statsWrapper}>
-          <StatsCards
-            juzCount={stats.juzCount}
-            rubCount={stats.rubCount}
-            hizbCount={stats.hizbCount}
-          />
-        </View> */}
         <View style={styles.overallProgressWrapper}>
           <OverallProgress
             readCount={readCount}
@@ -171,9 +154,6 @@ const styles = StyleSheet.create({
   },
   sections: {
     flex: 1,
-  },
-  statsWrapper: {
-    marginTop: 20,
   },
   overallProgressWrapper: {
     marginTop: 0,
