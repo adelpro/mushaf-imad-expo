@@ -113,7 +113,7 @@ const VerseMarkersLayer = React.memo(function VerseMarkersLayer({
               top: y - FASEL_HEIGHT / 2 + FASEL_CENTER_Y_OFFSET,
             }}
           >
-            <VerseFasel number={m.number} scale={LINE_SCALE} />
+            <VerseFasel number={m.number} scale={LINE_SCALE} digitsFormat={digitsFormat} />
           </View>
         );
       })}
@@ -169,12 +169,14 @@ interface Props {
   pageNumber: number;
   activeChapter?: number;
   activeVerse?: number | null;
+  digitsFormat?: boolean;
 }
 
 export const QuranPage = React.memo<Props>(function QuranPage({
   pageNumber,
   activeChapter,
   activeVerse,
+  digitsFormat = true,
 }) {
   const { page, loading, error, retry } = useQuranPage(pageNumber);
 

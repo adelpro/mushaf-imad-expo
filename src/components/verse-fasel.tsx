@@ -13,9 +13,10 @@ const BASE_PADDING = 2 * BALANCE;
 type Props = {
   number: number;
   scale: number;
+  digitsFormat?: boolean;
 };
 
-export function VerseFasel({ number, scale }: Props) {
+export function VerseFasel({ number, scale, digitsFormat = true }: Props) {
   const width = BASE_WIDTH * scale;
   const height = BASE_HEIGHT * scale;
   const fontSize = BASE_FONT_SIZE * scale;
@@ -24,20 +25,21 @@ export function VerseFasel({ number, scale }: Props) {
   return (
     <View style={[styles.container, { width, height }]}>
       <Fasel width={width} height={height} />
-      <Text
-        adjustsFontSizeToFit
-        minimumFontScale={0.8}
-        style={[
-          styles.text,
-          {
-            fontSize,
-            paddingHorizontal,
-            transform: [{ translateX: -1 * scale }, { translateY: 1 * scale }],
-          },
-        ]}
-      >
-        {toArabicDigits(number)}
-      </Text>
+      <View style={styles.textContainer}>
+        <Text
+          adjustsFontSizeToFit
+          minimumFontScale={0.8}
+          style={[
+            styles.text,
+            {
+              fontSize,
+              paddingHorizontal,
+            },
+          ]}
+        >
+          {digitsFormat ? toArabicDigits(number) : String(number)}
+        </Text>
+      </View>
     </View>
   );
 }
@@ -46,14 +48,17 @@ const styles = StyleSheet.create({
   container: {
     position: "relative",
   },
-  text: {
+  textContainer: {
     position: "absolute",
     left: 0,
     right: 0,
     top: 0,
     bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  text: {
     textAlign: "center",
-    textAlignVertical: "center",
     fontFamily: "uthman_tn1_bold",
     color: colors.text.primary,
   },
