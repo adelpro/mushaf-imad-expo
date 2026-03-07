@@ -13,9 +13,10 @@ const BASE_PADDING = 2 * BALANCE;
 type Props = {
   number: number;
   scale: number;
+  useArabicDigits?: boolean;
 };
 
-export function VerseFasel({ number, scale }: Props) {
+export function VerseFasel({ number, scale, useArabicDigits = true }: Props) {
   const width = BASE_WIDTH * scale;
   const height = BASE_HEIGHT * scale;
   const fontSize = BASE_FONT_SIZE * scale;
@@ -36,7 +37,7 @@ export function VerseFasel({ number, scale }: Props) {
             },
           ]}
         >
-          {toArabicDigits(number)}
+          {useArabicDigits ? toArabicDigits(number) : String(number)}
         </Text>
       </View>
     </View>
