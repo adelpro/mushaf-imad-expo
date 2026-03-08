@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import {
   FlatList,
   StyleSheet,
@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import * as ScreenOrientation from "expo-screen-orientation";
 import { QuranPage } from "../components/QuranPage";
+import { AudioPlayerBar } from "../components/AudioPlayerBar";
 import { databaseService } from "../services/SQLiteService";
 
 type ViewableItemsChangedInfo = {
@@ -24,10 +25,8 @@ export function MushafScreen() {
   const pages = Array.from({ length: 604 }, (_, i) => i + 1);
 
   useEffect(() => {
-    // Get initial orientation
     ScreenOrientation.getOrientationAsync().then(setOrientation);
 
-    // Listen for orientation changes
     const subscription = ScreenOrientation.addOrientationChangeListener(
       (event) => {
         setOrientation(event.orientationInfo.orientation);
@@ -43,9 +42,12 @@ export function MushafScreen() {
     orientation === ScreenOrientation.Orientation.LANDSCAPE_LEFT ||
     orientation === ScreenOrientation.Orientation.LANDSCAPE_RIGHT;
 
-  // Reserve less space for controls in landscape
-  const controlsHeight = isLandscape ? 40 : 60;
-  const pageHeight = height - controlsHeight;
+  const audioBarHeight = isLandscape ? 36 : 48;
+  const pageHeight = height - audioBarHeight;
+
+  const handleVerseChange = useCallback((verseNumber: number) => {
+    setActiveVerse(verseNumber);
+  }, []);
 
   async function updateChapter(pageNumber: number) {
     try {
@@ -108,7 +110,10 @@ export function MushafScreen() {
         viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
         windowSize={3}
       />
-      <View style={{ height: controlsHeight }} />
+      <AudioPlayerBar
+        chapterNumber={currentChapter}
+        onVerseChange={handleVerseChange}
+      />
     </View>
   );
 }

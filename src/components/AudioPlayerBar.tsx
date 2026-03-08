@@ -1,76 +1,250 @@
-import React, { useEffect, useState } from 'react';
-import { View, Button, StyleSheet, Text } from 'react-native';
-import { useAudioPlayer } from 'expo-audio';
-import { loadTiming } from '../services/AyahTimingService';
+import React, { useState, useMemo } from 'react';
+import {
+  View,
+  TouchableOpacity,
+  StyleSheet,
+  Text,
+  Modal,
+  FlatList,
+  Pressable,
+} from 'react-native';
+import { useAudioSync } from '../hooks/useAudioSync';
+import { getAvailableReciters } from '../services/AyahTimingService';
+import { toArabicDigits } from '../utils/toArabicDigits';
 
 interface Props {
   chapterNumber: number;
   onVerseChange: (verseNumber: number) => void;
 }
 
-export const AudioPlayerBar: React.FC<Props> = ({ chapterNumber, onVerseChange }) => {
-  const paddedChapter = chapterNumber.toString().padStart(3, '0');
-  const url = `https://server6.mp3quran.net/akdr/${paddedChapter}.mp3`;
-  
-  const player = useAudioPlayer(url);
-  const [timing, setTiming] = useState<any>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+export const AudioPlayerBar: React.FC<Props> = ({
+  chapterNumber,
+  onVerseChange,
+}) => {
+  const [reciterId, setReciterId] = useState(1);
+  const [reciterModalVisible, setReciterModalVisible] = useState(false);
 
-  useEffect(() => {
-    loadTiming(1).then(data => {
-      if (data) {
-        const chapterData = data.chapters.find((c: any) => c.id === chapterNumber);
-        setTiming(chapterData);
-      }
-    });
-  }, [chapterNumber]);
+  const {
+    isPlaying,
+    currentVerse,
+    currentTimeMs,
+    durationMs,
+    togglePlay,
+    nextVerse,
+    previousVerse,
+  } = useAudioSync({
+    reciterId,
+    chapterNumber,
+    onVerseChange,
+  });
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // Check if player is playing. Note: player.playing might be a getter.
-      // We assume player object is stable but its properties change.
-      // However, hooks usually trigger re-render on change if they are stateful.
-      // If useAudioPlayer returns a plain object ref, we need to poll.
-      
-      const playing = player.playing;
-      if (playing !== isPlaying) {
-        setIsPlaying(playing);
-      }
+  const reciters = useMemo(() => getAvailableReciters(), []);
+  const currentReciter = reciters.find((r) => r.id === reciterId);
 
-      if (playing && timing) {
-        const timeMs = player.currentTime * 1000;
-        const verse = timing.aya_timing.find((t: any) => timeMs >= t.start_time && timeMs < t.end_time);
-        if (verse) {
-          onVerseChange(verse.ayah);
-        }
-      }
-    }, 200);
-
-    return () => clearInterval(interval);
-  }, [player, timing, isPlaying, onVerseChange]);
-
-  const togglePlay = () => {
-    if (player.playing) {
-      player.pause();
-    } else {
-      player.play();
-    }
+  const formatTime = (ms: number) => {
+    const totalSeconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
+
+  const progress = durationMs > 0 ? currentTimeMs / durationMs : 0;
 
   return (
     <View style={styles.container}>
-      <Button title={isPlaying ? "Pause" : "Play"} onPress={togglePlay} />
-      <Text>{isPlaying ? "Playing" : "Paused"}</Text>
+      <View style={styles.progressBarContainer}>
+        <View style={[styles.progressBar, { width: `${progress * 100}%` }]} />
+      </View>
+
+      <View style={styles.controls}>
+        <TouchableOpacity
+          style={styles.reciterButton}
+          onPress={() => setReciterModalVisible(true)}
+        >
+          <Text style={styles.reciterName} numberOfLines={1}>
+            {currentReciter?.name ?? ''}
+          </Text>
+        </TouchableOpacity>
+
+        <View style={styles.mainControls}>
+          <TouchableOpacity onPress={previousVerse} style={styles.controlButton}>
+            <Text style={styles.controlIcon}>⏮</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={togglePlay} style={styles.playButton}>
+            <Text style={styles.playIcon}>{isPlaying ? '⏸' : '▶'}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={nextVerse} style={styles.controlButton}>
+            <Text style={styles.controlIcon}>⏭</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.info}>
+          {currentVerse !== null && currentVerse > 0 && (
+            <Text style={styles.verseIndicator}>
+              آية {toArabicDigits(currentVerse)}
+            </Text>
+          )}
+          <Text style={styles.timeText}>
+            {formatTime(currentTimeMs)} / {formatTime(durationMs)}
+          </Text>
+        </View>
+      </View>
+
+      <Modal
+        visible={reciterModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setReciterModalVisible(false)}
+      >
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setReciterModalVisible(false)}
+        >
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>اختيار القارئ</Text>
+            <FlatList
+              data={reciters}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[
+                    styles.reciterItem,
+                    item.id === reciterId && styles.reciterItemActive,
+                  ]}
+                  onPress={() => {
+                    setReciterId(item.id);
+                    setReciterModalVisible(false);
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.reciterItemText,
+                      item.id === reciterId && styles.reciterItemTextActive,
+                    ]}
+                  >
+                    {item.name}
+                  </Text>
+                  <Text style={styles.reciterItemSubtext}>{item.name_en}</Text>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </Pressable>
+      </Modal>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    padding: 10,
-    backgroundColor: '#eee',
+    backgroundColor: '#1B5E20',
+  },
+  progressBarContainer: {
+    height: 3,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  progressBar: {
+    height: '100%',
+    backgroundColor: '#A5D6A7',
+  },
+  controls: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  reciterButton: {
+    flex: 1,
+    marginRight: 8,
+  },
+  reciterName: {
+    color: '#C8E6C9',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  mainControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  controlButton: {
+    padding: 6,
+  },
+  controlIcon: {
+    fontSize: 16,
+    color: '#FFFFFF',
+  },
+  playButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  playIcon: {
+    fontSize: 16,
+    color: '#FFFFFF',
+  },
+  info: {
+    flex: 1,
+    alignItems: 'flex-end',
+    marginLeft: 8,
+  },
+  verseIndicator: {
+    color: '#A5D6A7',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  timeText: {
+    color: 'rgba(255, 255, 255, 0.6)',
+    fontSize: 10,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    maxHeight: '60%',
+    paddingBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    textAlign: 'center',
+    paddingVertical: 16,
+    color: '#1B5E20',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+  },
+  reciterItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#E0E0E0',
+  },
+  reciterItemActive: {
+    backgroundColor: '#E8F5E9',
+  },
+  reciterItemText: {
+    fontSize: 16,
+    color: '#333333',
+    textAlign: 'right',
+  },
+  reciterItemTextActive: {
+    color: '#1B5E20',
+    fontWeight: '700',
+  },
+  reciterItemSubtext: {
+    fontSize: 12,
+    color: '#888888',
+    textAlign: 'right',
+    marginTop: 2,
   },
 });
