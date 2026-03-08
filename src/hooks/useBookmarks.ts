@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { AppState } from "react-native";
 import {
   bookmarkService,
   Bookmark,
@@ -55,6 +56,16 @@ export function useBookmarks() {
 
 export function useIsBookmarked(verseID: number | null) {
   const [bookmarked, setBookmarked] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") {
+        setRefreshKey((k) => k + 1);
+      }
+    });
+    return () => subscription.remove();
+  }, []);
 
   useEffect(() => {
     if (verseID === null) {
@@ -62,7 +73,9 @@ export function useIsBookmarked(verseID: number | null) {
       return;
     }
     bookmarkService.isBookmarked(verseID).then(setBookmarked).catch(() => {});
-  }, [verseID]);
+  }, [verseID, refreshKey]);
 
-  return bookmarked;
+  const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
+
+  return { bookmarked, refresh };
 }

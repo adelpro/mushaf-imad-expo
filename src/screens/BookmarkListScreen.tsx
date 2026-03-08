@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -23,9 +23,15 @@ export const BookmarkListScreen: React.FC<BookmarkListScreenProps> = ({
   onClose,
   onNavigateToPage,
 }) => {
-  const { bookmarks, loading, remove, updateNote } = useBookmarks();
+  const { bookmarks, loading, remove, updateNote, refresh } = useBookmarks();
   const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
   const [noteText, setNoteText] = useState("");
+
+  useEffect(() => {
+    if (visible) {
+      refresh();
+    }
+  }, [visible, refresh]);
 
   const handleDelete = (bookmark: Bookmark) => {
     Alert.alert("حذف العلامة", "هل تريد حذف هذه العلامة المرجعية؟", [

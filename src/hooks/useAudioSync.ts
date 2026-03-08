@@ -18,7 +18,7 @@ export type AudioSyncState = {
 type UseAudioSyncOptions = {
   reciterId: number;
   chapterNumber: number;
-  onVerseChange?: (verseNumber: number) => void;
+  onVerseChange?: (verseNumber: number | null) => void;
 };
 
 export function useAudioSync({
@@ -76,18 +76,22 @@ export function useAudioSync({
         }
       }
 
-      setState({
+      const resolvedVerse = currentVerse ?? lastVerseRef.current;
+
+      setState((prev) => ({
         isPlaying: playing,
         isLoaded: true,
-        currentVerse,
+        currentVerse: resolvedVerse,
         currentTimeMs,
         durationMs,
-        verseTiming,
-      });
+        verseTiming: verseTiming ?? prev.verseTiming,
+      }));
 
       if (currentVerse !== null && currentVerse !== lastVerseRef.current) {
         lastVerseRef.current = currentVerse;
         onVerseChangeRef.current?.(currentVerse);
+      } else if (!playing && currentVerse === null && lastVerseRef.current !== null) {
+        onVerseChangeRef.current?.(null);
       }
     }, 150);
 

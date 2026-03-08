@@ -26,7 +26,10 @@ class BookmarkService {
     if (this.db) return this.db;
     if (this.initPromise) return this.initPromise;
 
-    this.initPromise = this.init();
+    this.initPromise = this.init().catch((err) => {
+      this.initPromise = null;
+      throw err;
+    });
     this.db = await this.initPromise;
     return this.db;
   }
@@ -48,11 +51,9 @@ class BookmarkService {
       );
     `);
 
-    await db
-      .execAsync(
-        "CREATE UNIQUE INDEX IF NOT EXISTS idx_bookmarks_verse ON bookmarks(verseID);",
-      )
-      .catch(() => {});
+    await db.execAsync(
+      "CREATE UNIQUE INDEX IF NOT EXISTS idx_bookmarks_verse ON bookmarks(verseID);",
+    );
 
     return db;
   }
@@ -117,14 +118,28 @@ class BookmarkService {
     return bookmark !== null;
   }
 
+  private toggleLock = Promise.resolve();
+
   async toggleBookmark(bookmark: NewBookmark): Promise<boolean> {
-    const existing = await this.getBookmark(bookmark.verseID);
-    if (existing) {
-      await this.removeBookmark(bookmark.verseID);
-      return false;
+    const release = this.toggleLock.then(() => {});
+    let resolve: () => void;
+    this.toggleLock = new Promise<void>((r) => { resolve = r; });
+
+    await release;
+    try {
+      const db = await this.getDb();
+      const deleted = await db.runAsync(
+        "DELETE FROM bookmarks WHERE verseID = ?",
+        [bookmark.verseID],
+      );
+      if (deleted.changes > 0) {
+        return false;
+      }
+      await this.addBookmark(bookmark);
+      return true;
+    } finally {
+      resolve!();
     }
-    await this.addBookmark(bookmark);
-    return true;
   }
 }
 

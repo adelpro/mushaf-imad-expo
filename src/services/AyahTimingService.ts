@@ -42,12 +42,27 @@ const TIMING_FILES: Record<number, () => ReciterData> = {
 
 const cache = new Map<number, ReciterData>();
 
-export function getAvailableReciters(): Array<{ id: number; name: string; name_en: string }> {
-  return Object.keys(TIMING_FILES).map((key) => {
+type ReciterMeta = { id: number; name: string; name_en: string };
+
+const metadataCache: ReciterMeta[] = [];
+
+export function getAvailableReciters(): ReciterMeta[] {
+  if (metadataCache.length > 0) return metadataCache;
+
+  for (const key of Object.keys(TIMING_FILES)) {
     const id = Number(key);
-    const data = loadTimingSync(id);
-    return { id, name: data?.name ?? '', name_en: data?.name_en ?? '' };
-  });
+    const cached = cache.get(id);
+    if (cached) {
+      metadataCache.push({ id, name: cached.name, name_en: cached.name_en });
+      continue;
+    }
+    const loader = TIMING_FILES[id];
+    if (!loader) continue;
+    const data = loader();
+    metadataCache.push({ id, name: data.name, name_en: data.name_en });
+  }
+
+  return metadataCache;
 }
 
 function loadTimingSync(reciterId: number): ReciterData | null {

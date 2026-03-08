@@ -14,7 +14,7 @@ import { toArabicDigits } from '../utils/toArabicDigits';
 
 interface Props {
   chapterNumber: number;
-  onVerseChange: (verseNumber: number) => void;
+  onVerseChange: (verseNumber: number | null) => void;
 }
 
 export const AudioPlayerBar: React.FC<Props> = ({
@@ -67,15 +67,30 @@ export const AudioPlayerBar: React.FC<Props> = ({
         </TouchableOpacity>
 
         <View style={styles.mainControls}>
-          <TouchableOpacity onPress={previousVerse} style={styles.controlButton}>
+          <TouchableOpacity
+            onPress={previousVerse}
+            style={styles.controlButton}
+            accessibilityLabel="الآية السابقة"
+            accessibilityRole="button"
+          >
             <Text style={styles.controlIcon}>⏮</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={togglePlay} style={styles.playButton}>
+          <TouchableOpacity
+            onPress={togglePlay}
+            style={styles.playButton}
+            accessibilityLabel={isPlaying ? 'إيقاف مؤقت' : 'تشغيل'}
+            accessibilityRole="button"
+          >
             <Text style={styles.playIcon}>{isPlaying ? '⏸' : '▶'}</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={nextVerse} style={styles.controlButton}>
+          <TouchableOpacity
+            onPress={nextVerse}
+            style={styles.controlButton}
+            accessibilityLabel="الآية التالية"
+            accessibilityRole="button"
+          >
             <Text style={styles.controlIcon}>⏭</Text>
           </TouchableOpacity>
         </View>
