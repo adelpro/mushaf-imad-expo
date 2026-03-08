@@ -375,8 +375,10 @@ export function QuranView({
 
   const renderLines = () => {
     const lines: React.ReactNode[] = [];
+    const startLine = isCentered ? 3 : 0;
+    const endLine = isCentered ? 12 : config.lineCount;
 
-    for (let i = 0; i < config.lineCount; i++) {
+    for (let i = startLine; i < endLine; i++) {
       const lineImageSource = resolveLineImage(i);
 
       lines.push(
@@ -386,7 +388,7 @@ export function QuranView({
             width,
             height: lineHeight,
             backgroundColor: "transparent",
-            marginBottom: i < config.lineCount - 1 ? LINE_GAP : 0,
+            marginBottom: i < endLine - 1 ? LINE_GAP : 0,
           }}
           onPress={(e) => {
             onLineClicked(i, e.nativeEvent.locationX);
@@ -438,10 +440,15 @@ export function QuranView({
     );
   }
 
+  const isCentered = pageNumber === 1 || pageNumber === 2;
+
   return (
     <View style={styles.container}>
       <ScrollView
-        contentContainerStyle={styles.linesContainer}
+        contentContainerStyle={[
+          styles.linesContainer,
+          isCentered && styles.centeredContent,
+        ]}
         showsVerticalScrollIndicator={true}
         indicatorStyle="black"
         flashScrollIndicators
@@ -501,6 +508,10 @@ const styles = StyleSheet.create({
   linesContainer: {
     flexDirection: "column",
     alignItems: "center",
+  },
+  centeredContent: {
+    flexGrow: 1,
+    justifyContent: "center",
   },
   offScreen: {
     position: "absolute",
