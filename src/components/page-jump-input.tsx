@@ -35,8 +35,12 @@ export function PageJumpInput({ currentPage, onJumpToPage }: PageJumpInputProps)
     const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
 
     const showSub = Keyboard.addListener(showEvent, (e) => {
+      const kbHeight = e.endCoordinates.height;
+      // Effective bottom = base (70) minus translateY (negative Y = higher)
+      const effectiveBottom = 70 - lastOffset.current.y;
+      const needed = Math.max(0, kbHeight - effectiveBottom + 50); // 50px padding
       Animated.timing(keyboardOffset, {
-        toValue: e.endCoordinates.height,
+        toValue: needed,
         duration: Platform.OS === "ios" ? e.duration : 200,
         useNativeDriver: false,
       }).start();
@@ -101,7 +105,9 @@ export function PageJumpInput({ currentPage, onJumpToPage }: PageJumpInputProps)
           toValue: { x: clampedX, y: clampedY },
           useNativeDriver: false,
           friction: 7,
-        }).start();
+        }).start(() => {
+          isDragging.current = false;
+        });
       },
     }),
   ).current;
