@@ -1,4 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { AudioPlayerBar } from "../components/audio-player-bar";
+import { BookmarkListScreen } from "./bookmark-list-screen";
 import {
   Dimensions,
   FlatList,
@@ -39,16 +41,15 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
   const storeCurrentPage = useMushafStore((s) => s.currentPage);
   const setStoreCurrentPage = useMushafStore((s) => s.setCurrentPage);
   const pages = Array.from({ length: 604 }, (_, i) => i + 1);
+  const setActiveVerse = useMushafStore((s) => s.setActiveVerse);
   const [currentPage, setCurrentPage] = useState(1);
+  const [bookmarksVisible, setBookmarksVisible] = useState(false);
   const flatListRef = useRef<FlatList<number>>(null);
   const dwellTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const chapterUpdateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const currentDwellPageRef = useRef<number>(1);
 
   const initialScrollIndex = (() => {
-    // When coming from "أكمل" (Continue), jumpToPage is set and must be used exclusively.
-    // Do NOT fall back to storeCurrentPage here—that would use the last scroll position
-    // instead of the persisted last-read page.
     const target = jumpToPage ?? storeCurrentPage;
     if (target >= 1 && target <= 604) return target - 1;
     return 0;
@@ -65,6 +66,13 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
       return () => cancelAnimationFrame(id);
     }
   }, [jumpToPage, setJumpToPage]);
+
+  const handleVerseChange = useCallback(
+    (verseNumber: number | null) => {
+      setActiveVerse(verseNumber);
+    },
+    [setActiveVerse],
+  );
 
   const handleContentTap = useCallback(() => {
     onContentTap();
@@ -207,9 +215,15 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
         windowSize={3}
       />
       <PageJumpInput currentPage={currentPage} onJumpToPage={handleJumpToPage} />
-      <View style={{ height: 60 }}>
-        {/* <AudioPlayerBar /> */}
-      </View>
+      <AudioPlayerBar
+        chapterNumber={currentChapter}
+        onVerseChange={handleVerseChange}
+      />
+      <BookmarkListScreen
+        visible={bookmarksVisible}
+        onClose={() => setBookmarksVisible(false)}
+        onNavigateToPage={handleJumpToPage}
+      />
     </View>
   );
 }
