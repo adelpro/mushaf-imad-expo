@@ -27,7 +27,7 @@ type ViewableItemsChangedInfo = {
 };
 
 type MushafScreenProps = {
-  onContentTap?: () => void;
+  onContentTap: () => void;
 };
 
 export function MushafScreen({ onContentTap }: MushafScreenProps) {
@@ -67,7 +67,7 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
   }, [jumpToPage, setJumpToPage]);
 
   const handleContentTap = useCallback(() => {
-    onContentTap?.();
+    onContentTap();
     const pageToSave = currentDwellPageRef.current;
     if (Number.isFinite(pageToSave)) {
       if (dwellTimerRef.current) {

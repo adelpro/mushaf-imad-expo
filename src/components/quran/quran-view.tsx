@@ -161,7 +161,7 @@ export function QuranView({
         position: { x, y },
       };
       onVersePress?.(event);
-      onContentTap?.();
+      onContentTap();
     },
     [pageNumber, onVersePress, onContentTap],
   );
@@ -381,7 +381,7 @@ export function QuranView({
             marginBottom: 4,
           }}
           onPress={() => {
-            onContentTap?.();
+            onContentTap();
           }}
           onLongPress={(e) => {
             onLineLongPress(i, e.nativeEvent.locationX);
