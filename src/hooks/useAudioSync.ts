@@ -53,6 +53,7 @@ export function useAudioSync({
       verseTiming: null,
       isPlaying: false,
     }));
+    onVerseChangeRef.current?.(null);
   }, [chapterNumber, reciterId]);
 
   useEffect(() => {
@@ -66,7 +67,7 @@ export function useAudioSync({
       let currentVerse: number | null = null;
       let verseTiming: AyahTiming | null = null;
 
-      if (playing && chapterTiming) {
+      if (chapterTiming) {
         const timing = chapterTiming.aya_timing.find(
           (t) => currentTimeMs >= t.start_time && currentTimeMs < t.end_time,
         );
@@ -90,7 +91,8 @@ export function useAudioSync({
       if (currentVerse !== null && currentVerse !== lastVerseRef.current) {
         lastVerseRef.current = currentVerse;
         onVerseChangeRef.current?.(currentVerse);
-      } else if (!playing && currentVerse === null && lastVerseRef.current !== null) {
+      } else if (currentVerse === null && lastVerseRef.current !== null) {
+        lastVerseRef.current = null;
         onVerseChangeRef.current?.(null);
       }
     }, 150);

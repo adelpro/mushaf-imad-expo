@@ -22,6 +22,7 @@ export function MushafScreen() {
   );
   const [currentChapter, setCurrentChapter] = useState(1);
   const [activeVerse, setActiveVerse] = useState<number | null>(null);
+  const latestPageRef = useRef(0);
   const pages = Array.from({ length: 604 }, (_, i) => i + 1);
 
   useEffect(() => {
@@ -45,16 +46,19 @@ export function MushafScreen() {
   const audioBarHeight = isLandscape ? 36 : 48;
   const pageHeight = height - audioBarHeight;
 
-  const handleVerseChange = useCallback((verseNumber: number) => {
+  const handleVerseChange = useCallback((verseNumber: number | null) => {
     setActiveVerse(verseNumber);
   }, []);
 
   async function updateChapter(pageNumber: number) {
+    latestPageRef.current = pageNumber;
     try {
       const page = await databaseService.getPageByNumber(pageNumber);
+      if (latestPageRef.current !== pageNumber) return;
       const chapterNum = page?.verses1441?.[0]?.chapter_id ?? null;
       if (chapterNum) {
         const chapter = await databaseService.getChapterByNumber(chapterNum);
+        if (latestPageRef.current !== pageNumber) return;
         if (chapter) {
           setCurrentChapter((prev) =>
             chapter.number !== prev ? chapter.number : prev,

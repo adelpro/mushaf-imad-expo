@@ -60,6 +60,9 @@ export const AudioPlayerBar: React.FC<Props> = ({
         <TouchableOpacity
           style={styles.reciterButton}
           onPress={() => setReciterModalVisible(true)}
+          accessibilityRole="button"
+          accessibilityLabel={`القارئ: ${currentReciter?.name ?? ''}`}
+          accessibilityHint="اضغط لاختيار قارئ آخر"
         >
           <Text style={styles.reciterName} numberOfLines={1}>
             {currentReciter?.name ?? ''}
@@ -72,6 +75,7 @@ export const AudioPlayerBar: React.FC<Props> = ({
             style={styles.controlButton}
             accessibilityLabel="الآية السابقة"
             accessibilityRole="button"
+            accessibilityHint="الانتقال إلى الآية السابقة"
           >
             <Text style={styles.controlIcon}>⏮</Text>
           </TouchableOpacity>
@@ -81,6 +85,7 @@ export const AudioPlayerBar: React.FC<Props> = ({
             style={styles.playButton}
             accessibilityLabel={isPlaying ? 'إيقاف مؤقت' : 'تشغيل'}
             accessibilityRole="button"
+            accessibilityHint={isPlaying ? 'إيقاف التلاوة مؤقتاً' : 'بدء التلاوة'}
           >
             <Text style={styles.playIcon}>{isPlaying ? '⏸' : '▶'}</Text>
           </TouchableOpacity>
@@ -90,6 +95,7 @@ export const AudioPlayerBar: React.FC<Props> = ({
             style={styles.controlButton}
             accessibilityLabel="الآية التالية"
             accessibilityRole="button"
+            accessibilityHint="الانتقال إلى الآية التالية"
           >
             <Text style={styles.controlIcon}>⏭</Text>
           </TouchableOpacity>

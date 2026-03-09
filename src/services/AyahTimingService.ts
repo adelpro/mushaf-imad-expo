@@ -44,25 +44,29 @@ const cache = new Map<number, ReciterData>();
 
 type ReciterMeta = { id: number; name: string; name_en: string };
 
-const metadataCache: ReciterMeta[] = [];
+const TIMING_METADATA: ReciterMeta[] = [
+  { id: 1, name: 'إبراهيم الأخضر', name_en: 'Ibrahim Al-Akdar' },
+  { id: 5, name: 'أحمد بن علي العجمي', name_en: 'Ahmad Al-Ajmy' },
+  { id: 9, name: 'أحمد نعينع', name_en: 'Ahmad Nauina' },
+  { id: 10, name: 'أكرم العلاقمي', name_en: 'Akram Alalaqmi' },
+  { id: 31, name: 'سعود الشريم', name_en: 'Saud Al-Shuraim' },
+  { id: 32, name: 'سهل ياسين', name_en: 'Sahl Yassin' },
+  { id: 51, name: 'عبدالباسط عبدالصمد', name_en: 'Abdulbasit Abdulsamad' },
+  { id: 53, name: 'عبدالباسط عبدالصمد', name_en: 'Abdulbasit Abdulsamad' },
+  { id: 60, name: 'عبدالله بصفر', name_en: 'Abdullah Basfer' },
+  { id: 62, name: 'عبدالله عواد الجهني', name_en: 'Abdullah Al-Johany' },
+  { id: 67, name: 'عبدالمحسن القاسم', name_en: 'Abdulmohsen Al-Qasim' },
+  { id: 74, name: 'علي بن عبدالرحمن الحذيفي', name_en: 'Ali Alhuthaifi' },
+  { id: 78, name: 'عماد زهير حافظ', name_en: 'Emad Hafez' },
+  { id: 106, name: 'محمد الطبلاوي', name_en: 'Mohammad Al-Tablaway' },
+  { id: 112, name: 'محمد صديق المنشاوي', name_en: 'Mohammed Siddiq Al-Minshawi' },
+  { id: 118, name: 'محمود خليل الحصري', name_en: 'Mahmoud Khalil Al-Hussary' },
+  { id: 159, name: 'خالد المهنا', name_en: 'Khalid Almohana' },
+  { id: 256, name: 'أحمد خليل شاهين', name_en: 'Ahmad Shaheen' },
+];
 
 export function getAvailableReciters(): ReciterMeta[] {
-  if (metadataCache.length > 0) return metadataCache;
-
-  for (const key of Object.keys(TIMING_FILES)) {
-    const id = Number(key);
-    const cached = cache.get(id);
-    if (cached) {
-      metadataCache.push({ id, name: cached.name, name_en: cached.name_en });
-      continue;
-    }
-    const loader = TIMING_FILES[id];
-    if (!loader) continue;
-    const data = loader();
-    metadataCache.push({ id, name: data.name, name_en: data.name_en });
-  }
-
-  return metadataCache;
+  return TIMING_METADATA;
 }
 
 function loadTimingSync(reciterId: number): ReciterData | null {

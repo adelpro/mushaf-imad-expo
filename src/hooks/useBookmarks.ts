@@ -1,10 +1,19 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { AppState } from "react-native";
 import {
   bookmarkService,
   Bookmark,
   NewBookmark,
 } from "../services/BookmarkService";
+
+type BookmarkListener = () => void;
+const bookmarkListeners = new Set<BookmarkListener>();
+
+function notifyBookmarkChange() {
+  for (const listener of bookmarkListeners) {
+    listener();
+  }
+}
 
 export function useBookmarks() {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
@@ -30,6 +39,7 @@ export function useBookmarks() {
     async (data: NewBookmark): Promise<boolean> => {
       const added = await bookmarkService.toggleBookmark(data);
       await refresh();
+      notifyBookmarkChange();
       return added;
     },
     [refresh],
@@ -39,6 +49,7 @@ export function useBookmarks() {
     async (verseID: number) => {
       await bookmarkService.removeBookmark(verseID);
       await refresh();
+      notifyBookmarkChange();
     },
     [refresh],
   );
@@ -47,6 +58,7 @@ export function useBookmarks() {
     async (verseID: number, note: string) => {
       await bookmarkService.updateNote(verseID, note);
       await refresh();
+      notifyBookmarkChange();
     },
     [refresh],
   );
@@ -64,7 +76,14 @@ export function useIsBookmarked(verseID: number | null) {
         setRefreshKey((k) => k + 1);
       }
     });
-    return () => subscription.remove();
+
+    const listener = () => setRefreshKey((k) => k + 1);
+    bookmarkListeners.add(listener);
+
+    return () => {
+      subscription.remove();
+      bookmarkListeners.delete(listener);
+    };
   }, []);
 
   useEffect(() => {

@@ -118,28 +118,38 @@ class BookmarkService {
     return bookmark !== null;
   }
 
-  private toggleLock = Promise.resolve();
-
   async toggleBookmark(bookmark: NewBookmark): Promise<boolean> {
-    const release = this.toggleLock.then(() => {});
-    let resolve: () => void;
-    this.toggleLock = new Promise<void>((r) => { resolve = r; });
+    const db = await this.getDb();
+    const now = new Date().toISOString();
+    let added = false;
 
-    await release;
-    try {
-      const db = await this.getDb();
+    await db.withTransactionAsync(async () => {
       const deleted = await db.runAsync(
         "DELETE FROM bookmarks WHERE verseID = ?",
         [bookmark.verseID],
       );
       if (deleted.changes > 0) {
-        return false;
+        added = false;
+        return;
       }
-      await this.addBookmark(bookmark);
-      return true;
-    } finally {
-      resolve!();
-    }
+      await db.runAsync(
+        `INSERT INTO bookmarks (verseID, verseNumber, chapterId, chapterName, pageNumber, note, createdAt, updatedAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          bookmark.verseID,
+          bookmark.verseNumber,
+          bookmark.chapterId,
+          bookmark.chapterName,
+          bookmark.pageNumber,
+          bookmark.note,
+          now,
+          now,
+        ],
+      );
+      added = true;
+    });
+
+    return added;
   }
 }
 
