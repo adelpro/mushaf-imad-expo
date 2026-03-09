@@ -10,10 +10,10 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { TOTAL_PAGES } from "../constants/mushaf";
 import { colors } from "../theme";
 
 const MIN_PAGE = 1;
-const MAX_PAGE = 604;
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -79,7 +79,7 @@ export function PageJumpInput({ currentPage, onJumpToPage }: PageJumpInputProps)
 
   function handleSubmit() {
     const page = Number.parseInt(inputValue, 10);
-    if (page >= MIN_PAGE && page <= MAX_PAGE) {
+    if (page >= MIN_PAGE && page <= TOTAL_PAGES) {
       onJumpToPage(page);
     }
     setInputValue("");
@@ -107,7 +107,7 @@ export function PageJumpInput({ currentPage, onJumpToPage }: PageJumpInputProps)
             }}
             onChangeText={setInputValue}
             onSubmitEditing={handleSubmit}
-            placeholder={`${MIN_PAGE}-${MAX_PAGE}`}
+            placeholder={`${MIN_PAGE}-${TOTAL_PAGES}`}
             placeholderTextColor={colors.text.tertiary}
             returnKeyType="go"
             style={styles.input}
@@ -145,7 +145,7 @@ export function PageJumpInput({ currentPage, onJumpToPage }: PageJumpInputProps)
       >
         <Text style={styles.pageLabel}>صفحة</Text>
         <Text style={styles.pageNumber}>{currentPage}</Text>
-        <Text style={styles.totalPages}>/ {MAX_PAGE}</Text>
+        <Text style={styles.totalPages}>/ {TOTAL_PAGES}</Text>
       </Pressable>
     </Animated.View>
   );
