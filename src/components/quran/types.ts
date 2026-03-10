@@ -158,6 +158,8 @@ export interface QuranViewProps {
   onChapterPress?: (event: ChapterPressEvent) => void;
   onChapterLongPress?: (event: ChapterPressEvent) => void;
   onPageChange?: (page: number) => void;
+  /** Called on short tap on content (line); use to show/focus footer. Popup only opens on long press. */
+  onContentTap: () => void;
 
   // Custom Rendering
   renderSuraNameBar?: (props: SuraNameBarProps) => React.ReactNode;

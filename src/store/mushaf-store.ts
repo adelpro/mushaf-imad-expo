@@ -6,6 +6,9 @@ type MushafState = {
   activeVerse: number | null;
   currentPage: number;
 
+  // Jump from Progress "Continue" to open mushaf at a specific page
+  jumpToPage: number | null;
+
   // Playback state
   isPlaying: boolean;
 
@@ -13,6 +16,7 @@ type MushafState = {
   setCurrentChapter: (chapter: number) => void;
   setActiveVerse: (verse: number | null) => void;
   setCurrentPage: (page: number) => void;
+  setJumpToPage: (page: number | null) => void;
   setIsPlaying: (playing: boolean) => void;
 };
 
@@ -21,6 +25,7 @@ export const useMushafStore = create<MushafState>((set) => ({
   currentChapter: 1,
   activeVerse: null,
   currentPage: 1,
+  jumpToPage: null,
   isPlaying: false,
 
   // Actions
@@ -30,5 +35,6 @@ export const useMushafStore = create<MushafState>((set) => ({
     ),
   setActiveVerse: (verse) => set({ activeVerse: verse }),
   setCurrentPage: (page) => set({ currentPage: page }),
+  setJumpToPage: (page) => set({ jumpToPage: page }),
   setIsPlaying: (playing) => set({ isPlaying: playing }),
 }));

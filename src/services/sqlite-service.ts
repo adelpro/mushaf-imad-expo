@@ -553,6 +553,24 @@ class DatabaseService {
 
     return chapters;
   }
+
+  /**
+   * Returns the actual count of verses on the given page numbers (1441 layout).
+   */
+  async getVerseCountForPageNumbers(
+    pageNumbers: number[],
+  ): Promise<number> {
+    const db = await this.getDb();
+    if (pageNumbers.length === 0) return 0;
+    const placeholders = pageNumbers.map(() => "?").join(",");
+    const result = await db.getFirstAsync<{ count: number }>(
+      `SELECT COUNT(*) as count FROM verses v
+       INNER JOIN pages p ON p.identifier = v.page1441_id
+       WHERE p.number IN (${placeholders})`,
+      ...pageNumbers,
+    );
+    return result?.count ?? 0;
+  }
 }
 
 export const databaseService = new DatabaseService();

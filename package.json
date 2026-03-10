@@ -1,7 +1,7 @@
 {
   "name": "mushaf-imad-rn",
   "version": "0.2.0-athar",
-  "main": "index.ts",
+  "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
     "generate-map": "node scripts/generate-map.js",
@@ -22,12 +22,17 @@
     "docs:start": "cd docs && npx fumapress"
   },
   "dependencies": {
+    "@expo-google-fonts/amiri": "^0.4.1",
+    "@react-native-async-storage/async-storage": "2.2.0",
     "expo": "54.0.33",
     "expo-asset": "^12.0.12",
     "expo-audio": "^1.1.1",
     "expo-av": "^16.0.8",
+    "expo-constants": "~18.0.13",
     "expo-file-system": "^19.0.21",
-    "expo-font": "14.0.11",
+    "expo-font": "~14.0.11",
+    "expo-linking": "~8.0.11",
+    "expo-router": "~6.0.23",
     "expo-sharing": "~14.0.8",
     "expo-splash-screen": "~31.0.13",
     "expo-sqlite": "~16.0.10",
@@ -36,6 +41,7 @@
     "react": "19.1.0",
     "react-native": "0.81.5",
     "react-native-safe-area-context": "~5.6.0",
+    "react-native-screens": "~4.16.0",
     "react-native-svg": "15.12.1",
     "react-native-view-shot": "4.0.3",
     "zustand": "^5.0.0"

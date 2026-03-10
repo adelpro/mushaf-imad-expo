@@ -46,6 +46,7 @@ export function QuranView({
   onVerseLongPress,
   onChapterPress,
   onChapterLongPress,
+  onContentTap,
 }: QuranViewProps) {
   const { page, loading, error } = useQuranData(pageNumber);
 
@@ -152,16 +153,7 @@ export function QuranView({
 
   const handleVersePress = useCallback(
     (verse: Verse, x: number, y: number) => {
-      console.log("[QuranView] onVersePress:", {
-        verseNumber: verse.number,
-        chapterId: verse.chapter_id,
-        pageNumber,
-        position: { x, y },
-      });
-      setSelectedVerse(verse);
-      resolveChapterForVerse(verse);
-      setVersePopupVisible(true);
-
+      // Short tap: do not open popup (avoids layout shift). Parent can show footer.
       const event: VersePressEvent = {
         verse,
         page: pageNumber,
@@ -169,8 +161,9 @@ export function QuranView({
         position: { x, y },
       };
       onVersePress?.(event);
+      onContentTap();
     },
-    [pageNumber, onVersePress, resolveChapterForVerse],
+    [pageNumber, onVersePress, onContentTap],
   );
 
   const handleVerseLongPress = useCallback(
@@ -341,9 +334,9 @@ export function QuranView({
     });
   };
 
-  // Whenever a line is clicked, we search for a verse that has a highlight on that line number,
+  // Long press on line: find verse under tap and show popup. Short press does not open popup (use onContentTap for footer).
   // and check whether the X position of the click falls between the start and end positions of that verse’s highlight.
-  const onLineClicked = useCallback(
+  const onLineLongPress = useCallback(
     (lineIndex: number, locationX: number) => {
       const xIndex = locationX / width;
 
@@ -369,7 +362,7 @@ export function QuranView({
       resolveChapterForVerse(targetVerse);
       setVersePopupVisible(true);
     },
-    [width, page, layout, setSelectedVerse, setVersePopupVisible, resolveChapterForVerse],
+    [width, page, layout, resolveChapterForVerse],
   );
 
   const renderLines = () => {
@@ -387,11 +380,11 @@ export function QuranView({
             backgroundColor: "transparent",
             marginBottom: 4,
           }}
-          onPress={(e) => {
-            onLineClicked(i, e.nativeEvent.locationX);
+          onPress={() => {
+            onContentTap();
           }}
           onLongPress={(e) => {
-            onLineClicked(i, e.nativeEvent.locationX);
+            onLineLongPress(i, e.nativeEvent.locationX);
           }}
         >
           <View style={{ width, height: lineHeight, position: "absolute" }}>
