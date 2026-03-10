@@ -1,6 +1,6 @@
 {
   "name": "mushaf-imad-rn",
-  "version": "0.1.0",
+  "version": "0.2.0-athar",
   "main": "index.ts",
   "scripts": {
     "start": "expo start",
