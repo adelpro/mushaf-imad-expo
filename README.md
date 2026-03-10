@@ -1,6 +1,33 @@
 # Mushaf Imad RN
 
+[![Version](https://img.shields.io/badge/version-0.2.0-athar-blue)](https://github.com/mushaf-imad/mushaf-imad-expo)
+[![Expo](https://img.shields.io/badge/Expo-54.0.33-blueviolet)](https://expo.dev)
+[![React Native](https://img.shields.io/badge/React%20Native-0.81.5-61DAFB)](https://reactnative.dev)
+[![iOS](https://img.shields.io/badge/platform-iOS-000000)](https://apple.com/ios)
+[![Android](https://img.shields.io/badge/platform-Android-3DDC84)](https://www.android.com)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Athar](https://img.shields.io/static/v1?label=Athar&message=%F0%9F%8C%99&color=blue)](https://community.itqan.dev/d/250/3)
+
 A React Native Quran reading application built with Expo, featuring page-by-page Quran rendering with interactive verse support.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Features](#features)
+- [Screenshots](#screenshots)
+- [Quick Start](#quick-start)
+  - [Installation](#installation)
+  - [Running on Platforms](#running-on-platforms)
+- [Project Structure](#project-structure)
+- [Documentation](#documentation)
+- [Dependencies](#dependencies)
+- [Scripts](#scripts)
+- [Database](#database)
+- [Image Assets](#image-assets)
+- [Version](#version)
+- [Acknowledgments](#acknowledgments)
+- [License](#license)
+- [Changelog](CHANGELOG.md)
 
 ## Overview
 
@@ -133,6 +160,16 @@ Quran page images are organized in `assets/images/quran/` with 604 folders, one 
 
 - **Current Version**: 1.0.0
 - **Package**: com.adelpro.mushafimadrn
+
+## Acknowledgments
+
+Special thanks to the [ITQAN Community](https://community.itqan.dev) for their support and contribution to the Quran technology ecosystem.
+
+<p align="center">
+  <a href="https://itqan.dev">
+    <img src="https://itqan.dev/logo.svg" alt="ITQAN Community Logo" width="150" />
+  </a>
+</p>
 
 ## License
 

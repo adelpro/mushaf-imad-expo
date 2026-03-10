@@ -42,8 +42,16 @@ src/
 ## Dependencies
 
 ```bash
-npm install expo-sqlite expo-asset react-native-svg
+npm install expo-sqlite expo-asset react-native-svg expo zustand
 ```
+
+Current dependency versions:
+
+- `expo`: 54.0.33
+- `expo-sqlite`: ~16.0.10
+- `expo-asset`: ^12.0.12
+- `react-native-svg`: 15.12.1
+- `zustand`: ^5.0.0
 
 ## Event Types
 
