@@ -1,8 +1,8 @@
 import { useCallback } from "react";
 import { useRouter } from "expo-router";
 
-import { ProgressScreen } from "../src/screens/progress-screen";
-import { useMushafStore } from "../src/store/mushaf-store";
+import { ProgressScreen } from "../../src/screens/progress-screen";
+import { useMushafStore } from "../../src/store/mushaf-store";
 
 export default function ProgressRoute() {
   const router = useRouter();
@@ -13,7 +13,7 @@ export default function ProgressRoute() {
     (page: number) => {
       setJumpToPage(page);
       setCurrentPage(page);
-      router.navigate("/");
+      router.navigate("/(tabs)");
     },
     [router, setCurrentPage, setJumpToPage],
   );

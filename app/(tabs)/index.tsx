@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 
-import { MushafScreen } from "../src/screens/mushaf-screen";
-import { useUiStore } from "../src/store/ui-store";
+import { MushafScreen } from "../../src/screens/mushaf-screen";
+import { useUiStore } from "../../src/store/ui-store";
 
 export default function MushafRoute() {
   const toggleFooterVisible = useUiStore((s) => s.toggleFooterVisible);
