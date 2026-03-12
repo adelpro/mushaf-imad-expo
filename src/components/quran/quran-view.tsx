@@ -1,37 +1,38 @@
 // Quran Component - Main View with Content Press Support
-import React, { useState, useCallback, useMemo, useRef } from "react";
+import * as Sharing from "expo-sharing";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
-  View,
-  Image,
-  Dimensions,
-  TouchableOpacity,
   ActivityIndicator,
-  Text,
-  StyleSheet,
+  Dimensions,
+  Image,
   Pressable,
   Share,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { captureRef } from "react-native-view-shot";
-import * as Sharing from "expo-sharing";
+import SuraNameBar from "../../../assets/images/sura_name_bar.svg";
+import { QuranImages } from "../../constants/image-map";
 import { databaseService } from "../../services/sqlite-service";
-import { ShareVerseCard } from "./share-verse-card";
-import { useQuranData } from "./use-quran-data";
+import { colors } from "../../theme";
+import { triggerImpactHaptic, triggerSelectionHaptic } from "../../utils/triggerHaptics";
+import { VerseFasel } from "../verse-fasel";
+import { ChapterPopup } from "./chapter-popup";
 import { DEFAULT_CONFIG } from "./constants";
+import { ShareVerseCard } from "./share-verse-card";
 import {
+  Chapter,
+  ChapterHeader,
+  ChapterPressEvent,
   QuranViewProps,
   Verse,
-  Chapter,
-  VersePressEvent,
-  ChapterPressEvent,
   VerseHighlight,
-  ChapterHeader,
+  VersePressEvent,
 } from "./types";
-import SuraNameBar from "../../../assets/images/sura_name_bar.svg";
-import { VerseFasel } from "../verse-fasel";
-import { QuranImages } from "../../constants/image-map";
+import { useQuranData } from "./use-quran-data";
 import { VersePopup } from "./verse-popup";
-import { ChapterPopup } from "./chapter-popup";
-import { colors } from "../../theme";
 
 const { width } = Dimensions.get("window");
 
@@ -334,10 +335,16 @@ export function QuranView({
     });
   };
 
+  const onLinePress = useCallback(() => {
+    triggerSelectionHaptic();
+    onContentTap();
+  }, [onContentTap]);
+
   // Long press on line: find verse under tap and show popup. Short press does not open popup (use onContentTap for footer).
   // and check whether the X position of the click falls between the start and end positions of that verse’s highlight.
   const onLineLongPress = useCallback(
     (lineIndex: number, locationX: number) => {
+      triggerImpactHaptic();
       const xIndex = locationX / width;
 
       if (!page) return;
@@ -380,9 +387,7 @@ export function QuranView({
             backgroundColor: "transparent",
             marginBottom: 4,
           }}
-          onPress={() => {
-            onContentTap();
-          }}
+          onPress={onLinePress}
           onLongPress={(e) => {
             onLineLongPress(i, e.nativeEvent.locationX);
           }}
