@@ -55,8 +55,8 @@ Mushaf Imad RN is a reusable Quran page rendering component for Expo application
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-repo/mushaf-imad-rn.git
-cd mushaf-imad-rn
+git clone https://github.com/your-repo/mushaf-imad-expo.git
+cd mushaf-imad-expo
 
 # Install dependencies
 yarn install
@@ -81,7 +81,7 @@ yarn web
 ## Project Structure
 
 ```
-mushaf-imad-rn/
+mushaf-imad-expo/
 ├── assets/
 │   ├── images/quran/      # Quran page images (604 folders)
 │   ├── fonts/             # Application fonts
