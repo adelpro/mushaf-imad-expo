@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
-import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
 import { Amiri_400Regular } from "@expo-google-fonts/amiri";
 
@@ -32,6 +32,7 @@ export default function App() {
     },
     [setJumpToPage, setCurrentPage],
   );
+  
   const [fontsLoaded, fontError] = useFonts({
     uthmanTn1Bold: require("./assets/fonts/UthmanTN1B-Ver20.ttf"),
     Amiri_400Regular,
@@ -62,29 +63,19 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" />
-      <View style={styles.content}>
-        {activeTab === "mushaf" && (
-          <View style={styles.tabContent} pointerEvents="auto">
-            <MushafScreen
-              onContentTap={() => setFooterVisible((v) => !v)}
-            />
-          </View>
-        )}
-        {activeTab === "progress" && (
-          <View style={styles.tabContent} pointerEvents="auto">
+        <StatusBar style="dark" />
+        <View style={styles.content}>
+          {activeTab === "mushaf" && <MushafScreen onContentTap={() => setFooterVisible(v => !v)} />}
+          {activeTab === "progress" && (
             <ProgressScreen onContinueReading={handleContinueReading} />
-          </View>
-        )}
-      </View>
-      <View style={styles.footerOverlay} pointerEvents="box-none">
+          )}
+        </View>
         <TabFooter
           activeTab={activeTab}
           onTabChange={setActiveTab}
           visible={footerVisible}
         />
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
     </SafeAreaProvider>
   );
 }

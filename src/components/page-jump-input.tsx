@@ -1,9 +1,10 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
   Dimensions,
   Keyboard,
   PanResponder,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -25,6 +26,38 @@ type PageJumpInputProps = {
 export function PageJumpInput({ currentPage, onJumpToPage }: PageJumpInputProps) {
   const [inputValue, setInputValue] = useState("");
   const [isEditing, setIsEditing] = useState(false);
+
+  // Keyboard offset animation
+  const keyboardOffset = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+
+    const showSub = Keyboard.addListener(showEvent, (e) => {
+      const kbHeight = e.endCoordinates.height;
+      // Effective bottom = base (70) minus translateY (negative Y = higher)
+      const effectiveBottom = 70 - lastOffset.current.y;
+      const needed = Math.max(0, kbHeight - effectiveBottom + 50); // 50px padding
+      Animated.timing(keyboardOffset, {
+        toValue: needed,
+        duration: Platform.OS === "ios" ? e.duration : 200,
+        useNativeDriver: false,
+      }).start();
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      Animated.timing(keyboardOffset, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: false,
+      }).start();
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, [keyboardOffset]);
 
   // Draggable position
   const pan = useRef(new Animated.ValueXY()).current;
@@ -72,7 +105,9 @@ export function PageJumpInput({ currentPage, onJumpToPage }: PageJumpInputProps)
           toValue: { x: clampedX, y: clampedY },
           useNativeDriver: false,
           friction: 7,
-        }).start();
+        }).start(() => {
+          isDragging.current = false;
+        });
       },
     }),
   ).current;
@@ -92,7 +127,7 @@ export function PageJumpInput({ currentPage, onJumpToPage }: PageJumpInputProps)
       <Animated.View
         style={[
           styles.floatingContainer,
-          { transform: pan.getTranslateTransform() },
+          { transform: pan.getTranslateTransform(), bottom: Animated.add(70, keyboardOffset) },
         ]}
         {...panResponder.panHandlers}
       >
@@ -131,7 +166,7 @@ export function PageJumpInput({ currentPage, onJumpToPage }: PageJumpInputProps)
     <Animated.View
       style={[
         styles.floatingContainer,
-        { transform: pan.getTranslateTransform() },
+        { transform: pan.getTranslateTransform(), bottom: Animated.add(70, keyboardOffset) },
       ]}
       {...panResponder.panHandlers}
     >
@@ -154,7 +189,6 @@ export function PageJumpInput({ currentPage, onJumpToPage }: PageJumpInputProps)
 const styles = StyleSheet.create({
   floatingContainer: {
     position: "absolute",
-    bottom: 70,
     alignSelf: "center",
     zIndex: 100,
     elevation: 10,

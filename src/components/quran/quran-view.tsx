@@ -7,6 +7,7 @@ import {
   Image,
   Pressable,
   Share,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -42,7 +43,10 @@ export function QuranView({
   showSuraName = true,
   showVerseMarkers = true,
   showHighlights = true,
+  digitsFormat = true,
   highlightColor = colors.state.textSelection,
+  activeChapter,
+  activeVerse,
   onVersePress,
   onVerseLongPress,
   onChapterPress,
@@ -58,6 +62,7 @@ export function QuranView({
   const [chapterPopupVisible, setChapterPopupVisible] = useState(false);
 
   const config = DEFAULT_CONFIG;
+  const LINE_GAP = 4;
   const lineHeight = width / config.lineAspectRatio;
   const lineScale = width / 1440;
 
@@ -275,12 +280,10 @@ export function QuranView({
     if (!page || !showVerseMarkers) return null;
 
     const markers = markersByLine.get(lineIndex) ?? [];
-    const scaledImageHeight = width / config.lineAspectRatio;
-    const cropOffset = (scaledImageHeight - lineHeight) / 2;
 
     return markers.map((m) => {
       const x = width * m.centerX;
-      const y = scaledImageHeight * m.centerY - cropOffset;
+      const y = lineHeight * m.centerY;
 
       return (
         <TouchableOpacity
@@ -294,21 +297,25 @@ export function QuranView({
           onPress={() => handleVersePress(m.verse, x, y)}
           onLongPress={() => handleVerseLongPress(m.verse, x, y)}
         >
-          <VerseFasel number={m.verse.number} scale={lineScale} />
+          <VerseFasel number={m.verse.number} scale={lineScale} digitsFormat={digitsFormat} />
         </TouchableOpacity>
       );
     });
   };
 
   const renderVerseHighlights = (lineIndex: number) => {
-    if (!page || !showHighlights || !selectedVerse) return null;
+    if (!page || !showHighlights) return null;
 
     const verses = layout === 1441 ? page.verses1441 : page.verses1405;
     const highlightsKey = layout === 1441 ? "highlights1441" : "highlights1405";
 
     const versesToHighlight = verses.filter(
-      (v: Verse) => v.verseID === selectedVerse.verseID,
+      (v: Verse) =>
+        (selectedVerse && v.verseID === selectedVerse.verseID) ||
+        (activeChapter && activeVerse && v.chapter_id === activeChapter && v.number === activeVerse)
     );
+
+    if (versesToHighlight.length === 0) return null;
 
     return versesToHighlight.map((v: Verse) => {
       const highlights = (v[highlightsKey] as VerseHighlight[]) || [];
@@ -374,8 +381,10 @@ export function QuranView({
 
   const renderLines = () => {
     const lines: React.ReactNode[] = [];
+    const startLine = isCentered ? 3 : 0;
+    const endLine = isCentered ? 12 : config.lineCount;
 
-    for (let i = 0; i < config.lineCount; i++) {
+    for (let i = startLine; i < endLine; i++) {
       const lineImageSource = resolveLineImage(i);
 
       lines.push(
@@ -385,7 +394,7 @@ export function QuranView({
             width,
             height: lineHeight,
             backgroundColor: "transparent",
-            marginBottom: 4,
+            marginBottom: i < endLine - 1 ? LINE_GAP : 0,
           }}
           onPress={onLinePress}
           onLongPress={(e) => {
@@ -435,9 +444,20 @@ export function QuranView({
     );
   }
 
+  const isCentered = pageNumber === 1 || pageNumber === 2;
+
   return (
     <View style={styles.container}>
-      <View style={styles.linesContainer}>{renderLines()}</View>
+      <ScrollView
+        contentContainerStyle={[
+          styles.linesContainer,
+          isCentered && styles.centeredContent,
+        ]}
+        showsVerticalScrollIndicator={true}
+        indicatorStyle="black"
+      >
+        {renderLines()}
+      </ScrollView>
 
       <VersePopup
         visible={versePopupVisible}
@@ -487,10 +507,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: DEFAULT_CONFIG.backgroundColor,
-    justifyContent: "center",
   },
   linesContainer: {
     flexDirection: "column",
+    alignItems: "center",
+  },
+  centeredContent: {
+    flexGrow: 1,
     justifyContent: "center",
   },
   offScreen: {
