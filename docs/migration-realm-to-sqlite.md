@@ -11,6 +11,7 @@ This document describes the migration from Realm database to SQLite using `@expo
 | Source Database | Realm (`quran.realm`) |
 | Target Database | SQLite (`quran.db`) |
 | Migration Date | 2026-02-10 |
+| Expo SQLite Version | `expo-sqlite` ~16.0.10 |
 | Total Tables | 9 |
 | Total Records | ~40,000 |
 

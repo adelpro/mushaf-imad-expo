@@ -2,6 +2,7 @@
   "expo": {
     "name": "mushaf-imad-rn",
     "slug": "mushaf-imad-rn",
+    "scheme": "mushafimadrn",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -39,7 +40,9 @@
           "imageWidth": 200
         }
       ],
-      "expo-sqlite"
+      "expo-sqlite",
+      "expo-font",
+      "expo-router"
     ]
   }
 }

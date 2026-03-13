@@ -93,8 +93,10 @@ type MarkerEntry = {
 
 const VerseMarkersLayer = React.memo(function VerseMarkersLayer({
   markers,
+  digitsFormat,
 }: {
   markers: MarkerEntry[];
+  digitsFormat?: boolean;
 }) {
   if (markers.length === 0) return null;
 
@@ -236,7 +238,7 @@ export const QuranPage = React.memo<Props>(function QuranPage({
             />
           )}
           <SurahTitlesLayer headers={headers} lineIndex={i} />
-          <VerseMarkersLayer markers={markers} />
+          <VerseMarkersLayer markers={markers} digitsFormat={digitsFormat} />
           <HighlightsLayer highlights={activeHighlights} lineIndex={i} />
         </View>,
       );
