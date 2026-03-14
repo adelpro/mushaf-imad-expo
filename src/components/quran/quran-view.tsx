@@ -12,6 +12,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Alert,
 } from "react-native";
 import { captureRef } from "react-native-view-shot";
 import SuraNameBar from "../../../assets/images/sura_name_bar.svg";
@@ -20,6 +21,8 @@ import { databaseService } from "../../services/sqlite-service";
 import { colors } from "../../theme";
 import { triggerImpactHaptic, triggerSelectionHaptic } from "../../utils/triggerHaptics";
 import { VerseFasel } from "../verse-fasel";
+import { setLastRead } from "../../services/last-read-service";
+import { addReadPagesUpTo } from "../../services/read-pages-service";
 import { ChapterPopup } from "./chapter-popup";
 import { DEFAULT_CONFIG } from "./constants";
 import { ShareVerseCard } from "./share-verse-card";
@@ -127,7 +130,7 @@ export function QuranView({
   }, [page, layout]);
 
   const resolveChapterForVerse = useCallback(async (verse: Verse) => {
-    if (verse.chapter_id) {
+    if (verse.chapter_id != null) {
       const chapter = await databaseService.getChapterByIdentifier(verse.chapter_id);
       if (chapter) setSelectedChapter(chapter);
     }
@@ -156,6 +159,44 @@ export function QuranView({
       console.error("[QuranView] Share image error:", err);
     }
   }, [selectedVerse]);
+
+  const handleSaveProgress = useCallback(async () => {
+    if (!selectedVerse) return;
+    try {
+      const chapterId = selectedVerse.chapter_id;
+
+      // Resolve chapter — use already-loaded one or fetch by identifier
+      let chapter = selectedChapter;
+      if ((!chapter || chapter.number === 0) && chapterId) {
+        chapter =
+          (await databaseService.getChapterByIdentifier(chapterId)) ??
+          null;
+      }
+
+      const chapterNumber = chapter?.number ?? 0;
+
+      // verse.number is the surah-local verse number (1-based within the surah)
+      const ayahNumber = selectedVerse.number;
+
+      await setLastRead({
+        page: pageNumber,
+        chapterNumber,
+        ayah: ayahNumber,
+        source: "manual",
+      });
+      // Mark all pages from 1 up to current page as read
+      await addReadPagesUpTo(pageNumber);
+      setVersePopupVisible(false);
+      Alert.alert(
+        "تم حفظ التقدم ✅",
+        `تم حفظ تقدمك عند سورة ${chapter?.arabicTitle ?? ""} الآية ${ayahNumber}`,
+        [{ text: "حسناً", style: "default" }],
+      );
+    } catch (e) {
+      console.error("[QuranView] Save progress error:", e);
+      Alert.alert("خطأ", "حدث خطأ أثناء حفظ التقدم، حاول مرة أخرى.");
+    }
+  }, [selectedVerse, selectedChapter, pageNumber]);
 
   const handleVersePress = useCallback(
     (verse: Verse, x: number, y: number) => {
@@ -466,6 +507,7 @@ export function QuranView({
         onClose={() => setVersePopupVisible(false)}
         onShareText={handleShareText}
         onShareImage={handleShareImage}
+        onSaveProgress={handleSaveProgress}
       />
 
       {/* Off-screen card for image capture */}

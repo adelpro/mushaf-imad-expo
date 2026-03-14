@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 import AntDesign from "@expo/vector-icons/AntDesign";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors } from "../theme";
 
 type IconComponentProps = {
@@ -55,18 +56,18 @@ type TabFooterProps = {
   visible?: boolean;
 };
 
-function useFooterSlide(visible: boolean) {
+function useFooterSlide(visible: boolean, height: number) {
   const translateY = useRef(
-    new Animated.Value(visible ? 0 : FOOTER_HEIGHT),
+    new Animated.Value(visible ? 0 : height),
   ).current;
 
   useEffect(() => {
     Animated.timing(translateY, {
-      toValue: visible ? 0 : FOOTER_HEIGHT,
+      toValue: visible ? 0 : height,
       duration: SLIDE_DURATION,
       useNativeDriver: true,
     }).start();
-  }, [visible, translateY]);
+  }, [visible, translateY, height]);
 
   return translateY;
 }
@@ -125,15 +126,21 @@ export function TabFooter({
   onTabChange,
   visible = true,
 }: TabFooterProps) {
-  const translateY = useFooterSlide(visible);
+  const insets = useSafeAreaInsets();
+  const totalHeight = FOOTER_HEIGHT + insets.bottom;
+  const translateY = useFooterSlide(visible, totalHeight);
 
   return (
-    <View style={[styles.footerWrapper, { height: FOOTER_HEIGHT }]}>
+    <View style={[styles.footerWrapper, { height: totalHeight }]}>
       <Animated.View
         pointerEvents={visible ? "auto" : "none"}
         style={[
           styles.footer,
-          { height: FOOTER_HEIGHT, transform: [{ translateY }] },
+          { 
+            height: totalHeight, 
+            paddingBottom: insets.bottom,
+            transform: [{ translateY }] 
+          },
         ]}
       >
         {TABS.map((tab) => (

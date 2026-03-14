@@ -7,6 +7,10 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  ToastAndroid,
+  Platform,
+  Alert,
+  Clipboard,
 } from "react-native";
 import { Verse, Chapter } from "./types";
 import { colors } from "../../theme";
@@ -19,6 +23,7 @@ interface VersePopupProps {
   onLongPress?: () => void;
   onShareText?: () => void;
   onShareImage?: () => void;
+  onSaveProgress?: () => void;
 }
 
 export const VersePopup: React.FC<VersePopupProps> = ({
@@ -29,8 +34,19 @@ export const VersePopup: React.FC<VersePopupProps> = ({
   onLongPress,
   onShareText,
   onShareImage,
+  onSaveProgress,
 }) => {
   if (!verse) return null;
+
+  function handleCopy() {
+    const text = `﴿${verse!.text}﴾\n[سورة ${chapter?.arabicTitle ?? ""} - الآية ${verse!.number}]`;
+    Clipboard.setString(text);
+    if (Platform.OS === "android") {
+      ToastAndroid.show("تم النسخ ✓", ToastAndroid.SHORT);
+    } else {
+      Alert.alert("تم النسخ", "تم نسخ الآية إلى الحافظة.");
+    }
+  }
 
   return (
     <Modal
@@ -74,11 +90,21 @@ export const VersePopup: React.FC<VersePopupProps> = ({
               </TouchableOpacity>
             </View>
 
+            {/* Save progress action */}
+            {onSaveProgress && (
+              <TouchableOpacity
+                style={styles.saveProgressButton}
+                onPress={onSaveProgress}
+              >
+                <Text style={styles.shareActionLabel}>🔖 حفظ التقدم عند هذه الآية</Text>
+              </TouchableOpacity>
+            )}
+
             {/* Utility actions row */}
             <View style={styles.utilRow}>
               <TouchableOpacity
                 style={styles.utilButton}
-                onPress={onLongPress}
+                onPress={handleCopy}
               >
                 <Text style={styles.utilButtonText}>نسخ</Text>
               </TouchableOpacity>
@@ -261,6 +287,13 @@ const styles = StyleSheet.create({
   },
   shareImageButton: {
     backgroundColor: colors.brand.accent,
+  },
+  saveProgressButton: {
+    backgroundColor: colors.brand.default,
+    width: "100%",
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: "center",
   },
   shareActionLabel: {
     fontSize: 14,

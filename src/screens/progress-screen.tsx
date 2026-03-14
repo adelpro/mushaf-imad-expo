@@ -1,17 +1,21 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
+import { useFocusEffect } from "expo-router";
 import {
   ActivityIndicator,
   ScrollView,
   StyleSheet,
   Text,
   View,
+  Alert,
+  TouchableOpacity,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ContinueReadingCard } from "../components/continue-reading-card";
 import { OverallProgress } from "../components/overall-progress";
-import { getLastRead, type LastRead } from "../services/last-read-service";
+import { getLastRead, clearLastRead, type LastRead } from "../services/last-read-service";
 import {
   getReadPages,
+  clearReadPages,
 } from "../services/read-pages-service";
 import { databaseService } from "../services/sqlite-service";
 import { useMushafStore } from "../store/mushaf-store";
@@ -92,15 +96,36 @@ export function ProgressScreen({ onContinueReading }: ProgressScreenProps) {
     }
   }, []);
 
-  useEffect(() => {
-    void loadLastRead();
-  }, [loadLastRead]);
+  useFocusEffect(
+    useCallback(() => {
+      void loadLastRead();
+    }, [loadLastRead]),
+  );
 
   const handleContinue = useCallback(() => {
     if (!lastReadData) return;
     setJumpToPage(lastReadData.page);
     onContinueReading?.(lastReadData.page);
   }, [lastReadData, setJumpToPage, onContinueReading]);
+
+  const handleResetProgress = useCallback(() => {
+    Alert.alert(
+      "إعادة تعيين التقدم",
+      "هل أنت متأكد أنك تريد مسح جميع بيانات تقدمك والبدء من الصفر؟ لا يمكن التراجع عن هذا الإجراء.",
+      [
+        { text: "إلغاء", style: "cancel" },
+        {
+          text: "مسح التقدم",
+          style: "destructive",
+          onPress: async () => {
+            setLoading(true);
+            await Promise.all([clearLastRead(), clearReadPages()]);
+            await loadLastRead();
+          },
+        },
+      ]
+    );
+  }, [loadLastRead]);
 
   const renderContent = () => {
     if (loading) return <ProgressLoading />;
@@ -124,6 +149,13 @@ export function ProgressScreen({ onContinueReading }: ProgressScreenProps) {
             verseCount={verseCount ?? undefined}
           />
         </View>
+        <TouchableOpacity
+          style={styles.resetButton}
+          onPress={handleResetProgress}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.resetButtonText}>مسح التقدم والبدء من الصفر</Text>
+        </TouchableOpacity>
       </View>
     );
   };
@@ -153,7 +185,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   sections: {
-    flex: 1,
+    gap: 4,
   },
   overallProgressWrapper: {
     marginTop: 0,
@@ -176,5 +208,21 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
     textAlign: "center",
     writingDirection: "rtl",
+  },
+  resetButton: {
+    marginTop: 32,
+    marginHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.text.error,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "transparent",
+  },
+  resetButtonText: {
+    color: colors.text.error,
+    fontSize: 15,
+    fontFamily: "uthman_tn1_bold",
   },
 });
