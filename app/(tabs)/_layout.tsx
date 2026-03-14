@@ -1,7 +1,6 @@
 import { useCallback, useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 import { Tabs, useRouter, useSegments } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 import { TabFooter, type TabId } from "../../src/components/tab-footer";
 import { useUiStore } from "../../src/store/ui-store";
@@ -32,7 +31,7 @@ export default function TabsLayout() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.content}>
         {/* Keep both tabs mounted so tab switch and Continue Reading are instant (no remount). */}
         <Tabs
@@ -60,7 +59,7 @@ export default function TabsLayout() {
           visible={footerVisible}
         />
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 

@@ -28,12 +28,14 @@ export function VerseFasel({ number, scale, digitsFormat = true }: Props) {
       <View style={styles.textContainer}>
         <Text
           adjustsFontSizeToFit
-          minimumFontScale={0.8}
+          minimumFontScale={0.3}
+          numberOfLines={1}
           style={[
             styles.text,
             {
               fontSize,
               paddingHorizontal,
+              width: "100%",
             },
           ]}
         >
@@ -63,3 +65,4 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
   },
 });
+

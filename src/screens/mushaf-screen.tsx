@@ -10,7 +10,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PageJumpInput } from "../components/page-jump-input";
 import { databaseService } from "../services/sqlite-service";
 import { setLastRead } from "../services/last-read-service";
-import { addReadPage } from "../services/read-pages-service";
+import { addReadPage, getReadPagesCount } from "../services/read-pages-service";
 import { QuranView } from "../components/quran";
 import { colors } from "../theme";
 import { useMushafStore } from "../store/mushaf-store";
@@ -18,7 +18,7 @@ import { useMushafStore } from "../store/mushaf-store";
 const { height, width } = Dimensions.get("window");
 
 /** Minimum time (ms) on a page before it counts as "read" for Continue Reading */
-const MIN_DWELL_MS = 12_000;
+const MIN_DWELL_MS = 1000;
 
 /** Debounce (ms) before updating chapter highlight to reduce DB queries during fast scroll */
 const CHAPTER_UPDATE_DEBOUNCE_MS = 250;
@@ -46,6 +46,12 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
   const dwellTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const chapterUpdateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const currentDwellPageRef = useRef<number>(1);
+  const [readCount, setReadCount] = useState<number>(0);
+
+  // Load initial read count once
+  useEffect(() => {
+    void getReadPagesCount().then(setReadCount);
+  }, []);
 
   const initialScrollIndex = (() => {
     // When coming from "أكمل" (Continue), jumpToPage is set and must be used exclusively.
@@ -162,7 +168,10 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
       dwellTimerRef.current = setTimeout(() => {
         dwellTimerRef.current = null;
         void persistLastRead(pageNum);
-        void addReadPage(pageNum);
+        void addReadPage(pageNum).then(() => {
+          // Refresh the live progress count shown in the page bubble
+          void getReadPagesCount().then(setReadCount);
+        });
       }, MIN_DWELL_MS);
     },
   ).current;
@@ -176,7 +185,12 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
   );
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <FlatList
         ref={flatListRef}
         data={pages}
@@ -208,7 +222,11 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
         viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
         windowSize={3}
       />
-      <PageJumpInput currentPage={currentPage} onJumpToPage={handleJumpToPage} />
+      <PageJumpInput
+        currentPage={currentPage}
+        onJumpToPage={handleJumpToPage}
+        readCount={readCount}
+      />
     </View>
   );
 }

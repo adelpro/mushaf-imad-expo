@@ -21,8 +21,20 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<TabId>("mushaf");
   const [footerVisible, setFooterVisible] = useState(true);
   const [appReady, setAppReady] = useState(false);
+  const [progressRefreshKey, setProgressRefreshKey] = useState(0);
   const setJumpToPage = useMushafStore((s) => s.setJumpToPage);
   const setCurrentPage = useMushafStore((s) => s.setCurrentPage);
+
+  const handleTabChange = useCallback(
+    (tab: TabId) => {
+      if (tab === "progress") {
+        // Bump key every time the progress tab is opened so it re-fetches
+        setProgressRefreshKey((k) => k + 1);
+      }
+      setActiveTab(tab);
+    },
+    [],
+  );
 
   const handleContinueReading = useCallback(
     (page: number) => {
@@ -67,12 +79,15 @@ export default function App() {
         <View style={styles.content}>
           {activeTab === "mushaf" && <MushafScreen onContentTap={() => setFooterVisible(v => !v)} />}
           {activeTab === "progress" && (
-            <ProgressScreen onContinueReading={handleContinueReading} />
+            <ProgressScreen
+              key={progressRefreshKey}
+              onContinueReading={handleContinueReading}
+            />
           )}
         </View>
         <TabFooter
           activeTab={activeTab}
-          onTabChange={setActiveTab}
+          onTabChange={handleTabChange}
           visible={footerVisible}
         />
       </SafeAreaView>
