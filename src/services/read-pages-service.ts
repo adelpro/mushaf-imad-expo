@@ -60,6 +60,35 @@ export async function addReadPage(page: number): Promise<void> {
 }
 
 /**
+ * Marks all pages from 1 up to (and including) the given page as read.
+ * Used when the user saves progress at a specific verse — all prior pages
+ * are considered read.
+ */
+export async function addReadPagesUpTo(page: number): Promise<void> {
+  if (
+    !Number.isFinite(page) ||
+    !Number.isInteger(page) ||
+    page < 1 ||
+    page > TOTAL_PAGES
+  ) {
+    return;
+  }
+  try {
+    const existing = await getReadPages();
+    const set = new Set(existing);
+    for (let p = 1; p <= page; p++) {
+      set.add(p);
+    }
+    await AsyncStorage.setItem(
+      READ_PAGES_KEY,
+      JSON.stringify([...set].sort((a, b) => a - b)),
+    );
+  } catch {
+    // ignore
+  }
+}
+
+/**
  * Clears all read pages progress, resetting it to 0.
  */
 export async function clearReadPages(): Promise<void> {

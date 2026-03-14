@@ -24,78 +24,158 @@ type Step = {
 
 // ── tiny demo components ──────────────────────────────────────────────────────
 
-function TapDemo() {
-  const scale = useRef(new Animated.Value(1)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
+function TabsDemo() {
+  const [activeTab, setActiveTab] = useState<"mushaf" | "progress">("mushaf");
+  const indicatorX = useRef(new Animated.Value(0)).current;
 
-  function pulse() {
-    opacity.setValue(0);
-    scale.setValue(1);
-    Animated.parallel([
-      Animated.sequence([
-        Animated.timing(scale, { toValue: 0.93, duration: 120, useNativeDriver: true }),
-        Animated.timing(scale, { toValue: 1, duration: 200, useNativeDriver: true }),
-      ]),
-      Animated.sequence([
-        Animated.timing(opacity, { toValue: 1, duration: 80, useNativeDriver: true }),
-        Animated.timing(opacity, { toValue: 0, duration: 300, useNativeDriver: true }),
-      ]),
-    ]).start();
+  function switchTab(tab: "mushaf" | "progress") {
+    setActiveTab(tab);
+    Animated.spring(indicatorX, {
+      toValue: tab === "mushaf" ? 0 : 1,
+      useNativeDriver: false,
+      friction: 8,
+    }).start();
   }
 
+  const indicatorLeft = indicatorX.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0%", "50%"],
+  });
+
   return (
-    <Pressable onPress={pulse} style={styles.demoTapArea}>
-      <Animated.View style={[styles.demoTapRipple, { opacity }]} />
-      <Animated.View style={[styles.demoAyahLine, { transform: [{ scale }] }]}>
-        <Text style={styles.demoAyahText}>
-          بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
-        </Text>
-      </Animated.View>
-      <Text style={styles.demoHint}>اضغط هنا لتجربة</Text>
-    </Pressable>
+    <View style={styles.demoTabsWrapper}>
+      {/* Mini screen preview */}
+      <View style={styles.demoTabsScreen}>
+        {activeTab === "mushaf" ? (
+          <View style={styles.demoTabsContent}>
+            {[1, 2, 3, 4].map((i) => (
+              <View
+                key={i}
+                style={[styles.demoTabsLine, i === 1 && { width: "60%" }]}
+              />
+            ))}
+          </View>
+        ) : (
+          <View style={styles.demoTabsContent}>
+            <View style={styles.demoTabsProgressCard}>
+              <View style={styles.demoTabsProgressRow}>
+                <View style={[styles.demoTabsLine, { width: "50%", height: 6 }]} />
+                <View style={[styles.demoTabsLine, { width: "25%", height: 6, backgroundColor: colors.brand.default, opacity: 0.5 }]} />
+              </View>
+              <View style={[styles.demoTabsLine, { width: "70%", height: 6, marginTop: 4 }]} />
+            </View>
+          </View>
+        )}
+
+        {/* Tab bar */}
+        <View style={styles.demoTabBar}>
+          <Animated.View style={[styles.demoTabIndicator, { left: indicatorLeft }]} />
+          <Pressable style={styles.demoTab} onPress={() => switchTab("mushaf")}>
+            <Text style={[styles.demoTabIcon, activeTab === "mushaf" && styles.demoTabIconActive]}>📖</Text>
+            <Text style={[styles.demoTabLabel, activeTab === "mushaf" && styles.demoTabLabelActive]}>
+              المصحف
+            </Text>
+          </Pressable>
+          <Pressable style={styles.demoTab} onPress={() => switchTab("progress")}>
+            <Text style={[styles.demoTabIcon, activeTab === "progress" && styles.demoTabIconActive]}>📊</Text>
+            <Text style={[styles.demoTabLabel, activeTab === "progress" && styles.demoTabLabelActive]}>
+              التقدم
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+      <Text style={styles.demoHint}>اضغط على التبويبات للتنقل</Text>
+    </View>
   );
 }
 
 function LongPressDemo() {
   const progress = useRef(new Animated.Value(0)).current;
-  const [active, setActive] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [phase, setPhase] = useState<"idle" | "holding" | "popup">("idle");
+  const animRef = useRef<Animated.CompositeAnimation | null>(null);
 
   function startPress() {
-    setActive(true);
+    if (phase === "popup") return;
+    setPhase("holding");
     progress.setValue(0);
-    Animated.timing(progress, {
+    animRef.current = Animated.timing(progress, {
       toValue: 1,
-      duration: 600,
+      duration: 700,
       useNativeDriver: false,
-    }).start(({ finished }) => {
-      if (finished) setActive(false);
+    });
+    animRef.current.start(({ finished }) => {
+      if (finished) setPhase("popup");
     });
   }
 
   function endPress() {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    Animated.timing(progress, { toValue: 0, duration: 200, useNativeDriver: false }).start(() =>
-      setActive(false),
+    if (phase === "popup") return;
+    animRef.current?.stop();
+    Animated.timing(progress, { toValue: 0, duration: 200, useNativeDriver: false }).start(
+      () => setPhase("idle"),
     );
   }
 
   const barWidth = progress.interpolate({ inputRange: [0, 1], outputRange: ["0%", "100%"] });
 
   return (
-    <Pressable onPressIn={startPress} onPressOut={endPress} style={styles.demoTapArea}>
-      <View style={styles.demoAyahLine}>
-        <Text style={styles.demoAyahText}>
-          بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
+    <View style={styles.demoLongPressWrapper}>
+      {/* Ayah line — hold target */}
+      <Pressable onPressIn={startPress} onPressOut={endPress} style={styles.demoTapArea}>
+        <View style={styles.demoAyahLine}>
+          <Text style={styles.demoAyahText}>
+            بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
+          </Text>
+          {phase === "holding" && (
+            <View style={styles.demoProgressTrack}>
+              <Animated.View style={[styles.demoProgressFill, { width: barWidth }]} />
+            </View>
+          )}
+        </View>
+        <Text style={styles.demoHint}>
+          {phase === "popup" ? "اضغط إغلاق للعودة" : "اضغط مطولاً لتجربة"}
         </Text>
-        {active && (
-          <View style={styles.demoProgressTrack}>
-            <Animated.View style={[styles.demoProgressFill, { width: barWidth }]} />
+      </Pressable>
+
+      {/* Mini verse popup overlay */}
+      {phase === "popup" && (
+        <View style={styles.demoPopupOverlay}>
+          <View style={styles.demoPopup}>
+            {/* Header */}
+            <View style={styles.demoPopupHeader}>
+              <Text style={styles.demoPopupChapter}>سورة الفاتحة</Text>
+              <Text style={styles.demoPopupVerse}>الآية 1</Text>
+            </View>
+            {/* Verse text */}
+            <View style={styles.demoPopupContent}>
+              <Text style={styles.demoPopupArabic}>
+                بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
+              </Text>
+            </View>
+            {/* Actions */}
+            <View style={styles.demoPopupFooter}>
+              <View style={styles.demoPopupShareRow}>
+                <View style={[styles.demoPopupBtn, styles.demoPopupBtnGreen]}>
+                  <Text style={styles.demoPopupBtnText}>📤 مشاركة نص</Text>
+                </View>
+                <View style={[styles.demoPopupBtn, styles.demoPopupBtnBrown]}>
+                  <Text style={styles.demoPopupBtnText}>🖼️ مشاركة صورة</Text>
+                </View>
+              </View>
+              <View style={[styles.demoPopupBtnFull, styles.demoPopupBtnGreen]}>
+                <Text style={styles.demoPopupBtnText}>🔖 حفظ التقدم عند هذه الآية</Text>
+              </View>
+              <View style={styles.demoPopupUtilRow}>
+                <Text style={styles.demoPopupUtil}>نسخ</Text>
+                <Pressable onPress={() => setPhase("idle")}>
+                  <Text style={styles.demoPopupUtil}>إغلاق</Text>
+                </Pressable>
+              </View>
+            </View>
           </View>
-        )}
-      </View>
-      <Text style={styles.demoHint}>اضغط مطولاً لتجربة</Text>
-    </Pressable>
+        </View>
+      )}
+    </View>
   );
 }
 
@@ -117,33 +197,6 @@ function BubbleDemo() {
   );
 }
 
-function FooterDemo() {
-  const [visible, setVisible] = useState(true);
-  const translateY = useRef(new Animated.Value(0)).current;
-
-  function toggle() {
-    const toValue = visible ? 80 : 0;
-    Animated.spring(translateY, { toValue, useNativeDriver: true, friction: 8 }).start();
-    setVisible((v) => !v);
-  }
-
-  return (
-    <Pressable onPress={toggle} style={styles.demoTapArea}>
-      <View style={styles.demoFooterScreen}>
-        <View style={styles.demoFooterLines}>
-          {[1, 2, 3].map((i) => (
-            <View key={i} style={styles.demoFooterLine} />
-          ))}
-        </View>
-        <Animated.View style={[styles.demoFooterBar, { transform: [{ translateY }] }]}>
-          <View style={styles.demoFooterTab} />
-          <View style={[styles.demoFooterTab, { backgroundColor: colors.brand.default }]} />
-        </Animated.View>
-      </View>
-      <Text style={styles.demoHint}>اضغط لإظهار / إخفاء</Text>
-    </Pressable>
-  );
-}
 
 // ── steps data ────────────────────────────────────────────────────────────────
 
@@ -151,8 +204,8 @@ const STEPS: Step[] = [
   {
     emoji: "👆",
     title: "ضغطة واحدة على الآية",
-    body: "ضغطة واحدة على أي آية تُظهر أو تُخفي شريط التنقل السفلي.",
-    demo: <FooterDemo />,
+    body: "ضغطة واحدة على أي آية تُظهر أو تُخفي شريط التنقل بين المصحف والتقدم.",
+    demo: <TabsDemo />,
   },
   {
     emoji: "✋",
@@ -364,14 +417,78 @@ const styles = StyleSheet.create({
     color: colors.text.tertiary,
   },
 
-  // ── tap demo ──
-  demoTapRipple: {
-    position: "absolute",
-    width: SCREEN_WIDTH - 64,
-    height: 52,
-    borderRadius: 8,
-    backgroundColor: colors.brand.highlight,
+  // ── tabs demo ──
+  demoTabsWrapper: {
+    alignItems: "center",
+    gap: 10,
+    width: "100%",
   },
+  demoTabsScreen: {
+    width: SCREEN_WIDTH - 64,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border.default,
+    backgroundColor: colors.background.surface,
+    overflow: "hidden",
+  },
+  demoTabsContent: {
+    padding: 16,
+    gap: 8,
+    minHeight: 80,
+    justifyContent: "center",
+  },
+  demoTabsProgressCard: {
+    gap: 6,
+  },
+  demoTabsProgressRow: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "center",
+  },
+  demoTabBar: {
+    height: 48,
+    borderTopWidth: 1,
+    borderTopColor: colors.border.default,
+    flexDirection: "row",
+    position: "relative",
+  },
+  demoTabIndicator: {
+    position: "absolute",
+    top: 0,
+    width: "50%",
+    height: 2,
+    backgroundColor: colors.brand.default,
+    borderRadius: 1,
+  },
+  demoTab: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 2,
+  },
+  demoTabIcon: {
+    fontSize: 14,
+    opacity: 0.4,
+  },
+  demoTabIconActive: {
+    opacity: 1,
+  },
+  demoTabLabel: {
+    fontSize: 10,
+    color: colors.text.tertiary,
+  },
+  demoTabLabelActive: {
+    color: colors.brand.default,
+    fontWeight: "700",
+  },
+  demoTabsLine: {
+    height: 8,
+    backgroundColor: colors.border.default,
+    borderRadius: 4,
+    width: "100%",
+  },
+
+  // ── ayah line (shared by long press demo) ──
   demoAyahLine: {
     backgroundColor: colors.background.surface,
     borderRadius: 8,
@@ -391,6 +508,108 @@ const styles = StyleSheet.create({
   },
 
   // ── long press demo ──
+  demoLongPressWrapper: {
+    width: "100%",
+    alignItems: "center",
+    gap: 10,
+    minHeight: 160,
+  },
+  demoPopupOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.35)",
+    borderRadius: 12,
+    zIndex: 10,
+  },
+  demoPopup: {
+    backgroundColor: colors.background.surface,
+    borderRadius: 14,
+    width: "90%",
+    overflow: "hidden",
+    shadowColor: colors.shadow.default,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 6,
+  },
+  demoPopupHeader: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border.default,
+    alignItems: "center",
+  },
+  demoPopupChapter: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: colors.brand.default,
+  },
+  demoPopupVerse: {
+    fontSize: 11,
+    color: colors.text.secondary,
+    marginTop: 2,
+  },
+  demoPopupContent: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  demoPopupArabic: {
+    fontSize: 16,
+    textAlign: "center",
+    color: colors.text.primary,
+    lineHeight: 28,
+  },
+  demoPopupFooter: {
+    borderTopWidth: 1,
+    borderTopColor: colors.border.default,
+    padding: 10,
+    gap: 6,
+    alignItems: "center",
+  },
+  demoPopupShareRow: {
+    flexDirection: "row",
+    gap: 6,
+    width: "100%",
+  },
+  demoPopupBtn: {
+    flex: 1,
+    paddingVertical: 9,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  demoPopupBtnFull: {
+    alignSelf: "stretch",
+    paddingVertical: 9,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  demoPopupBtnGreen: {
+    backgroundColor: colors.brand.default,
+  },
+  demoPopupBtnBrown: {
+    backgroundColor: colors.brand.accent,
+  },
+  demoPopupBtnText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: colors.text.inverse,
+  },
+  demoPopupUtilRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 20,
+    marginTop: 2,
+  },
+  demoPopupUtil: {
+    fontSize: 12,
+    color: colors.text.tertiary,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
   demoProgressTrack: {
     position: "absolute",
     bottom: 0,
@@ -433,43 +652,4 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
   },
 
-  // ── footer demo ──
-  demoFooterScreen: {
-    width: SCREEN_WIDTH - 64,
-    height: 110,
-    backgroundColor: colors.background.surface,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border.default,
-    overflow: "hidden",
-    justifyContent: "space-between",
-  },
-  demoFooterLines: {
-    flex: 1,
-    padding: 12,
-    gap: 8,
-    justifyContent: "center",
-  },
-  demoFooterLine: {
-    height: 8,
-    backgroundColor: colors.border.default,
-    borderRadius: 4,
-  },
-  demoFooterBar: {
-    height: 44,
-    backgroundColor: colors.background.surface,
-    borderTopWidth: 1,
-    borderTopColor: colors.border.default,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 32,
-    paddingHorizontal: 16,
-  },
-  demoFooterTab: {
-    width: 32,
-    height: 20,
-    borderRadius: 6,
-    backgroundColor: colors.border.default,
-  },
 });

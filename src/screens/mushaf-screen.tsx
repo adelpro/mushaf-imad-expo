@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { databaseService } from "../services/sqlite-service";
-import { setLastRead } from "../services/last-read-service";
+import { getLastRead, setLastRead } from "../services/last-read-service";
 import { addReadPage, getReadPagesCount } from "../services/read-pages-service";
 import { QuranView } from "../components/quran";
 import { colors } from "../theme";
@@ -82,9 +82,7 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
       if (currentDwellPageRef.current !== pageNumber) return;
       const chapterRef = page?.verses1441?.[0]?.chapter_id ?? null;
       if (chapterRef != null) {
-        const chapter =
-          (await databaseService.getChapterByNumber(chapterRef)) ??
-          (await databaseService.getChapterByIdentifier(chapterRef));
+        const chapter = await databaseService.getChapterByIdentifier(chapterRef);
         if (chapter && currentDwellPageRef.current === pageNumber) {
           setCurrentChapter(chapter.number);
         }
@@ -96,12 +94,16 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
 
   async function persistLastRead(pageNumber: number) {
     try {
+      // Don't override a manual save on the same page or a later page
+      const existing = await getLastRead();
+      if (existing?.source === "manual" && existing.page >= pageNumber) {
+        return;
+      }
+
       const page = await databaseService.getPageByNumber(pageNumber);
       const chapterRef = page?.verses1441?.[0]?.chapter_id ?? null;
       if (chapterRef != null) {
-        const chapter =
-          (await databaseService.getChapterByNumber(chapterRef)) ??
-          (await databaseService.getChapterByIdentifier(chapterRef));
+        const chapter = await databaseService.getChapterByIdentifier(chapterRef);
         if (chapter) {
           const firstVerse = page?.verses1441?.[0];
           const ayah = firstVerse?.number ?? 1;
@@ -109,6 +111,7 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
             page: pageNumber,
             chapterNumber: chapter.number,
             ayah,
+            source: "auto",
           });
         }
       }

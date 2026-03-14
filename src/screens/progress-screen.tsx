@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
+import { useFocusEffect } from "expo-router";
 import {
   ActivityIndicator,
   ScrollView,
@@ -95,9 +96,11 @@ export function ProgressScreen({ onContinueReading }: ProgressScreenProps) {
     }
   }, []);
 
-  useEffect(() => {
-    void loadLastRead();
-  }, [loadLastRead]);
+  useFocusEffect(
+    useCallback(() => {
+      void loadLastRead();
+    }, [loadLastRead]),
+  );
 
   const handleContinue = useCallback(() => {
     if (!lastReadData) return;

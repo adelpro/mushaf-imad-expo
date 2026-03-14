@@ -7,6 +7,10 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  ToastAndroid,
+  Platform,
+  Alert,
+  Clipboard,
 } from "react-native";
 import { Verse, Chapter } from "./types";
 import { colors } from "../../theme";
@@ -33,6 +37,16 @@ export const VersePopup: React.FC<VersePopupProps> = ({
   onSaveProgress,
 }) => {
   if (!verse) return null;
+
+  function handleCopy() {
+    const text = `﴿${verse!.text}﴾\n[سورة ${chapter?.arabicTitle ?? ""} - الآية ${verse!.number}]`;
+    Clipboard.setString(text);
+    if (Platform.OS === "android") {
+      ToastAndroid.show("تم النسخ ✓", ToastAndroid.SHORT);
+    } else {
+      Alert.alert("تم النسخ", "تم نسخ الآية إلى الحافظة.");
+    }
+  }
 
   return (
     <Modal
@@ -90,7 +104,7 @@ export const VersePopup: React.FC<VersePopupProps> = ({
             <View style={styles.utilRow}>
               <TouchableOpacity
                 style={styles.utilButton}
-                onPress={onLongPress}
+                onPress={handleCopy}
               >
                 <Text style={styles.utilButtonText}>نسخ</Text>
               </TouchableOpacity>
