@@ -65,8 +65,11 @@ export function PageJumpInput({
       Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
 
     const showSub = Keyboard.addListener(showEvent, (e) => {
+      const kbH = e.endCoordinates.height;
+      const bubbleBottom = 20 - offsetRef.current.y;
+      const needed = Math.max(0, kbH + 10 - bubbleBottom);
       Animated.timing(keyboardHeight, {
-        toValue: e.endCoordinates.height,
+        toValue: needed,
         duration: Platform.OS === "ios" ? e.duration : 200,
         useNativeDriver: false,
       }).start();
