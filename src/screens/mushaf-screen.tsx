@@ -7,7 +7,6 @@ import {
   ViewToken,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { PageJumpInput } from "../components/page-jump-input";
 import { databaseService } from "../services/sqlite-service";
 import { setLastRead } from "../services/last-read-service";
 import { addReadPage, getReadPagesCount } from "../services/read-pages-service";
@@ -37,7 +36,6 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
   const setJumpToPage = useMushafStore((s) => s.setJumpToPage);
   const storeCurrentPage = useMushafStore((s) => s.currentPage);
   const setReadCount = useMushafStore((s) => s.setReadCount);
-  const readCount = useMushafStore((s) => s.readCount);
 
   const pages = Array.from({ length: 604 }, (_, i) => i + 1);
   const [currentPage, setCurrentPage] = useState(storeCurrentPage);
@@ -165,10 +163,6 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
     },
   ).current;
 
-  const handleJumpToPage = useCallback((page: number) => {
-    flatListRef.current?.scrollToIndex({ index: page - 1, animated: false });
-  }, []);
-
   return (
     <View
       style={[
@@ -207,17 +201,6 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
         viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
         windowSize={3}
       />
-      <View
-        collapsable={false}
-        pointerEvents="box-none"
-        style={styles.overlay}
-      >
-        <PageJumpInput
-          currentPage={currentPage}
-          onJumpToPage={handleJumpToPage}
-          readCount={readCount}
-        />
-      </View>
     </View>
   );
 }
@@ -226,10 +209,5 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background.default,
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 999,
-    elevation: 999,
   },
 });

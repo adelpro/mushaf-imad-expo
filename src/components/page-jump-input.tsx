@@ -55,6 +55,7 @@ export function PageJumpInput({
   const offsetRef = useRef({ x: 0, y: 0 });
 
   const panRef = useRef(null);
+  const tapRef = useRef(null);
   const keyboardHeight = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -194,6 +195,7 @@ export function PageJumpInput({
     <View pointerEvents="box-none" style={styles.wrapper}>
       <PanGestureHandler
         ref={panRef}
+        simultaneousHandlers={tapRef}
         onGestureEvent={onPanGestureEvent}
         onHandlerStateChange={onPanHandlerStateChange}
         activeOffsetX={[-DRAG_THRESHOLD, DRAG_THRESHOLD]}
@@ -206,7 +208,9 @@ export function PageJumpInput({
           ]}
         >
           <TapGestureHandler
-            waitFor={panRef}
+            ref={tapRef}
+            simultaneousHandlers={panRef}
+            maxDist={DRAG_THRESHOLD}
             onHandlerStateChange={onTapHandlerStateChange}
           >
             <View style={styles.pageBubble}>
