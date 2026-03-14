@@ -9,8 +9,10 @@ import { Amiri_400Regular } from "@expo-google-fonts/amiri";
 import { MushafScreen } from "./src/screens/mushaf-screen";
 import { ProgressScreen } from "./src/screens/progress-screen";
 import { TabFooter, type TabId } from "./src/components/tab-footer";
+import { PageJumpInput } from "./src/components/page-jump-input";
 import { useMushafStore } from "./src/store/mushaf-store";
 import { getLastRead } from "./src/services/last-read-service";
+import { getReadPagesCount } from "./src/services/read-pages-service";
 import { colors } from "./src/theme";
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
@@ -22,8 +24,14 @@ export default function App() {
   const [footerVisible, setFooterVisible] = useState(true);
   const [appReady, setAppReady] = useState(false);
   const [progressRefreshKey, setProgressRefreshKey] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [readCount, setReadCount] = useState(0);
   const setJumpToPage = useMushafStore((s) => s.setJumpToPage);
-  const setCurrentPage = useMushafStore((s) => s.setCurrentPage);
+  const setCurrentPage_store = useMushafStore((s) => s.setCurrentPage);
+
+  useEffect(() => {
+    void getReadPagesCount().then(setReadCount);
+  }, []);
 
   const handleTabChange = useCallback(
     (tab: TabId) => {
@@ -39,10 +47,17 @@ export default function App() {
   const handleContinueReading = useCallback(
     (page: number) => {
       setJumpToPage(page);
-      setCurrentPage(page); // So store doesn't fall back to last scroll position (e.g. 74)
+      setCurrentPage_store(page);
       setActiveTab("mushaf");
     },
-    [setJumpToPage, setCurrentPage],
+    [setJumpToPage, setCurrentPage_store],
+  );
+
+  const handleJumpToPage = useCallback(
+    (page: number) => {
+      setJumpToPage(page);
+    },
+    [setJumpToPage],
   );
   
   const [fontsLoaded, fontError] = useFonts({
@@ -56,6 +71,7 @@ export default function App() {
       const lastRead = await getLastRead();
       if (lastRead) {
         useMushafStore.getState().setCurrentPage(lastRead.page);
+        setCurrentPage(lastRead.page);
       }
       setAppReady(true);
       await SplashScreen.hideAsync();
@@ -77,7 +93,15 @@ export default function App() {
       <SafeAreaView style={styles.container}>
         <StatusBar style="dark" />
         <View style={styles.content}>
-          {activeTab === "mushaf" && <MushafScreen onContentTap={() => setFooterVisible(v => !v)} />}
+          {activeTab === "mushaf" && (
+            <MushafScreen
+              onContentTap={() => setFooterVisible(v => !v)}
+              currentPage={currentPage}
+              onCurrentPageChange={setCurrentPage}
+              readCount={readCount}
+              onReadCountChange={setReadCount}
+            />
+          )}
           {activeTab === "progress" && (
             <ProgressScreen
               key={progressRefreshKey}
@@ -90,6 +114,16 @@ export default function App() {
           onTabChange={handleTabChange}
           visible={footerVisible}
         />
+        {/* PageJumpInput lives at root level so nothing can block its touches */}
+        {activeTab === "mushaf" && (
+          <View style={styles.pageInputOverlay} pointerEvents="box-none">
+            <PageJumpInput
+              currentPage={currentPage}
+              onJumpToPage={handleJumpToPage}
+              readCount={readCount}
+            />
+          </View>
+        )}
       </SafeAreaView>
     </SafeAreaProvider>
   );
@@ -103,15 +137,10 @@ const styles = StyleSheet.create({
   content: {
     ...StyleSheet.absoluteFillObject,
   },
-  tabContent: {
+  pageInputOverlay: {
     ...StyleSheet.absoluteFillObject,
-  },
-  footerOverlay: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    overflow: "hidden",
+    zIndex: 200,
+    elevation: 20,
   },
   loader: {
     flex: 1,

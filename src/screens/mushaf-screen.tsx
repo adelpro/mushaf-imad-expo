@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import {
   Dimensions,
   FlatList,
@@ -7,7 +7,6 @@ import {
   ViewToken,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { PageJumpInput } from "../components/page-jump-input";
 import { databaseService } from "../services/sqlite-service";
 import { setLastRead } from "../services/last-read-service";
 import { addReadPage, getReadPagesCount } from "../services/read-pages-service";
@@ -27,11 +26,21 @@ type ViewableItemsChangedInfo = {
   viewableItems: ViewToken[];
 };
 
-type MushafScreenProps = {
+export type MushafScreenProps = {
   onContentTap: () => void;
+  currentPage: number;
+  onCurrentPageChange: (page: number) => void;
+  readCount: number;
+  onReadCountChange: (count: number) => void;
 };
 
-export function MushafScreen({ onContentTap }: MushafScreenProps) {
+export function MushafScreen({
+  onContentTap,
+  currentPage,
+  onCurrentPageChange,
+  readCount,
+  onReadCountChange,
+}: MushafScreenProps) {
   const insets = useSafeAreaInsets();
   const currentChapter = useMushafStore((s) => s.currentChapter);
   const setCurrentChapter = useMushafStore((s) => s.setCurrentChapter);
@@ -41,17 +50,10 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
   const storeCurrentPage = useMushafStore((s) => s.currentPage);
   const setStoreCurrentPage = useMushafStore((s) => s.setCurrentPage);
   const pages = Array.from({ length: 604 }, (_, i) => i + 1);
-  const [currentPage, setCurrentPage] = useState(1);
   const flatListRef = useRef<FlatList<number>>(null);
   const dwellTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const chapterUpdateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const currentDwellPageRef = useRef<number>(1);
-  const [readCount, setReadCount] = useState<number>(0);
-
-  // Load initial read count once
-  useEffect(() => {
-    void getReadPagesCount().then(setReadCount);
-  }, []);
 
   const initialScrollIndex = (() => {
     // When coming from "أكمل" (Continue), jumpToPage is set and must be used exclusively.
@@ -153,7 +155,7 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
         dwellTimerRef.current = null;
       }
 
-      setCurrentPage(pageNum);
+      onCurrentPageChange(pageNum);
       setStoreCurrentPage(pageNum);
       currentDwellPageRef.current = pageNum;
 
@@ -169,8 +171,7 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
         dwellTimerRef.current = null;
         void persistLastRead(pageNum);
         void addReadPage(pageNum).then(() => {
-          // Refresh the live progress count shown in the page bubble
-          void getReadPagesCount().then(setReadCount);
+          void getReadPagesCount().then(onReadCountChange);
         });
       }, MIN_DWELL_MS);
     },
@@ -221,11 +222,6 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
         showsHorizontalScrollIndicator={false}
         viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
         windowSize={3}
-      />
-      <PageJumpInput
-        currentPage={currentPage}
-        onJumpToPage={handleJumpToPage}
-        readCount={readCount}
       />
     </View>
   );
