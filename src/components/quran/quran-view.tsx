@@ -131,7 +131,9 @@ export function QuranView({
 
   const resolveChapterForVerse = useCallback(async (verse: Verse) => {
     if (verse.chapter_id) {
-      const chapter = await databaseService.getChapterByIdentifier(verse.chapter_id);
+      const chapter =
+        (await databaseService.getChapterByNumber(verse.chapter_id)) ??
+        (await databaseService.getChapterByIdentifier(verse.chapter_id));
       if (chapter) setSelectedChapter(chapter);
     }
   }, []);
