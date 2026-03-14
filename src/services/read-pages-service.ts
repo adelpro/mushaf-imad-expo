@@ -58,3 +58,14 @@ export async function addReadPage(page: number): Promise<void> {
     // ignore
   }
 }
+
+/**
+ * Clears all read pages progress, resetting it to 0.
+ */
+export async function clearReadPages(): Promise<void> {
+  try {
+    await AsyncStorage.removeItem(READ_PAGES_KEY);
+  } catch {
+    // ignore
+  }
+}

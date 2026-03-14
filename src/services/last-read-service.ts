@@ -38,3 +38,11 @@ export async function setLastRead(value: LastRead): Promise<void> {
     // ignore
   }
 }
+
+export async function clearLastRead(): Promise<void> {
+  try {
+    await AsyncStorage.removeItem(LAST_READ_KEY);
+  } catch {
+    // ignore
+  }
+}
