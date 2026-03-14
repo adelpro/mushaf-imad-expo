@@ -15,19 +15,34 @@ import { TOTAL_PAGES } from "../constants/mushaf";
 import { colors } from "../theme";
 
 const MIN_PAGE = 1;
+const BUTTON_WIDTH = 160;
+const BUTTON_HEIGHT = 44;
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
-
-type PageJumpInputProps = {
+export type PageJumpInputProps = {
   currentPage: number;
   onJumpToPage: (page: number) => void;
+  readCount?: number;
+  readPct?: number;
 };
 
-export function PageJumpInput({ currentPage, onJumpToPage }: PageJumpInputProps) {
+export function PageJumpInput({ currentPage, onJumpToPage, readCount, readPct }: PageJumpInputProps) {
+  const pct =
+    readPct !== undefined
+      ? readPct
+      : readCount !== undefined
+        ? Math.round((readCount / TOTAL_PAGES) * 100)
+        : null;
+
   const [inputValue, setInputValue] = useState("");
   const [isEditing, setIsEditing] = useState(false);
 
-  // Keyboard offset animation
+  // Keep a ref so PanResponder (created once) can read the latest value
+  const isEditingRef = useRef(false);
+  useEffect(() => {
+    isEditingRef.current = isEditing;
+  }, [isEditing]);
+
+  // ── Keyboard avoidance ──────────────────────────────────────────────────────
   const keyboardOffset = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -35,16 +50,13 @@ export function PageJumpInput({ currentPage, onJumpToPage }: PageJumpInputProps)
     const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
 
     const showSub = Keyboard.addListener(showEvent, (e) => {
-      const kbHeight = e.endCoordinates.height;
-      // Effective bottom = base (70) minus translateY (negative Y = higher)
-      const effectiveBottom = 70 - lastOffset.current.y;
-      const needed = Math.max(0, kbHeight - effectiveBottom + 50); // 50px padding
       Animated.timing(keyboardOffset, {
-        toValue: needed,
+        toValue: e.endCoordinates.height,
         duration: Platform.OS === "ios" ? e.duration : 200,
         useNativeDriver: false,
       }).start();
     });
+
     const hideSub = Keyboard.addListener(hideEvent, () => {
       Animated.timing(keyboardOffset, {
         toValue: 0,
@@ -59,45 +71,52 @@ export function PageJumpInput({ currentPage, onJumpToPage }: PageJumpInputProps)
     };
   }, [keyboardOffset]);
 
-  // Draggable position
+  // ── Draggable position ──────────────────────────────────────────────────────
   const pan = useRef(new Animated.ValueXY()).current;
   const lastOffset = useRef({ x: 0, y: 0 });
   const isDragging = useRef(false);
+  const dragStarted = useRef(false);
+
+  const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+  const minX = -(SCREEN_WIDTH / 2 - BUTTON_WIDTH / 2);
+  const maxX = SCREEN_WIDTH / 2 - BUTTON_WIDTH / 2;
+  const minY = -(SCREEN_HEIGHT / 2 - BUTTON_HEIGHT);
+  const maxY = SCREEN_HEIGHT / 2 - BUTTON_HEIGHT - 80;
 
   const panResponder = useRef(
     PanResponder.create({
+      // Never steal the initial touch – let Pressable handle taps
       onStartShouldSetPanResponder: () => false,
-      onMoveShouldSetPanResponder: (_, gestureState) => {
-        // Only capture drag if moved more than 5px (avoids blocking taps)
-        return Math.abs(gestureState.dx) > 5 || Math.abs(gestureState.dy) > 5;
+      onStartShouldSetPanResponderCapture: () => false,
+
+      // Claim the gesture only after a clear drag movement
+      onMoveShouldSetPanResponder: (_, gs) => {
+        if (isEditingRef.current) return false;
+        return Math.abs(gs.dx) > 6 || Math.abs(gs.dy) > 6;
       },
+      onMoveShouldSetPanResponderCapture: () => false,
+
       onPanResponderGrant: () => {
+        dragStarted.current = true;
         isDragging.current = false;
-        pan.setOffset({
-          x: lastOffset.current.x,
-          y: lastOffset.current.y,
-        });
+        pan.setOffset({ x: lastOffset.current.x, y: lastOffset.current.y });
         pan.setValue({ x: 0, y: 0 });
       },
-      onPanResponderMove: (_, gestureState) => {
-        isDragging.current = true;
-        Animated.event([null, { dx: pan.x, dy: pan.y }], {
-          useNativeDriver: false,
-        })(_, gestureState);
+
+      onPanResponderMove: (_, gs) => {
+        if (Math.abs(gs.dx) > 2 || Math.abs(gs.dy) > 2) {
+          isDragging.current = true;
+        }
+        pan.setValue({ x: gs.dx, y: gs.dy });
       },
-      onPanResponderRelease: (_, gestureState) => {
+
+      onPanResponderRelease: (_, gs) => {
         pan.flattenOffset();
 
-        // Clamp within screen bounds
-        const buttonWidth = 140;
-        const buttonHeight = 40;
-        const minX = -(SCREEN_WIDTH / 2 - buttonWidth / 2);
-        const maxX = SCREEN_WIDTH / 2 - buttonWidth / 2;
-        const minY = -(SCREEN_HEIGHT / 2 - buttonHeight);
-        const maxY = SCREEN_HEIGHT / 2 - buttonHeight - 80;
-
-        const clampedX = Math.max(minX, Math.min(maxX, lastOffset.current.x + gestureState.dx));
-        const clampedY = Math.max(minY, Math.min(maxY, lastOffset.current.y + gestureState.dy));
+        const newX = lastOffset.current.x + gs.dx;
+        const newY = lastOffset.current.y + gs.dy;
+        const clampedX = Math.max(minX, Math.min(maxX, newX));
+        const clampedY = Math.max(minY, Math.min(maxY, newY));
 
         lastOffset.current = { x: clampedX, y: clampedY };
 
@@ -107,14 +126,21 @@ export function PageJumpInput({ currentPage, onJumpToPage }: PageJumpInputProps)
           friction: 7,
         }).start(() => {
           isDragging.current = false;
+          dragStarted.current = false;
         });
+      },
+
+      onPanResponderTerminate: () => {
+        isDragging.current = false;
+        dragStarted.current = false;
       },
     }),
   ).current;
 
+  // ── Handlers ────────────────────────────────────────────────────────────────
   function handleSubmit() {
     const page = Number.parseInt(inputValue, 10);
-    if (page >= MIN_PAGE && page <= TOTAL_PAGES) {
+    if (!Number.isNaN(page) && page >= MIN_PAGE && page <= TOTAL_PAGES) {
       onJumpToPage(page);
     }
     setInputValue("");
@@ -122,14 +148,21 @@ export function PageJumpInput({ currentPage, onJumpToPage }: PageJumpInputProps)
     Keyboard.dismiss();
   }
 
+  function handleBubblePress() {
+    if (!isDragging.current) {
+      setIsEditing(true);
+    }
+  }
+
+  // ── Render ───────────────────────────────────────────────────────────────────
   if (isEditing) {
     return (
+      // When editing: fixed bottom, moves up with keyboard, NOT draggable
       <Animated.View
         style={[
           styles.floatingContainer,
-          { transform: pan.getTranslateTransform(), bottom: Animated.add(70, keyboardOffset) },
+          { bottom: Animated.add(16, keyboardOffset) },
         ]}
-        {...panResponder.panHandlers}
       >
         <View style={styles.editingBubble}>
           <TextInput
@@ -142,7 +175,7 @@ export function PageJumpInput({ currentPage, onJumpToPage }: PageJumpInputProps)
             }}
             onChangeText={setInputValue}
             onSubmitEditing={handleSubmit}
-            placeholder={`${MIN_PAGE}-${TOTAL_PAGES}`}
+            placeholder={`${MIN_PAGE}–${TOTAL_PAGES}`}
             placeholderTextColor={colors.text.tertiary}
             returnKeyType="go"
             style={styles.input}
@@ -150,10 +183,7 @@ export function PageJumpInput({ currentPage, onJumpToPage }: PageJumpInputProps)
           />
           <Pressable
             onPress={handleSubmit}
-            style={({ pressed }) => [
-              styles.goButton,
-              pressed && styles.goButtonPressed,
-            ]}
+            style={({ pressed }) => [styles.goButton, pressed && styles.goButtonPressed]}
           >
             <Text style={styles.goButtonText}>انتقال</Text>
           </Pressable>
@@ -163,24 +193,24 @@ export function PageJumpInput({ currentPage, onJumpToPage }: PageJumpInputProps)
   }
 
   return (
+    // When idle: draggable, sits 70px from bottom
     <Animated.View
       style={[
         styles.floatingContainer,
-        { transform: pan.getTranslateTransform(), bottom: Animated.add(70, keyboardOffset) },
+        { transform: pan.getTranslateTransform(), bottom: 70 },
       ]}
       {...panResponder.panHandlers}
     >
-      <Pressable
-        style={styles.pageBubble}
-        onPress={() => {
-          if (!isDragging.current) {
-            setIsEditing(true);
-          }
-        }}
-      >
+      <Pressable style={styles.pageBubble} onPress={handleBubblePress}>
         <Text style={styles.pageLabel}>صفحة</Text>
         <Text style={styles.pageNumber}>{currentPage}</Text>
         <Text style={styles.totalPages}>/ {TOTAL_PAGES}</Text>
+        {pct !== null && (
+          <>
+            <View style={styles.pctDivider} />
+            <Text style={styles.pctText}>{pct}%</Text>
+          </>
+        )}
       </Pressable>
     </Animated.View>
   );
@@ -208,6 +238,8 @@ const styles = StyleSheet.create({
     elevation: 8,
     borderWidth: 1,
     borderColor: colors.border.default,
+    minWidth: BUTTON_WIDTH,
+    justifyContent: "center",
   },
   editingBubble: {
     flexDirection: "row",
@@ -240,6 +272,18 @@ const styles = StyleSheet.create({
   totalPages: {
     fontSize: 13,
     color: colors.text.tertiary,
+  },
+  pctDivider: {
+    width: 1,
+    height: 14,
+    backgroundColor: colors.border.default,
+    marginHorizontal: 4,
+  },
+  pctText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.brand.default,
+    opacity: 0.8,
   },
   input: {
     backgroundColor: colors.background.subtle,
