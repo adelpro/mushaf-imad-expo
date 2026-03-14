@@ -56,13 +56,11 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
 
   useEffect(() => {
     if (jumpToPage != null) {
-      const page = jumpToPage;
-      setJumpToPage(null);
-      const index = page - 1;
-      const id = requestAnimationFrame(() => {
-        flatListRef.current?.scrollToIndex({ index, animated: false });
+      flatListRef.current?.scrollToIndex({
+        index: jumpToPage - 1,
+        animated: false,
       });
-      return () => cancelAnimationFrame(id);
+      setJumpToPage(null);
     }
   }, [jumpToPage, setJumpToPage]);
 
