@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Dimensions,
   FlatList,
@@ -7,6 +7,7 @@ import {
   ViewToken,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { PageJumpInput } from "../components/page-jump-input";
 import { databaseService } from "../services/sqlite-service";
 import { setLastRead } from "../services/last-read-service";
 import { addReadPage, getReadPagesCount } from "../services/read-pages-service";
@@ -16,31 +17,18 @@ import { useMushafStore } from "../store/mushaf-store";
 
 const { height, width } = Dimensions.get("window");
 
-/** Minimum time (ms) on a page before it counts as "read" for Continue Reading */
 const MIN_DWELL_MS = 1000;
-
-/** Debounce (ms) before updating chapter highlight to reduce DB queries during fast scroll */
 const CHAPTER_UPDATE_DEBOUNCE_MS = 250;
 
 type ViewableItemsChangedInfo = {
   viewableItems: ViewToken[];
 };
 
-export type MushafScreenProps = {
+type MushafScreenProps = {
   onContentTap: () => void;
-  currentPage: number;
-  onCurrentPageChange: (page: number) => void;
-  readCount: number;
-  onReadCountChange: (count: number) => void;
 };
 
-export function MushafScreen({
-  onContentTap,
-  currentPage,
-  onCurrentPageChange,
-  readCount,
-  onReadCountChange,
-}: MushafScreenProps) {
+export function MushafScreen({ onContentTap }: MushafScreenProps) {
   const insets = useSafeAreaInsets();
   const currentChapter = useMushafStore((s) => s.currentChapter);
   const setCurrentChapter = useMushafStore((s) => s.setCurrentChapter);
@@ -48,23 +36,21 @@ export function MushafScreen({
   const jumpToPage = useMushafStore((s) => s.jumpToPage);
   const setJumpToPage = useMushafStore((s) => s.setJumpToPage);
   const storeCurrentPage = useMushafStore((s) => s.currentPage);
-  const setStoreCurrentPage = useMushafStore((s) => s.setCurrentPage);
+  const setReadCount = useMushafStore((s) => s.setReadCount);
+  const readCount = useMushafStore((s) => s.readCount);
+
   const pages = Array.from({ length: 604 }, (_, i) => i + 1);
+  const [currentPage, setCurrentPage] = useState(storeCurrentPage);
   const flatListRef = useRef<FlatList<number>>(null);
   const dwellTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const chapterUpdateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const currentDwellPageRef = useRef<number>(1);
 
-  // Keep latest callbacks in refs so the frozen useRef(onViewableItemsChanged) always sees them
-  const onCurrentPageChangeRef = useRef(onCurrentPageChange);
-  const onReadCountChangeRef = useRef(onReadCountChange);
-  useEffect(() => { onCurrentPageChangeRef.current = onCurrentPageChange; }, [onCurrentPageChange]);
-  useEffect(() => { onReadCountChangeRef.current = onReadCountChange; }, [onReadCountChange]);
+  useEffect(() => {
+    void getReadPagesCount().then(setReadCount);
+  }, [setReadCount]);
 
   const initialScrollIndex = (() => {
-    // When coming from "أكمل" (Continue), jumpToPage is set and must be used exclusively.
-    // Do NOT fall back to storeCurrentPage here—that would use the last scroll position
-    // instead of the persisted last-read page.
     const target = jumpToPage ?? storeCurrentPage;
     if (target >= 1 && target <= 604) return target - 1;
     return 0;
@@ -137,12 +123,8 @@ export function MushafScreen({
 
   useEffect(() => {
     return () => {
-      if (dwellTimerRef.current) {
-        clearTimeout(dwellTimerRef.current);
-      }
-      if (chapterUpdateTimerRef.current) {
-        clearTimeout(chapterUpdateTimerRef.current);
-      }
+      if (dwellTimerRef.current) clearTimeout(dwellTimerRef.current);
+      if (chapterUpdateTimerRef.current) clearTimeout(chapterUpdateTimerRef.current);
     };
   }, []);
 
@@ -161,8 +143,8 @@ export function MushafScreen({
         dwellTimerRef.current = null;
       }
 
-      onCurrentPageChangeRef.current(pageNum);
-      setStoreCurrentPage(pageNum);
+      setCurrentPage(pageNum);
+      useMushafStore.getState().setCurrentPage(pageNum);
       currentDwellPageRef.current = pageNum;
 
       if (chapterUpdateTimerRef.current) {
@@ -177,19 +159,15 @@ export function MushafScreen({
         dwellTimerRef.current = null;
         void persistLastRead(pageNum);
         void addReadPage(pageNum).then(() => {
-          void getReadPagesCount().then(onReadCountChangeRef.current);
+          void getReadPagesCount().then((c) => useMushafStore.getState().setReadCount(c));
         });
       }, MIN_DWELL_MS);
     },
   ).current;
 
-  const handleJumpToPage = useCallback(
-    (page: number) => {
-      const index = page - 1;
-      flatListRef.current?.scrollToIndex({ index, animated: false });
-    },
-    [],
-  );
+  const handleJumpToPage = useCallback((page: number) => {
+    flatListRef.current?.scrollToIndex({ index: page - 1, animated: false });
+  }, []);
 
   return (
     <View
@@ -229,6 +207,17 @@ export function MushafScreen({
         viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
         windowSize={3}
       />
+      <View
+        collapsable={false}
+        pointerEvents="box-none"
+        style={styles.overlay}
+      >
+        <PageJumpInput
+          currentPage={currentPage}
+          onJumpToPage={handleJumpToPage}
+          readCount={readCount}
+        />
+      </View>
     </View>
   );
 }
@@ -237,5 +226,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background.default,
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 999,
+    elevation: 999,
   },
 });
