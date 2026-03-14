@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   sections: {
-    flex: 1,
+    gap: 8,
   },
   overallProgressWrapper: {
     marginTop: 0,

@@ -8,11 +8,13 @@ import { Amiri_400Regular } from "@expo-google-fonts/amiri";
 
 import { MushafScreen } from "./src/screens/mushaf-screen";
 import { ProgressScreen } from "./src/screens/progress-screen";
+import { OnboardingScreen } from "./src/screens/onboarding-screen";
 import { TabFooter, type TabId } from "./src/components/tab-footer";
 import { PageJumpInput } from "./src/components/page-jump-input";
 import { useMushafStore } from "./src/store/mushaf-store";
 import { getLastRead } from "./src/services/last-read-service";
 import { getReadPagesCount } from "./src/services/read-pages-service";
+import { hasSeenOnboarding } from "./src/services/onboarding-service";
 import { colors } from "./src/theme";
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
@@ -23,6 +25,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<TabId>("mushaf");
   const [footerVisible, setFooterVisible] = useState(true);
   const [appReady, setAppReady] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [progressRefreshKey, setProgressRefreshKey] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [readCount, setReadCount] = useState(0);
@@ -68,10 +71,16 @@ export default function App() {
   useEffect(() => {
     if (!fontsLoaded && !fontError) return;
     void (async () => {
-      const lastRead = await getLastRead();
+      const [lastRead, seenOnboarding] = await Promise.all([
+        getLastRead(),
+        hasSeenOnboarding(),
+      ]);
       if (lastRead) {
         useMushafStore.getState().setCurrentPage(lastRead.page);
         setCurrentPage(lastRead.page);
+      }
+      if (!seenOnboarding) {
+        setShowOnboarding(true);
       }
       setAppReady(true);
       await SplashScreen.hideAsync();
@@ -84,6 +93,17 @@ export default function App() {
         <View style={styles.loader}>
           <ActivityIndicator size="large" />
         </View>
+      </SafeAreaProvider>
+    );
+  }
+
+  if (showOnboarding) {
+    return (
+      <SafeAreaProvider>
+        <SafeAreaView style={styles.container}>
+          <StatusBar style="dark" />
+          <OnboardingScreen onDone={() => setShowOnboarding(false)} />
+        </SafeAreaView>
       </SafeAreaProvider>
     );
   }
