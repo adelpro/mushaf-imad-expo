@@ -19,6 +19,7 @@ interface VersePopupProps {
   onLongPress?: () => void;
   onShareText?: () => void;
   onShareImage?: () => void;
+  onSaveProgress?: () => void;
 }
 
 export const VersePopup: React.FC<VersePopupProps> = ({
@@ -29,6 +30,7 @@ export const VersePopup: React.FC<VersePopupProps> = ({
   onLongPress,
   onShareText,
   onShareImage,
+  onSaveProgress,
 }) => {
   if (!verse) return null;
 
@@ -73,6 +75,16 @@ export const VersePopup: React.FC<VersePopupProps> = ({
                 <Text style={styles.shareActionLabel}>🖼️ مشاركة صورة</Text>
               </TouchableOpacity>
             </View>
+
+            {/* Save progress action */}
+            {onSaveProgress && (
+              <TouchableOpacity
+                style={styles.saveProgressButton}
+                onPress={onSaveProgress}
+              >
+                <Text style={styles.shareActionLabel}>🔖 حفظ التقدم عند هذه الآية</Text>
+              </TouchableOpacity>
+            )}
 
             {/* Utility actions row */}
             <View style={styles.utilRow}>
@@ -261,6 +273,13 @@ const styles = StyleSheet.create({
   },
   shareImageButton: {
     backgroundColor: colors.brand.accent,
+  },
+  saveProgressButton: {
+    backgroundColor: colors.brand.default,
+    width: "100%",
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: "center",
   },
   shareActionLabel: {
     fontSize: 14,

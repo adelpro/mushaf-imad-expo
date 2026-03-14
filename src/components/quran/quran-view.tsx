@@ -12,6 +12,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Alert,
 } from "react-native";
 import { captureRef } from "react-native-view-shot";
 import SuraNameBar from "../../../assets/images/sura_name_bar.svg";
@@ -20,6 +21,8 @@ import { databaseService } from "../../services/sqlite-service";
 import { colors } from "../../theme";
 import { triggerImpactHaptic, triggerSelectionHaptic } from "../../utils/triggerHaptics";
 import { VerseFasel } from "../verse-fasel";
+import { setLastRead } from "../../services/last-read-service";
+import { addReadPage } from "../../services/read-pages-service";
 import { ChapterPopup } from "./chapter-popup";
 import { DEFAULT_CONFIG } from "./constants";
 import { ShareVerseCard } from "./share-verse-card";
@@ -156,6 +159,26 @@ export function QuranView({
       console.error("[QuranView] Share image error:", err);
     }
   }, [selectedVerse]);
+
+  const handleSaveProgress = useCallback(async () => {
+    if (!selectedVerse || !selectedChapter) return;
+    try {
+      await setLastRead({
+        page: pageNumber,
+        chapterNumber: selectedChapter.number,
+        ayah: selectedVerse.number,
+      });
+      await addReadPage(pageNumber);
+      setVersePopupVisible(false);
+      Alert.alert(
+        "تم حفظ التقدم",
+        `تم حفظ تقدمك عند سورة ${selectedChapter.arabicTitle} الآية ${selectedVerse.number}`,
+        [{ text: "حسناً", style: "default" }]
+      );
+    } catch (e) {
+      console.error("[QuranView] Save progress error:", e);
+    }
+  }, [selectedVerse, selectedChapter, pageNumber]);
 
   const handleVersePress = useCallback(
     (verse: Verse, x: number, y: number) => {
@@ -466,6 +489,7 @@ export function QuranView({
         onClose={() => setVersePopupVisible(false)}
         onShareText={handleShareText}
         onShareImage={handleShareImage}
+        onSaveProgress={handleSaveProgress}
       />
 
       {/* Off-screen card for image capture */}
