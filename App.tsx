@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Modal, StyleSheet, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
@@ -79,6 +79,7 @@ export default function App() {
         useMushafStore.getState().setCurrentPage(lastRead.page);
         setCurrentPage(lastRead.page);
       }
+      // Show onboarding every launch unless user explicitly dismissed it permanently
       if (!seenOnboarding) {
         setShowOnboarding(true);
       }
@@ -134,8 +135,13 @@ export default function App() {
           onTabChange={handleTabChange}
           visible={footerVisible}
         />
-        {/* PageJumpInput lives at root level so nothing can block its touches */}
-        {activeTab === "mushaf" && (
+        {/* PageJumpInput in a transparent Modal so it's always above everything */}
+        <Modal
+          visible={activeTab === "mushaf"}
+          transparent
+          animationType="none"
+          statusBarTranslucent
+        >
           <View style={styles.pageInputOverlay} pointerEvents="box-none">
             <PageJumpInput
               currentPage={currentPage}
@@ -143,7 +149,7 @@ export default function App() {
               readCount={readCount}
             />
           </View>
-        )}
+        </Modal>
       </SafeAreaView>
     </SafeAreaProvider>
   );

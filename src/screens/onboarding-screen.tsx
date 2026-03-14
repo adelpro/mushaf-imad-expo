@@ -179,7 +179,7 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
   const [step, setStep] = useState(0);
   const slideAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(1)).current;
-
+  const isLastStep = step === STEPS.length - 1;
   const current = STEPS[step];
 
   function animateToStep(next: number) {
@@ -196,17 +196,21 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
     });
   }
 
-  async function handleNext() {
-    if (step < STEPS.length - 1) {
+  function handleNext() {
+    if (!isLastStep) {
       animateToStep(step + 1);
     } else {
-      await markOnboardingDone();
       onDone();
     }
   }
 
   function handleSkip() {
-    void markOnboardingDone().then(onDone);
+    onDone();
+  }
+
+  async function handleDontShowAgain() {
+    await markOnboardingDone();
+    onDone();
   }
 
   return (
@@ -219,10 +223,7 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
       {/* Step indicators */}
       <View style={styles.dots}>
         {STEPS.map((_, i) => (
-          <View
-            key={i}
-            style={[styles.dot, i === step && styles.dotActive]}
-          />
+          <View key={i} style={[styles.dot, i === step && styles.dotActive]} />
         ))}
       </View>
 
@@ -239,15 +240,23 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
         <View style={styles.demoContainer}>{current.demo}</View>
       </Animated.View>
 
-      {/* Next / Done */}
-      <Pressable
-        onPress={handleNext}
-        style={({ pressed }) => [styles.nextBtn, pressed && styles.nextBtnPressed]}
-      >
-        <Text style={styles.nextText}>
-          {step < STEPS.length - 1 ? "التالي ←" : "ابدأ القراءة"}
-        </Text>
-      </Pressable>
+      {/* Actions */}
+      <View style={styles.actions}>
+        <Pressable
+          onPress={handleNext}
+          style={({ pressed }) => [styles.nextBtn, pressed && styles.nextBtnPressed]}
+        >
+          <Text style={styles.nextText}>
+            {isLastStep ? "ابدأ القراءة" : "التالي ←"}
+          </Text>
+        </Pressable>
+
+        {isLastStep && (
+          <Pressable onPress={handleDontShowAgain} hitSlop={8} style={styles.dontShowBtn}>
+            <Text style={styles.dontShowText}>لا تظهر مرة أخرى</Text>
+          </Pressable>
+        )}
+      </View>
     </View>
   );
 }
@@ -314,6 +323,11 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
   },
+  actions: {
+    width: "100%",
+    gap: 12,
+    alignItems: "center",
+  },
   nextBtn: {
     backgroundColor: colors.brand.default,
     borderRadius: 16,
@@ -329,6 +343,14 @@ const styles = StyleSheet.create({
     color: colors.text.inverse,
     fontSize: 16,
     fontWeight: "700",
+  },
+  dontShowBtn: {
+    paddingVertical: 4,
+  },
+  dontShowText: {
+    fontSize: 13,
+    color: colors.text.tertiary,
+    textDecorationLine: "underline",
   },
 
   // ── demo shared ──

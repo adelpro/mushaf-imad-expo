@@ -55,6 +55,12 @@ export function MushafScreen({
   const chapterUpdateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const currentDwellPageRef = useRef<number>(1);
 
+  // Keep latest callbacks in refs so the frozen useRef(onViewableItemsChanged) always sees them
+  const onCurrentPageChangeRef = useRef(onCurrentPageChange);
+  const onReadCountChangeRef = useRef(onReadCountChange);
+  useEffect(() => { onCurrentPageChangeRef.current = onCurrentPageChange; }, [onCurrentPageChange]);
+  useEffect(() => { onReadCountChangeRef.current = onReadCountChange; }, [onReadCountChange]);
+
   const initialScrollIndex = (() => {
     // When coming from "أكمل" (Continue), jumpToPage is set and must be used exclusively.
     // Do NOT fall back to storeCurrentPage here—that would use the last scroll position
@@ -155,7 +161,7 @@ export function MushafScreen({
         dwellTimerRef.current = null;
       }
 
-      onCurrentPageChange(pageNum);
+      onCurrentPageChangeRef.current(pageNum);
       setStoreCurrentPage(pageNum);
       currentDwellPageRef.current = pageNum;
 
@@ -171,7 +177,7 @@ export function MushafScreen({
         dwellTimerRef.current = null;
         void persistLastRead(pageNum);
         void addReadPage(pageNum).then(() => {
-          void getReadPagesCount().then(onReadCountChange);
+          void getReadPagesCount().then(onReadCountChangeRef.current);
         });
       }, MIN_DWELL_MS);
     },
