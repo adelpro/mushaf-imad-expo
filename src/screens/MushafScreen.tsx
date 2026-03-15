@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import {
   FlatList,
   StyleSheet,
@@ -8,7 +8,9 @@ import {
 } from "react-native";
 import * as ScreenOrientation from "expo-screen-orientation";
 import { QuranPage } from "../components/QuranPage";
-import { databaseService } from "../services/SQLiteService";
+import { databaseService, Verse } from "../services/SQLiteService";
+import { TafsirOverlay } from "../components/TafsirOverlay";
+import { TafsirModal } from "../components/TafsirModal";
 
 type ViewableItemsChangedInfo = {
   viewableItems: ViewToken[];
@@ -21,6 +23,10 @@ export function MushafScreen() {
   );
   const [currentChapter, setCurrentChapter] = useState(1);
   const [activeVerse, setActiveVerse] = useState<number | null>(null);
+  const [tafsirVisible, setTafsirVisible] = useState(false);
+  const [tafsirVerse, setTafsirVerse] = useState<Verse | null>(null);
+  const [tafsirPageNumber, setTafsirPageNumber] = useState<number | null>(null);
+
   const pages = Array.from({ length: 604 }, (_, i) => i + 1);
 
   useEffect(() => {
@@ -78,6 +84,18 @@ export function MushafScreen() {
     },
   ).current;
 
+  const handleVerseLongPress = useCallback((verse: Verse, pageNumber: number) => {
+    setTafsirVerse(verse);
+    setTafsirPageNumber(pageNumber);
+    setTafsirVisible(true);
+  }, []);
+
+  const handleTafsirClose = useCallback(() => {
+    setTafsirVisible(false);
+    setTafsirVerse(null);
+    setTafsirPageNumber(null);
+  }, []);
+
   return (
     <View style={styles.container}>
       <FlatList
@@ -102,6 +120,10 @@ export function MushafScreen() {
               activeVerse={activeVerse}
               pageNumber={item}
             />
+            <TafsirOverlay
+              pageNumber={item}
+              onVerseLongPress={handleVerseLongPress}
+            />
           </View>
         )}
         showsHorizontalScrollIndicator={false}
@@ -109,6 +131,12 @@ export function MushafScreen() {
         windowSize={3}
       />
       <View style={{ height: controlsHeight }} />
+      <TafsirModal
+        visible={tafsirVisible}
+        verse={tafsirVerse}
+        pageNumber={tafsirPageNumber}
+        onClose={handleTafsirClose}
+      />
     </View>
   );
 }
