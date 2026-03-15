@@ -4,6 +4,7 @@ import { Tabs, useRouter, useSegments } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { TabFooter, type TabId } from "../../src/components/tab-footer";
+import { useFooterAutoHide } from "../../src/hooks/use-footer-auto-hide";
 import { useUiStore } from "../../src/store/ui-store";
 import { colors } from "../../src/theme";
 
@@ -17,6 +18,8 @@ export default function TabsLayout() {
   const segments = useSegments();
   const router = useRouter();
   const footerVisible = useUiStore((s) => s.footerVisible);
+
+  useFooterAutoHide();
 
   const activeTab = useMemo<TabId>(() => {
     const tabSegment = segments[segments.length - 1];
