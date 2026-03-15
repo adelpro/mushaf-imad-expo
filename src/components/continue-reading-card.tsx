@@ -1,11 +1,5 @@
 import React from "react";
-import {
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 import Feather from "@expo/vector-icons/Feather";
 import { colors } from "../theme";
@@ -27,40 +21,22 @@ export function ContinueReadingCard({ data, onContinue }: ContinueReadingCardPro
       <View style={styles.card}>
         <View style={styles.decorativePattern}>
           <Svg width="128" height="128" viewBox="0 0 100 100">
-            <Circle
-              cx="20"
-              cy="20"
-              r="40"
-              fill={colors.text.inverse}
-              opacity={0.15}
-            />
-            <Circle
-              cx="10"
-              cy="50"
-              r="25"
-              fill={colors.text.inverse}
-              opacity={0.1}
-            />
+            <Circle cx="20" cy="20" r="40" fill={colors.text.inverse} opacity={0.15} />
+            <Circle cx="10" cy="50" r="25" fill={colors.text.inverse} opacity={0.1} />
           </Svg>
         </View>
 
         <View style={styles.cardContent}>
           <View style={styles.cardHeader}>
             <View style={styles.iconBox}>
-              <Feather
-                name="book-open"
-                size={14}
-                color={colors.text.inverse}
-              />
+              <Feather name="book-open" size={14} color={colors.text.inverse} />
             </View>
             <Text style={styles.continueLabel}>أكمل القراءة</Text>
           </View>
 
           <View style={styles.cardBody}>
             <View style={styles.cardText}>
-              <Text style={styles.surahArabicName}>
-                {data.surahArabicName}
-              </Text>
+              <Text style={styles.surahArabicName}>{data.surahArabicName}</Text>
               <Text style={styles.position}>
                 الآية {data.ayah} • صفحة {data.page}
               </Text>
@@ -75,12 +51,7 @@ export function ContinueReadingCard({ data, onContinue }: ContinueReadingCardPro
               accessibilityRole="button"
               accessibilityLabel="أَكْمِل الْقِرَاءَة"
             >
-              <Feather
-                name="play"
-                size={14}
-                color={colors.text.primary}
-                style={styles.playIcon}
-              />
+              <Feather name="play" size={14} color={colors.text.primary} style={styles.playIcon} />
               <Text style={styles.continueButtonText}>أكمل</Text>
             </Pressable>
           </View>

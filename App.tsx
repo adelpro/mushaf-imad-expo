@@ -30,9 +30,9 @@ export default function App() {
       setCurrentPage(page); // So store doesn't fall back to last scroll position (e.g. 74)
       setActiveTab("mushaf");
     },
-    [setJumpToPage, setCurrentPage],
+    [setJumpToPage, setCurrentPage]
   );
-  
+
   const [fontsLoaded, fontError] = useFonts({
     uthmanTn1Bold: require("./assets/fonts/UthmanTN1B-Ver20.ttf"),
     Amiri_400Regular,
@@ -65,16 +65,12 @@ export default function App() {
       <SafeAreaView style={styles.container}>
         <StatusBar style="dark" />
         <View style={styles.content}>
-          {activeTab === "mushaf" && <MushafScreen onContentTap={() => setFooterVisible(v => !v)} />}
-          {activeTab === "progress" && (
-            <ProgressScreen onContinueReading={handleContinueReading} />
+          {activeTab === "mushaf" && (
+            <MushafScreen onContentTap={() => setFooterVisible((v) => !v)} />
           )}
+          {activeTab === "progress" && <ProgressScreen onContinueReading={handleContinueReading} />}
         </View>
-        <TabFooter
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          visible={footerVisible}
-        />
+        <TabFooter activeTab={activeTab} onTabChange={setActiveTab} visible={footerVisible} />
       </SafeAreaView>
     </SafeAreaProvider>
   );

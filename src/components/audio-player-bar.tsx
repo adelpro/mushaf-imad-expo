@@ -21,9 +21,7 @@ export const AudioPlayerBar: React.FC = () => {
 
     loadTiming(1).then((data) => {
       if (data) {
-        timingData = data.chapters.find(
-          (c: any) => c.id === currentChapter,
-        );
+        timingData = data.chapters.find((c: any) => c.id === currentChapter);
       }
     });
 
@@ -36,7 +34,7 @@ export const AudioPlayerBar: React.FC = () => {
       if (playing && timingData) {
         const timeMs = player.currentTime * 1000;
         const verse = timingData.aya_timing.find(
-          (t: any) => timeMs >= t.start_time && timeMs < t.end_time,
+          (t: any) => timeMs >= t.start_time && timeMs < t.end_time
         );
         if (verse) {
           setActiveVerse(verse.ayah);

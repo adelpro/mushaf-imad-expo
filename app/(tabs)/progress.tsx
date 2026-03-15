@@ -15,7 +15,7 @@ export default function ProgressRoute() {
       setCurrentPage(page);
       router.navigate("/(tabs)");
     },
-    [router, setCurrentPage, setJumpToPage],
+    [router, setCurrentPage, setJumpToPage]
   );
 
   return <ProgressScreen onContinueReading={handleContinueReading} />;

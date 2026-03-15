@@ -1,11 +1,5 @@
 import React, { useCallback, useEffect, useRef } from "react";
-import {
-  Animated,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { colors } from "../theme";
@@ -56,9 +50,7 @@ type TabFooterProps = {
 };
 
 function useFooterSlide(visible: boolean) {
-  const translateY = useRef(
-    new Animated.Value(visible ? 0 : FOOTER_HEIGHT),
-  ).current;
+  const translateY = useRef(new Animated.Value(visible ? 0 : FOOTER_HEIGHT)).current;
 
   useEffect(() => {
     Animated.timing(translateY, {
@@ -77,15 +69,8 @@ type TabButtonProps = {
   onTabChange: (tab: TabId) => void;
 };
 
-const TabButton = React.memo(function TabButton({
-  tab,
-  isActive,
-  onTabChange,
-}: TabButtonProps) {
-  const handlePress = useCallback(
-    () => onTabChange(tab.id),
-    [onTabChange, tab.id],
-  );
+const TabButton = React.memo(function TabButton({ tab, isActive, onTabChange }: TabButtonProps) {
+  const handlePress = useCallback(() => onTabChange(tab.id), [onTabChange, tab.id]);
 
   const iconColor = isActive ? colors.brand.default : colors.text.tertiary;
   const { Icon, iconName } = tab;
@@ -95,46 +80,27 @@ const TabButton = React.memo(function TabButton({
       accessibilityRole="tab"
       accessibilityState={{ selected: isActive }}
       accessibilityLabel={tab.label}
-      style={({ pressed }) => [
-        styles.footerButton,
-        pressed && styles.footerButtonPressed,
-      ]}
+      style={({ pressed }) => [styles.footerButton, pressed && styles.footerButtonPressed]}
       onPress={handlePress}
     >
       <View style={styles.iconWrap}>
-        <Icon
-          name={iconName}
-          size={ICON_SIZE}
-          color={iconColor}
-        />
+        <Icon name={iconName} size={ICON_SIZE} color={iconColor} />
       </View>
-      <Text
-        style={[
-          styles.footerButtonText,
-          isActive && styles.footerButtonTextActive,
-        ]}
-      >
+      <Text style={[styles.footerButtonText, isActive && styles.footerButtonTextActive]}>
         {tab.label}
       </Text>
     </Pressable>
   );
 });
 
-export function TabFooter({
-  activeTab,
-  onTabChange,
-  visible = true,
-}: TabFooterProps) {
+export function TabFooter({ activeTab, onTabChange, visible = true }: TabFooterProps) {
   const translateY = useFooterSlide(visible);
 
   return (
     <View style={[styles.footerWrapper, { height: FOOTER_HEIGHT }]}>
       <Animated.View
         pointerEvents={visible ? "auto" : "none"}
-        style={[
-          styles.footer,
-          { height: FOOTER_HEIGHT, transform: [{ translateY }] },
-        ]}
+        style={[styles.footer, { height: FOOTER_HEIGHT, transform: [{ translateY }] }]}
       >
         {TABS.map((tab) => (
           <TabButton

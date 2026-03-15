@@ -28,7 +28,7 @@ export default function TabsLayout() {
       if (tab === activeTab) return;
       router.navigate(ROUTES[tab]);
     },
-    [activeTab, router],
+    [activeTab, router]
   );
 
   return (
@@ -43,22 +43,12 @@ export default function TabsLayout() {
           }}
           tabBar={() => null}
         >
-          <Tabs.Screen
-            name="index"
-            options={{ title: "المصحف" }}
-          />
-          <Tabs.Screen
-            name="progress"
-            options={{ title: "التقدم" }}
-          />
+          <Tabs.Screen name="index" options={{ title: "المصحف" }} />
+          <Tabs.Screen name="progress" options={{ title: "التقدم" }} />
         </Tabs>
       </View>
       <View style={styles.footerOverlay} pointerEvents="box-none">
-        <TabFooter
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-          visible={footerVisible}
-        />
+        <TabFooter activeTab={activeTab} onTabChange={handleTabChange} visible={footerVisible} />
       </View>
     </SafeAreaView>
   );

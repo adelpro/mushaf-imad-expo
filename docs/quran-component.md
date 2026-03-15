@@ -78,21 +78,21 @@ interface ChapterPressEvent {
 
 ## Props Reference
 
-| Prop | Type | Required | Default | Description |
-|------|------|----------|---------|-------------|
-| `pageNumber` | `number` | Yes | - | Page number to display (1-604) |
-| `layout` | `1441 \| 1405` | No | `1441` | Page layout type |
-| `showSuraName` | `boolean` | No | `true` | Show sura name bars |
-| `showVerseMarkers` | `boolean` | No | `true` | Show verse number markers |
-| `showHighlights` | `boolean` | No | `true` | Show verse highlights |
-| `highlightColor` | `string` | No | `"rgba(120, 120, 120, 0.3)"` | Highlight color (gray) |
-| `activeChapter` | `number` | No | - | Currently selected chapter |
-| `activeVerse` | `number` | No | - | Currently selected verse |
-| `onVersePress` | `(event: VersePressEvent) => void` | No | - | Verse short press callback |
-| `onVerseLongPress` | `(event: VersePressEvent) => void` | No | - | Verse long press callback |
-| `onChapterPress` | `(event: ChapterPressEvent) => void` | No | - | Chapter short press callback |
-| `onChapterLongPress` | `(event: ChapterPressEvent) => void` | No | - | Chapter long press callback |
-| `onPageChange` | `(page: number) => void` | No | - | Page change callback |
+| Prop                 | Type                                 | Required | Default                      | Description                    |
+| -------------------- | ------------------------------------ | -------- | ---------------------------- | ------------------------------ |
+| `pageNumber`         | `number`                             | Yes      | -                            | Page number to display (1-604) |
+| `layout`             | `1441 \| 1405`                       | No       | `1441`                       | Page layout type               |
+| `showSuraName`       | `boolean`                            | No       | `true`                       | Show sura name bars            |
+| `showVerseMarkers`   | `boolean`                            | No       | `true`                       | Show verse number markers      |
+| `showHighlights`     | `boolean`                            | No       | `true`                       | Show verse highlights          |
+| `highlightColor`     | `string`                             | No       | `"rgba(120, 120, 120, 0.3)"` | Highlight color (gray)         |
+| `activeChapter`      | `number`                             | No       | -                            | Currently selected chapter     |
+| `activeVerse`        | `number`                             | No       | -                            | Currently selected verse       |
+| `onVersePress`       | `(event: VersePressEvent) => void`   | No       | -                            | Verse short press callback     |
+| `onVerseLongPress`   | `(event: VersePressEvent) => void`   | No       | -                            | Verse long press callback      |
+| `onChapterPress`     | `(event: ChapterPressEvent) => void` | No       | -                            | Chapter short press callback   |
+| `onChapterLongPress` | `(event: ChapterPressEvent) => void` | No       | -                            | Chapter long press callback    |
+| `onPageChange`       | `(page: number) => void`             | No       | -                            | Page change callback           |
 
 ## Usage Examples
 
@@ -101,7 +101,7 @@ interface ChapterPressEvent {
 ```tsx
 import { QuranView } from "./components/quran";
 
-<QuranView pageNumber={1} />
+<QuranView pageNumber={1} />;
 ```
 
 ### With Press Callbacks
@@ -148,21 +148,13 @@ function MyScreen() {
 ### Custom Highlight Color
 
 ```tsx
-<QuranView
-  pageNumber={1}
-  highlightColor="rgba(100, 100, 100, 0.4)"
-/>
+<QuranView pageNumber={1} highlightColor="rgba(100, 100, 100, 0.4)" />
 ```
 
 ### Minimal (No Overlays)
 
 ```tsx
-<QuranView
-  pageNumber={1}
-  showSuraName={false}
-  showVerseMarkers={false}
-  showHighlights={false}
-/>
+<QuranView pageNumber={1} showSuraName={false} showVerseMarkers={false} showHighlights={false} />
 ```
 
 ### With Built-in Popups
@@ -212,10 +204,7 @@ function PaginatedMushaf() {
       pagingEnabled
       inverted
       renderItem={({ item }) => (
-        <QuranView
-          pageNumber={item}
-          onVersePress={(event) => console.log(event.verse)}
-        />
+        <QuranView pageNumber={item} onVersePress={(event) => console.log(event.verse)} />
       )}
       onMomentumScrollEnd={(e) => {
         const page = Math.round(e.nativeEvent.contentOffset.x / width) + 1;
@@ -230,11 +219,11 @@ function PaginatedMushaf() {
 
 ### What's Clickable
 
-| Element | Short Press | Long Press |
-|---------|-------------|------------|
-| Verse marker (fasel) | Show popup | Custom action |
-| Verse content area | Show popup | Custom action |
-| Sura name bar | Show chapter info | Custom action |
+| Element              | Short Press       | Long Press    |
+| -------------------- | ----------------- | ------------- |
+| Verse marker (fasel) | Show popup        | Custom action |
+| Verse content area   | Show popup        | Custom action |
+| Sura name bar        | Show chapter info | Custom action |
 
 ### Multi-line Verses
 
@@ -281,13 +270,13 @@ The component uses `SQLiteService` for data access. The database must contain:
 
 ### Tables
 
-| Table | Description |
-|-------|-------------|
-| `pages` | Page metadata (604 records) |
-| `chapters` | Chapter metadata (114 records) |
-| `verses` | Verse data with markers (6,236 records) |
-| `chapter_headers` | Sura name positions (228 records) |
-| `verse_highlights` | Highlight positions (27,039 records) |
+| Table              | Description                             |
+| ------------------ | --------------------------------------- |
+| `pages`            | Page metadata (604 records)             |
+| `chapters`         | Chapter metadata (114 records)          |
+| `verses`           | Verse data with markers (6,236 records) |
+| `chapter_headers`  | Sura name positions (228 records)       |
+| `verse_highlights` | Highlight positions (27,039 records)    |
 
 ### Database Methods
 
@@ -385,11 +374,11 @@ Check `verse_highlights` table has entries for all lines of the verse.
 
 ```typescript
 // Default layout values
-const LINE_ASPECT_RATIO = 1440 / 232;      // Image aspect ratio
-const LINE_COUNT = 15;                     // Lines per page
-const SURA_NAME_BAR_WIDTH_RATIO = 0.9;     // 90% of page width
-const SURA_NAME_BAR_HEIGHT_RATIO = 0.8;    // 80% of line height
-const VERSE_MARKER_BALANCE = 3.69;         // Marker sizing multiplier
+const LINE_ASPECT_RATIO = 1440 / 232; // Image aspect ratio
+const LINE_COUNT = 15; // Lines per page
+const SURA_NAME_BAR_WIDTH_RATIO = 0.9; // 90% of page width
+const SURA_NAME_BAR_HEIGHT_RATIO = 0.8; // 80% of line height
+const VERSE_MARKER_BALANCE = 3.69; // Marker sizing multiplier
 
 // Highlight color (gray)
 const DEFAULT_HIGHLIGHT_COLOR = "rgba(120, 120, 120, 0.3)";

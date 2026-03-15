@@ -1,6 +1,6 @@
-import { Platform } from 'react-native';
+import { Platform } from "react-native";
 
-import * as Haptics from 'expo-haptics';
+import * as Haptics from "expo-haptics";
 
 /**
  * Triggers a standard selection haptic feedback locally on a device.
@@ -9,9 +9,9 @@ import * as Haptics from 'expo-haptics';
  * @returns void
  */
 export function triggerSelectionHaptic() {
-  if (Platform.OS === 'web') return;
+  if (Platform.OS === "web") return;
   Haptics.selectionAsync().catch((error) => {
-    console.error('Haptics error', error);
+    console.error("Haptics error", error);
   });
 }
 
@@ -22,8 +22,8 @@ export function triggerSelectionHaptic() {
  * @returns void
  */
 export function triggerImpactHaptic() {
-  if (Platform.OS === 'web') return;
+  if (Platform.OS === "web") return;
   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch((error) => {
-    console.error('Haptics error', error);
+    console.error("Haptics error", error);
   });
 }

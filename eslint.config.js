@@ -13,7 +13,10 @@ module.exports = [
   ...compat.extends("universe", "universe/native"),
   {
     rules: {
-      "@typescript-eslint/no-require-imports": ["error", { allow: [".svg", ".png", ".jpg", ".jpeg", ".gif", ".ttf", ".otf"] }],
+      "@typescript-eslint/no-require-imports": [
+        "error",
+        { allow: [".svg", ".png", ".jpg", ".jpeg", ".gif", ".ttf", ".otf"] },
+      ],
     },
   },
 ];

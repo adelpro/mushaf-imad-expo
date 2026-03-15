@@ -109,7 +109,7 @@ export function PageJumpInput({ currentPage, onJumpToPage }: PageJumpInputProps)
           isDragging.current = false;
         });
       },
-    }),
+    })
   ).current;
 
   function handleSubmit() {
@@ -150,10 +150,7 @@ export function PageJumpInput({ currentPage, onJumpToPage }: PageJumpInputProps)
           />
           <Pressable
             onPress={handleSubmit}
-            style={({ pressed }) => [
-              styles.goButton,
-              pressed && styles.goButtonPressed,
-            ]}
+            style={({ pressed }) => [styles.goButton, pressed && styles.goButtonPressed]}
           >
             <Text style={styles.goButtonText}>انتقال</Text>
           </Pressable>

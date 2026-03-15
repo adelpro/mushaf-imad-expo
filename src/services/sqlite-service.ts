@@ -80,10 +80,7 @@ export type Page = {
   verses1405: Verse[];
 };
 
-type VerseRow = Omit<
-  Verse,
-  "marker1441" | "marker1405" | "highlights1441" | "highlights1405"
-> & {
+type VerseRow = Omit<Verse, "marker1441" | "marker1405" | "highlights1441" | "highlights1405"> & {
   marker1441_numberCodePoint: string | null;
   marker1441_line: number | null;
   marker1441_centerX: number | null;
@@ -123,7 +120,7 @@ class DatabaseService {
       if (dbInfo.exists) {
         const existingDb = await SQLite.openDatabaseAsync(DB_NAME);
         const chapterCount = await existingDb.getFirstAsync<{ count: number }>(
-          "SELECT COUNT(*) as count FROM chapters",
+          "SELECT COUNT(*) as count FROM chapters"
         );
 
         if (chapterCount && chapterCount.count > 0) {
@@ -131,18 +128,14 @@ class DatabaseService {
         }
 
         await existingDb.closeAsync().catch(() => {});
-        await FileSystem.deleteAsync(dbPath, { idempotent: true }).catch(
-          () => {},
-        );
+        await FileSystem.deleteAsync(dbPath, { idempotent: true }).catch(() => {});
       }
 
       const asset = Asset.Asset.fromModule(require("../../assets/quran.db"));
       await asset.downloadAsync();
 
       if (asset.localUri) {
-        await FileSystem.deleteAsync(dbPath, { idempotent: true }).catch(
-          () => {},
-        );
+        await FileSystem.deleteAsync(dbPath, { idempotent: true }).catch(() => {});
         await FileSystem.copyAsync({ from: asset.localUri, to: dbPath });
 
         return SQLite.openDatabaseAsync(DB_NAME);
@@ -160,14 +153,14 @@ class DatabaseService {
 
   private async runMigrations(db: SQLiteDb): Promise<void> {
     const result = await db.getFirstAsync<{ count: number }>(
-      "SELECT COUNT(*) as count FROM sqlite_master WHERE type='table' AND name='chapter_headers'",
+      "SELECT COUNT(*) as count FROM sqlite_master WHERE type='table' AND name='chapter_headers'"
     );
 
     if (!result || result.count === 0) {
       await this.initializeDatabase(db);
     } else {
       const pageColumns = await db.getFirstAsync<{ sql: string }>(
-        "SELECT sql FROM sqlite_master WHERE type='table' AND name='pages'",
+        "SELECT sql FROM sqlite_master WHERE type='table' AND name='pages'"
       );
 
       if (pageColumns && !pageColumns.sql.includes("header1441_part_id")) {
@@ -175,22 +168,18 @@ class DatabaseService {
           .execAsync("ALTER TABLE pages ADD COLUMN header1441_part_id INTEGER")
           .catch(() => {});
         await db
-          .execAsync(
-            "ALTER TABLE pages ADD COLUMN header1441_quarter_id INTEGER",
-          )
+          .execAsync("ALTER TABLE pages ADD COLUMN header1441_quarter_id INTEGER")
           .catch(() => {});
         await db
           .execAsync("ALTER TABLE pages ADD COLUMN header1405_part_id INTEGER")
           .catch(() => {});
         await db
-          .execAsync(
-            "ALTER TABLE pages ADD COLUMN header1405_quarter_id INTEGER",
-          )
+          .execAsync("ALTER TABLE pages ADD COLUMN header1405_quarter_id INTEGER")
           .catch(() => {});
       }
 
       const verseHighlightsColumns = await db.getFirstAsync<{ sql: string }>(
-        "SELECT sql FROM sqlite_master WHERE type='table' AND name='verse_highlights'",
+        "SELECT sql FROM sqlite_master WHERE type='table' AND name='verse_highlights'"
       );
 
       if (
@@ -209,7 +198,7 @@ class DatabaseService {
             right_position REAL NOT NULL,
             FOREIGN KEY (verse_id) REFERENCES verses(verseID)
           )
-        `,
+        `
           )
           .catch(() => {});
         await db
@@ -217,14 +206,12 @@ class DatabaseService {
             `
           INSERT INTO verse_highlights_new (verse_id, layout_type, line, left_position, right_position)
           SELECT verse_id, layout_type, line, left_position, right_position FROM verse_highlights
-        `,
+        `
           )
           .catch(() => {});
         await db.execAsync("DROP TABLE verse_highlights").catch(() => {});
         await db
-          .execAsync(
-            "ALTER TABLE verse_highlights_new RENAME TO verse_highlights",
-          )
+          .execAsync("ALTER TABLE verse_highlights_new RENAME TO verse_highlights")
           .catch(() => {});
       }
     }
@@ -370,18 +357,12 @@ class DatabaseService {
         id: number;
         part_id: number | null;
         quarter_id: number | null;
-      }>(
-        "SELECT * FROM page_headers WHERE page_id = ? AND layout_type = 1441 LIMIT 1",
-        pageId,
-      ),
+      }>("SELECT * FROM page_headers WHERE page_id = ? AND layout_type = 1441 LIMIT 1", pageId),
       db.getFirstAsync<{
         id: number;
         part_id: number | null;
         quarter_id: number | null;
-      }>(
-        "SELECT * FROM page_headers WHERE page_id = ? AND layout_type = 1405 LIMIT 1",
-        pageId,
-      ),
+      }>("SELECT * FROM page_headers WHERE page_id = ? AND layout_type = 1405 LIMIT 1", pageId),
       db.getAllAsync<{
         id: number;
         chapter_id: number | null;
@@ -390,7 +371,7 @@ class DatabaseService {
         centerY: number;
       }>(
         "SELECT * FROM chapter_headers WHERE page_id = ? AND layout_type = 1441 ORDER BY line ASC",
-        pageId,
+        pageId
       ),
       db.getAllAsync<{
         id: number;
@@ -400,16 +381,10 @@ class DatabaseService {
         centerY: number;
       }>(
         "SELECT * FROM chapter_headers WHERE page_id = ? AND layout_type = 1405 ORDER BY line ASC",
-        pageId,
+        pageId
       ),
-      db.getAllAsync<VerseRow>(
-        "SELECT * FROM verses WHERE page1441_id = ?",
-        pageId,
-      ),
-      db.getAllAsync<VerseRow>(
-        "SELECT * FROM verses WHERE page1405_id = ?",
-        pageId,
-      ),
+      db.getAllAsync<VerseRow>("SELECT * FROM verses WHERE page1441_id = ?", pageId),
+      db.getAllAsync<VerseRow>("SELECT * FROM verses WHERE page1405_id = ?", pageId),
     ]);
 
     const verses1441 = await Promise.all(
@@ -421,7 +396,7 @@ class DatabaseService {
             right_position: number;
           }>(
             "SELECT * FROM verse_highlights WHERE verse_id = ? AND layout_type = 1441",
-            verse.verseID,
+            verse.verseID
           ),
           db.getAllAsync<{
             line: number;
@@ -429,12 +404,12 @@ class DatabaseService {
             right_position: number;
           }>(
             "SELECT * FROM verse_highlights WHERE verse_id = ? AND layout_type = 1405",
-            verse.verseID,
+            verse.verseID
           ),
         ]);
 
         return this.mapVerseRow(verse, highlights1441, highlights1405);
-      }),
+      })
     );
 
     const verses1405 = await Promise.all(
@@ -446,7 +421,7 @@ class DatabaseService {
             right_position: number;
           }>(
             "SELECT * FROM verse_highlights WHERE verse_id = ? AND layout_type = 1441",
-            verse.verseID,
+            verse.verseID
           ),
           db.getAllAsync<{
             line: number;
@@ -454,12 +429,12 @@ class DatabaseService {
             right_position: number;
           }>(
             "SELECT * FROM verse_highlights WHERE verse_id = ? AND layout_type = 1405",
-            verse.verseID,
+            verse.verseID
           ),
         ]);
 
         return this.mapVerseRow(verse, highlights1441, highlights1405);
-      }),
+      })
     );
 
     return {
@@ -488,7 +463,7 @@ class DatabaseService {
   private mapVerseRow(
     verse: VerseRow,
     highlights1441: VerseHighlight[],
-    highlights1405: VerseHighlight[],
+    highlights1405: VerseHighlight[]
   ): Verse {
     return {
       verseID: verse.verseID,
@@ -527,7 +502,7 @@ class DatabaseService {
 
     const chapter = await db.getFirstAsync<Chapter>(
       "SELECT * FROM chapters WHERE number = ? LIMIT 1",
-      chapterNumber,
+      chapterNumber
     );
 
     return chapter;
@@ -538,7 +513,7 @@ class DatabaseService {
 
     const chapter = await db.getFirstAsync<Chapter>(
       "SELECT * FROM chapters WHERE identifier = ? LIMIT 1",
-      identifier,
+      identifier
     );
 
     return chapter;
@@ -547,9 +522,7 @@ class DatabaseService {
   async getChapters(): Promise<Chapter[]> {
     const db = await this.getDb();
 
-    const chapters = await db.getAllAsync<Chapter>(
-      "SELECT * FROM chapters ORDER BY number ASC",
-    );
+    const chapters = await db.getAllAsync<Chapter>("SELECT * FROM chapters ORDER BY number ASC");
 
     return chapters;
   }
@@ -557,9 +530,7 @@ class DatabaseService {
   /**
    * Returns the actual count of verses on the given page numbers (1441 layout).
    */
-  async getVerseCountForPageNumbers(
-    pageNumbers: number[],
-  ): Promise<number> {
+  async getVerseCountForPageNumbers(pageNumbers: number[]): Promise<number> {
     const db = await this.getDb();
     if (pageNumbers.length === 0) return 0;
     const placeholders = pageNumbers.map(() => "?").join(",");
@@ -567,7 +538,7 @@ class DatabaseService {
       `SELECT COUNT(*) as count FROM verses v
        INNER JOIN pages p ON p.identifier = v.page1441_id
        WHERE p.number IN (${placeholders})`,
-      ...pageNumbers,
+      ...pageNumbers
     );
     return result?.count ?? 0;
   }

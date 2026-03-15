@@ -9,6 +9,5 @@ type UiState = {
 export const useUiStore = create<UiState>((set) => ({
   footerVisible: false,
   setFooterVisible: (visible) => set({ footerVisible: visible }),
-  toggleFooterVisible: () =>
-    set((state) => ({ footerVisible: !state.footerVisible })),
+  toggleFooterVisible: () => set((state) => ({ footerVisible: !state.footerVisible })),
 }));

@@ -30,9 +30,7 @@ export const useMushafStore = create<MushafState>((set) => ({
 
   // Actions
   setCurrentChapter: (chapter) =>
-    set((state) =>
-      state.currentChapter !== chapter ? { currentChapter: chapter } : state,
-    ),
+    set((state) => (state.currentChapter !== chapter ? { currentChapter: chapter } : state)),
   setActiveVerse: (verse) => set({ activeVerse: verse }),
   setCurrentPage: (page) => set({ currentPage: page }),
   setJumpToPage: (page) => set({ jumpToPage: page }),

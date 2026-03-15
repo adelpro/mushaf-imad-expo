@@ -60,11 +60,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version History
 
-| Version | Date | Type |
-|---------|------|------|
-| 0.2.0-athar | 2026-03-10 | Minor |
-| 0.1.0 | 2026-02-10 | Minor |
-| 0.0.1 | 2026-01-01 | Initial |
+| Version     | Date       | Type    |
+| ----------- | ---------- | ------- |
+| 0.2.0-athar | 2026-03-10 | Minor   |
+| 0.1.0       | 2026-02-10 | Minor   |
+| 0.0.1       | 2026-01-01 | Initial |
 
 ## Upcoming (Unreleased)
 
