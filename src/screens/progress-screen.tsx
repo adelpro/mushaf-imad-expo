@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ContinueReadingCard } from "../components/continue-reading-card";
 import { OverallProgress } from "../components/overall-progress";
@@ -11,6 +11,8 @@ import { colors } from "../theme";
 
 type ProgressScreenProps = {
   onContinueReading?: (page: number) => void;
+  /** Called when user taps the screen (e.g. to show/hide bottom nav). */
+  onContentTap?: () => void;
 };
 
 type LastReadWithChapter = LastRead & {
@@ -34,7 +36,7 @@ function ProgressEmpty() {
   );
 }
 
-export function ProgressScreen({ onContinueReading }: ProgressScreenProps) {
+export function ProgressScreen({ onContinueReading, onContentTap }: ProgressScreenProps) {
   const insets = useSafeAreaInsets();
   const [lastReadData, setLastReadData] = useState<LastReadWithChapter | null>(null);
   const [readCount, setReadCount] = useState(0);
@@ -106,7 +108,7 @@ export function ProgressScreen({ onContinueReading }: ProgressScreenProps) {
     );
   };
 
-  return (
+  const scrollContent = (
     <ScrollView
       style={styles.container}
       contentContainerStyle={[styles.content, { paddingTop: insets.top + 24 }]}
@@ -115,6 +117,16 @@ export function ProgressScreen({ onContinueReading }: ProgressScreenProps) {
       {renderContent()}
     </ScrollView>
   );
+
+  if (onContentTap) {
+    return (
+      <Pressable style={styles.container} onPress={onContentTap} accessible={false}>
+        {scrollContent}
+      </Pressable>
+    );
+  }
+
+  return scrollContent;
 }
 
 const styles = StyleSheet.create({
