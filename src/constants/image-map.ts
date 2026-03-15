@@ -1,4 +1,4 @@
-export const QuranImages: Record<number, any[]> = {
+export const QuranImages: Record<number, number[]> = {
   1: [
     require("../../assets/images/quran/1/1.png"),
     require("../../assets/images/quran/1/2.png"),

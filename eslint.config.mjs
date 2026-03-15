@@ -32,6 +32,13 @@ export default defineConfig([
   // ── TypeScript recommended rules ─────────────────────────────────────
   ...tseslint.configs.recommended,
 
+  // ── Allow require for asset files ─────────────────────────────────────
+  {
+    rules: {
+      "@typescript-eslint/no-require-imports": ["error", { allow: [".svg", ".png", ".jpg", ".jpeg", ".gif", ".ttf", ".otf"] }],
+    },
+  },
+
   // ── React (eslint-react — ESLint 10 compatible) ──────────────────────
   {
     ...eslintReact.configs["recommended-typescript"],
