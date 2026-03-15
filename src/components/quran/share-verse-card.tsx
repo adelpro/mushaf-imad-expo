@@ -8,7 +8,10 @@ interface ShareVerseCardProps {
   chapter: Chapter | null;
 }
 
-export const ShareVerseCard = forwardRef<View, ShareVerseCardProps>(({ verse, chapter }, ref) => {
+export const ShareVerseCard = forwardRef<View, ShareVerseCardProps>(function ShareVerseCard(
+  { verse, chapter },
+  ref
+) {
   const surahName = chapter?.arabicTitle || "";
 
   return (
@@ -71,7 +74,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#1B5E20",
   },
 
-  // Header
   headerSection: {
     alignItems: "center",
     paddingTop: 28,
@@ -101,7 +103,6 @@ const styles = StyleSheet.create({
     color: "#C5A55A",
   },
 
-  // Verse
   verseSection: {
     marginHorizontal: 28,
     marginVertical: 16,
@@ -128,7 +129,6 @@ const styles = StyleSheet.create({
     color: "#C5A55A",
   },
 
-  // Reference
   referenceSection: {
     alignItems: "center",
     marginBottom: 20,
@@ -153,8 +153,6 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     backgroundColor: "#C5A55A",
   },
-
-  // Branding
   brandingSection: {
     alignItems: "center",
     paddingBottom: 24,
