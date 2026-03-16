@@ -13,6 +13,7 @@ import { TabFooter, type TabId } from "./src/components/tab-footer";
 import { useMushafStore } from "./src/store/mushaf-store";
 import { getLastRead } from "./src/services/last-read-service";
 import { hasSeenOnboarding } from "./src/services/onboarding-service";
+import { databaseService } from "./src/services/sqlite-service";
 import { colors } from "./src/theme";
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
@@ -49,22 +50,37 @@ export default function App() {
 
   useEffect(() => {
     if (!fontsLoaded && !fontError) return;
-    void (async () => {
-      const [lastRead, seenOnboarding] = await Promise.all([getLastRead(), hasSeenOnboarding()]);
-      if (lastRead) {
-        useMushafStore.getState().setCurrentPage(lastRead.page);
+
+    const prepare = async () => {
+      try {
+        await SplashScreen.hideAsync();
+        await databaseService.getDb();
+
+        const [lastRead, seenOnboarding] = await Promise.all([
+          getLastRead(),
+          hasSeenOnboarding(),
+        ]);
+        if (lastRead) {
+          useMushafStore.getState().setCurrentPage(lastRead.page);
+        }
+        setShowOnboarding(!seenOnboarding);
+      } catch (e) {
+        console.warn(e);
+      } finally {
+        setAppReady(true);
       }
-      setShowOnboarding(!seenOnboarding);
-      setAppReady(true);
-      await SplashScreen.hideAsync();
-    })();
+    };
+
+    prepare();
   }, [fontsLoaded, fontError]);
 
-  if (!fontsLoaded || !appReady) {
+  if (!fontsLoaded && !fontError) return null;
+
+  if (!appReady) {
     return (
       <SafeAreaProvider>
         <View style={styles.loader}>
-          <ActivityIndicator size="large" />
+          <ActivityIndicator size="large" color={colors.brand.default} />
         </View>
       </SafeAreaProvider>
     );
