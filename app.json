@@ -28,21 +28,15 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      [
-        "expo-splash-screen",
-        {
-          "backgroundColor": "#FFF8E1",
-          "image": "./assets/splash-icon.png",
-          "dark": {
-            "image": "./assets/splash-icon-dark.png",
-            "backgroundColor": "#000000"
-          },
-          "imageWidth": 200
-        }
-      ],
+      "expo-splash-screen",
       "expo-sqlite",
       "expo-font",
       "expo-router"
-    ]
+    ],
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFF8E1"
+    }
   }
 }
