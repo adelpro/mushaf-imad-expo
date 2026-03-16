@@ -50,10 +50,7 @@ export default function App() {
   useEffect(() => {
     if (!fontsLoaded && !fontError) return;
     void (async () => {
-      const [lastRead, seenOnboarding] = await Promise.all([
-        getLastRead(),
-        hasSeenOnboarding(),
-      ]);
+      const [lastRead, seenOnboarding] = await Promise.all([getLastRead(), hasSeenOnboarding()]);
       if (lastRead) {
         useMushafStore.getState().setCurrentPage(lastRead.page);
       }
@@ -93,17 +90,10 @@ export default function App() {
             <MushafScreen onContentTap={() => setFooterVisible((v) => !v)} />
           )}
           {activeTab === "progress" && (
-            <ProgressScreen
-              key={progressRefreshKey}
-              onContinueReading={handleContinueReading}
-            />
+            <ProgressScreen key={progressRefreshKey} onContinueReading={handleContinueReading} />
           )}
         </View>
-        <TabFooter
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-          visible={footerVisible}
-        />
+        <TabFooter activeTab={activeTab} onTabChange={handleTabChange} visible={footerVisible} />
       </SafeAreaView>
     </SafeAreaProvider>
   );

@@ -14,10 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ContinueReadingCard } from "../components/continue-reading-card";
 import { OverallProgress } from "../components/overall-progress";
 import { getLastRead, clearLastRead, type LastRead } from "../services/last-read-service";
-import {
-  getReadPages,
-  clearReadPages,
-} from "../services/read-pages-service";
+import { getReadPages, clearReadPages } from "../services/read-pages-service";
 import { databaseService } from "../services/sqlite-service";
 import { useMushafStore } from "../store/mushaf-store";
 import { colors } from "../theme";
@@ -91,7 +88,7 @@ export function ProgressScreen({ onContinueReading, onContentTap }: ProgressScre
   useFocusEffect(
     useCallback(() => {
       void loadLastRead();
-    }, [loadLastRead]),
+    }, [loadLastRead])
   );
 
   const handleContinue = useCallback(() => {

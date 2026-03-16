@@ -30,10 +30,7 @@ export default function RootLayout() {
     if (!fontsLoaded && !fontError) return;
 
     void (async () => {
-      const [lastRead, seenOnboarding] = await Promise.all([
-        getLastRead(),
-        hasSeenOnboarding(),
-      ]);
+      const [lastRead, seenOnboarding] = await Promise.all([getLastRead(), hasSeenOnboarding()]);
       if (lastRead) {
         useMushafStore.getState().setCurrentPage(lastRead.page);
       }

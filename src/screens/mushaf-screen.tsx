@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import { Dimensions, FlatList, StyleSheet, View, ViewToken } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { databaseService } from "../services/sqlite-service";
@@ -32,7 +32,6 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
   const setReadCount = useMushafStore((s) => s.setReadCount);
 
   const pages = Array.from({ length: 604 }, (_, i) => i + 1);
-  const [currentPage, setCurrentPage] = useState(storeCurrentPage);
   const flatListRef = useRef<FlatList<number>>(null);
   const dwellTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const chapterUpdateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -133,7 +132,6 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
       dwellTimerRef.current = null;
     }
 
-    setCurrentPage(pageNum);
     useMushafStore.getState().setCurrentPage(pageNum);
     currentDwellPageRef.current = pageNum;
 
@@ -154,12 +152,7 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
     }, MIN_DWELL_MS);
   }).current;
   return (
-    <View
-      style={[
-        styles.container,
-        { paddingTop: insets.top, paddingBottom: insets.bottom },
-      ]}
-    >
+    <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
       <FlatList
         ref={flatListRef}
         data={pages}

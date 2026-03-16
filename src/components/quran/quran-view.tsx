@@ -161,9 +161,7 @@ export function QuranView({
       // Resolve chapter — use already-loaded one or fetch by identifier
       let chapter = selectedChapter;
       if ((!chapter || chapter.number === 0) && chapterId) {
-        chapter =
-          (await databaseService.getChapterByIdentifier(chapterId)) ??
-          null;
+        chapter = (await databaseService.getChapterByIdentifier(chapterId)) ?? null;
       }
 
       const chapterNumber = chapter?.number ?? 0;
@@ -183,7 +181,7 @@ export function QuranView({
       Alert.alert(
         "تم حفظ التقدم ✅",
         `تم حفظ تقدمك عند سورة ${chapter?.arabicTitle ?? ""} الآية ${ayahNumber}`,
-        [{ text: "حسناً", style: "default" }],
+        [{ text: "حسناً", style: "default" }]
       );
     } catch (e) {
       console.error("[QuranView] Save progress error:", e);

@@ -53,12 +53,7 @@ export async function addReadPage(page: number): Promise<void> {
  * are considered read.
  */
 export async function addReadPagesUpTo(page: number): Promise<void> {
-  if (
-    !Number.isFinite(page) ||
-    !Number.isInteger(page) ||
-    page < 1 ||
-    page > TOTAL_PAGES
-  ) {
+  if (!Number.isFinite(page) || !Number.isInteger(page) || page < 1 || page > TOTAL_PAGES) {
     return;
   }
   try {
@@ -67,10 +62,7 @@ export async function addReadPagesUpTo(page: number): Promise<void> {
     for (let p = 1; p <= page; p++) {
       set.add(p);
     }
-    await AsyncStorage.setItem(
-      READ_PAGES_KEY,
-      JSON.stringify([...set].sort((a, b) => a - b)),
-    );
+    await AsyncStorage.setItem(READ_PAGES_KEY, JSON.stringify([...set].sort((a, b) => a - b)));
   } catch {
     // ignore
   }

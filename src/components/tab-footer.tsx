@@ -50,11 +50,8 @@ type TabFooterProps = {
   visible?: boolean;
 };
 
-<<<<<<< HEAD
 function useFooterSlide(visible: boolean, height: number) {
-  const translateY = useRef(
-    new Animated.Value(visible ? 0 : height),
-  ).current;
+  const translateY = useRef(new Animated.Value(visible ? 0 : height)).current;
 
   useEffect(() => {
     Animated.timing(translateY, {
@@ -97,11 +94,7 @@ const TabButton = React.memo(function TabButton({ tab, isActive, onTabChange }: 
   );
 });
 
-export function TabFooter({
-  activeTab,
-  onTabChange,
-  visible = true,
-}: TabFooterProps) {
+export function TabFooter({ activeTab, onTabChange, visible = true }: TabFooterProps) {
   const insets = useSafeAreaInsets();
   const totalHeight = FOOTER_HEIGHT + insets.bottom;
   const translateY = useFooterSlide(visible, totalHeight);
@@ -112,10 +105,10 @@ export function TabFooter({
         pointerEvents={visible ? "auto" : "none"}
         style={[
           styles.footer,
-          { 
-            height: totalHeight, 
+          {
+            height: totalHeight,
             paddingBottom: insets.bottom,
-            transform: [{ translateY }] 
+            transform: [{ translateY }],
           },
         ]}
       >

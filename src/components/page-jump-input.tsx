@@ -10,17 +10,12 @@ import {
   TextInput,
   View,
 } from "react-native";
-import {
-  PanGestureHandler,
-  TapGestureHandler,
-  State,
-} from "react-native-gesture-handler";
+import { PanGestureHandler, TapGestureHandler, State } from "react-native-gesture-handler";
 import { TOTAL_PAGES } from "../constants/mushaf";
 import { colors } from "../theme";
 
 const MIN_PAGE = 1;
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } =
-  Dimensions.get("window");
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const DRAG_THRESHOLD = 8;
 
 function clamp(val: number, min: number, max: number) {
@@ -59,10 +54,8 @@ export function PageJumpInput({
   const keyboardHeight = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const showEvent =
-      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
-    const hideEvent =
-      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+    const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
 
     const showSub = Keyboard.addListener(showEvent, (e) => {
       const kbH = e.endCoordinates.height;
@@ -90,17 +83,13 @@ export function PageJumpInput({
   }, [keyboardHeight]);
 
   const onPanGestureEvent = useCallback(
-    (event: {
-      nativeEvent: { translationX: number; translationY: number };
-    }) => {
+    (event: { nativeEvent: { translationX: number; translationY: number } }) => {
       const { translationX: tx, translationY: ty } = event.nativeEvent;
       const halfW = SCREEN_WIDTH / 2;
       translateX.setValue(clamp(offsetRef.current.x + tx, -halfW, halfW));
-      translateY.setValue(
-        clamp(offsetRef.current.y + ty, -(SCREEN_HEIGHT - 100), 0),
-      );
+      translateY.setValue(clamp(offsetRef.current.y + ty, -(SCREEN_HEIGHT - 100), 0));
     },
-    [translateX, translateY],
+    [translateX, translateY]
   );
 
   const onPanHandlerStateChange = useCallback(
@@ -120,17 +109,14 @@ export function PageJumpInput({
         };
       }
     },
-    [],
+    []
   );
 
-  const onTapHandlerStateChange = useCallback(
-    (event: { nativeEvent: { state: number } }) => {
-      if (event.nativeEvent.state === State.END) {
-        setIsEditing(true);
-      }
-    },
-    [],
-  );
+  const onTapHandlerStateChange = useCallback((event: { nativeEvent: { state: number } }) => {
+    if (event.nativeEvent.state === State.END) {
+      setIsEditing(true);
+    }
+  }, []);
 
   function handleSubmit() {
     const page = Number.parseInt(inputValue, 10);
@@ -149,19 +135,11 @@ export function PageJumpInput({
         style={[
           styles.wrapper,
           {
-            bottom: Animated.add(
-              20 as unknown as Animated.Value,
-              keyboardHeight,
-            ),
+            bottom: Animated.add(20 as unknown as Animated.Value, keyboardHeight),
           },
         ]}
       >
-        <Animated.View
-          style={[
-            styles.bubbleWrap,
-            { transform: [{ translateX }, { translateY }] },
-          ]}
-        >
+        <Animated.View style={[styles.bubbleWrap, { transform: [{ translateX }, { translateY }] }]}>
           <View style={styles.editingBubble}>
             <TextInput
               autoFocus
@@ -181,10 +159,7 @@ export function PageJumpInput({
             />
             <Pressable
               onPress={handleSubmit}
-              style={({ pressed }) => [
-                styles.goButton,
-                pressed && styles.goButtonPressed,
-              ]}
+              style={({ pressed }) => [styles.goButton, pressed && styles.goButtonPressed]}
             >
               <Text style={styles.goButtonText}>انتقال</Text>
             </Pressable>
@@ -204,12 +179,7 @@ export function PageJumpInput({
         activeOffsetX={[-DRAG_THRESHOLD, DRAG_THRESHOLD]}
         activeOffsetY={[-DRAG_THRESHOLD, DRAG_THRESHOLD]}
       >
-        <Animated.View
-          style={[
-            styles.bubbleWrap,
-            { transform: [{ translateX }, { translateY }] },
-          ]}
-        >
+        <Animated.View style={[styles.bubbleWrap, { transform: [{ translateX }, { translateY }] }]}>
           <TapGestureHandler
             ref={tapRef}
             simultaneousHandlers={panRef}

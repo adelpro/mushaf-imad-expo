@@ -20,7 +20,6 @@ interface VersePopupProps {
   verse: Verse | null;
   chapter: Chapter | null;
   onClose: () => void;
-  onLongPress?: () => void;
   onShareText?: () => void;
   onShareImage?: () => void;
   onSaveProgress?: () => void;
@@ -31,7 +30,6 @@ export const VersePopup: React.FC<VersePopupProps> = ({
   verse,
   chapter,
   onClose,
-  onLongPress,
   onShareText,
   onShareImage,
   onSaveProgress,
@@ -83,20 +81,14 @@ export const VersePopup: React.FC<VersePopupProps> = ({
 
             {/* Save progress action */}
             {onSaveProgress && (
-              <TouchableOpacity
-                style={styles.saveProgressButton}
-                onPress={onSaveProgress}
-              >
+              <TouchableOpacity style={styles.saveProgressButton} onPress={onSaveProgress}>
                 <Text style={styles.shareActionLabel}>🔖 حفظ التقدم عند هذه الآية</Text>
               </TouchableOpacity>
             )}
 
             {/* Utility actions row */}
             <View style={styles.utilRow}>
-              <TouchableOpacity
-                style={styles.utilButton}
-                onPress={handleCopy}
-              >
+              <TouchableOpacity style={styles.utilButton} onPress={handleCopy}>
                 <Text style={styles.utilButtonText}>نسخ</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.utilButton} onPress={onClose}>

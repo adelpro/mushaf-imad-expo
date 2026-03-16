@@ -38,10 +38,7 @@ export default function TabsLayout() {
     [activeTab, router]
   );
 
-  const handleJumpToPage = useCallback(
-    (page: number) => setJumpToPage(page),
-    [setJumpToPage],
-  );
+  const handleJumpToPage = useCallback((page: number) => setJumpToPage(page), [setJumpToPage]);
 
   return (
     <View style={styles.container}>

@@ -1,12 +1,5 @@
 import React, { useRef, useState } from "react";
-import {
-  Animated,
-  Dimensions,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Animated, Dimensions, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors } from "../theme";
 import { markOnboardingDone } from "../services/onboarding-service";
@@ -49,10 +42,7 @@ function TabsDemo() {
         {activeTab === "mushaf" ? (
           <View style={styles.demoTabsContent}>
             {[1, 2, 3, 4].map((i) => (
-              <View
-                key={i}
-                style={[styles.demoTabsLine, i === 1 && { width: "60%" }]}
-              />
+              <View key={i} style={[styles.demoTabsLine, i === 1 && { width: "60%" }]} />
             ))}
           </View>
         ) : (
@@ -60,7 +50,17 @@ function TabsDemo() {
             <View style={styles.demoTabsProgressCard}>
               <View style={styles.demoTabsProgressRow}>
                 <View style={[styles.demoTabsLine, { width: "50%", height: 6 }]} />
-                <View style={[styles.demoTabsLine, { width: "25%", height: 6, backgroundColor: colors.brand.default, opacity: 0.5 }]} />
+                <View
+                  style={[
+                    styles.demoTabsLine,
+                    {
+                      width: "25%",
+                      height: 6,
+                      backgroundColor: colors.brand.default,
+                      opacity: 0.5,
+                    },
+                  ]}
+                />
               </View>
               <View style={[styles.demoTabsLine, { width: "70%", height: 6, marginTop: 4 }]} />
             </View>
@@ -71,14 +71,24 @@ function TabsDemo() {
         <View style={styles.demoTabBar}>
           <Animated.View style={[styles.demoTabIndicator, { left: indicatorLeft }]} />
           <Pressable style={styles.demoTab} onPress={() => switchTab("mushaf")}>
-            <Text style={[styles.demoTabIcon, activeTab === "mushaf" && styles.demoTabIconActive]}>📖</Text>
-            <Text style={[styles.demoTabLabel, activeTab === "mushaf" && styles.demoTabLabelActive]}>
+            <Text style={[styles.demoTabIcon, activeTab === "mushaf" && styles.demoTabIconActive]}>
+              📖
+            </Text>
+            <Text
+              style={[styles.demoTabLabel, activeTab === "mushaf" && styles.demoTabLabelActive]}
+            >
               المصحف
             </Text>
           </Pressable>
           <Pressable style={styles.demoTab} onPress={() => switchTab("progress")}>
-            <Text style={[styles.demoTabIcon, activeTab === "progress" && styles.demoTabIconActive]}>📊</Text>
-            <Text style={[styles.demoTabLabel, activeTab === "progress" && styles.demoTabLabelActive]}>
+            <Text
+              style={[styles.demoTabIcon, activeTab === "progress" && styles.demoTabIconActive]}
+            >
+              📊
+            </Text>
+            <Text
+              style={[styles.demoTabLabel, activeTab === "progress" && styles.demoTabLabelActive]}
+            >
               التقدم
             </Text>
           </Pressable>
@@ -111,8 +121,8 @@ function LongPressDemo() {
   function endPress() {
     if (phase === "popup") return;
     animRef.current?.stop();
-    Animated.timing(progress, { toValue: 0, duration: 200, useNativeDriver: false }).start(
-      () => setPhase("idle"),
+    Animated.timing(progress, { toValue: 0, duration: 200, useNativeDriver: false }).start(() =>
+      setPhase("idle")
     );
   }
 
@@ -123,9 +133,7 @@ function LongPressDemo() {
       {/* Ayah line — hold target */}
       <Pressable onPressIn={startPress} onPressOut={endPress} style={styles.demoTapArea}>
         <View style={styles.demoAyahLine}>
-          <Text style={styles.demoAyahText}>
-            بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
-          </Text>
+          <Text style={styles.demoAyahText}>بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ</Text>
           {phase === "holding" && (
             <View style={styles.demoProgressTrack}>
               <Animated.View style={[styles.demoProgressFill, { width: barWidth }]} />
@@ -148,9 +156,7 @@ function LongPressDemo() {
             </View>
             {/* Verse text */}
             <View style={styles.demoPopupContent}>
-              <Text style={styles.demoPopupArabic}>
-                بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
-              </Text>
+              <Text style={styles.demoPopupArabic}>بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ</Text>
             </View>
             {/* Actions */}
             <View style={styles.demoPopupFooter}>
@@ -181,22 +187,20 @@ function LongPressDemo() {
 
 function BubbleDemo() {
   const pan = useRef(new Animated.ValueXY()).current;
-  const lastOffset = useRef({ x: 0, y: 0 });
 
   return (
     <View style={styles.demoBubbleArea} pointerEvents="box-none">
-      <Animated.View
-        style={[styles.demoBubble, { transform: pan.getTranslateTransform() }]}
-      >
+      <Animated.View style={[styles.demoBubble, { transform: pan.getTranslateTransform() }]}>
         <Text style={styles.demoBubbleText}>صفحة </Text>
-        <Text style={[styles.demoBubbleText, { color: colors.brand.default, fontWeight: "700" }]}>٧٤</Text>
+        <Text style={[styles.demoBubbleText, { color: colors.brand.default, fontWeight: "700" }]}>
+          ٧٤
+        </Text>
         <Text style={styles.demoBubbleText}> / ٦٠٤</Text>
       </Animated.View>
       <Text style={[styles.demoHint, { marginTop: 8 }]}>اسحب الزر لتحريكه</Text>
     </View>
   );
 }
-
 
 // ── steps data ────────────────────────────────────────────────────────────────
 
@@ -282,10 +286,7 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
 
       {/* Content */}
       <Animated.View
-        style={[
-          styles.card,
-          { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
-        ]}
+        style={[styles.card, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}
       >
         <Text style={styles.emoji}>{current.emoji}</Text>
         <Text style={styles.title}>{current.title}</Text>
@@ -299,9 +300,7 @@ export function OnboardingScreen({ onDone }: OnboardingScreenProps) {
           onPress={handleNext}
           style={({ pressed }) => [styles.nextBtn, pressed && styles.nextBtnPressed]}
         >
-          <Text style={styles.nextText}>
-            {isLastStep ? "ابدأ القراءة" : "التالي ←"}
-          </Text>
+          <Text style={styles.nextText}>{isLastStep ? "ابدأ القراءة" : "التالي ←"}</Text>
         </Pressable>
 
         {isLastStep && (
@@ -651,5 +650,4 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: colors.text.secondary,
   },
-
 });
