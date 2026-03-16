@@ -4,6 +4,7 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useFonts } from "expo-font";
 import { Amiri_400Regular } from "@expo-google-fonts/amiri";
 import LottieView from "lottie-react-native";
@@ -61,52 +62,60 @@ export default function RootLayout() {
 
   if (!appReady) {
     return (
-      <SafeAreaProvider>
-        <View style={styles.loader}>
-          <ActivityIndicator size="large" color={colors.brand.default} />
-        </View>
-      </SafeAreaProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaProvider>
+          <View style={styles.loader}>
+            <ActivityIndicator size="large" color={colors.brand.default} />
+          </View>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
     );
   }
 
   if (isFirstLaunch) {
     return (
-      <SafeAreaProvider>
-        <View style={styles.splash}>
-          <LottieView
-            source={require("../assets/animations/mushaf.json")}
-            autoPlay
-            loop
-            style={styles.lottie}
-          />
-          <ActivityIndicator size="large" color={colors.brand.default} style={styles.spinner} />
-          <Text style={styles.message}>
-            جارٍ تجهيز المصحف…{"\n"}
-            سيكون جاهزاً في لحظات
-          </Text>
-        </View>
-      </SafeAreaProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaProvider>
+          <View style={styles.splash}>
+            <LottieView
+              source={require("../assets/animations/mushaf.json")}
+              autoPlay
+              loop
+              style={styles.lottie}
+            />
+            <ActivityIndicator size="large" color={colors.brand.default} style={styles.spinner} />
+            <Text style={styles.message}>
+              جارٍ تجهيز المصحف…{"\n"}
+              سيكون جاهزاً في لحظات
+            </Text>
+          </View>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
     );
   }
 
   if (showOnboarding) {
     return (
-      <SafeAreaProvider>
-        <StatusBar style="dark" backgroundColor={colors.background.default} />
-        <View style={styles.onboarding}>
-          <OnboardingScreen onDone={() => setShowOnboarding(false)} />
-        </View>
-      </SafeAreaProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaProvider>
+          <StatusBar style="dark" backgroundColor={colors.background.default} />
+          <View style={styles.onboarding}>
+            <OnboardingScreen onDone={() => setShowOnboarding(false)} />
+          </View>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
     );
   }
 
   return (
-    <SafeAreaProvider>
-      <StatusBar style="dark" />
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" />
-      </Stack>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <StatusBar style="dark" />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(tabs)" />
+        </Stack>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 

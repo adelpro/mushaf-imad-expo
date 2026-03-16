@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useFonts } from "expo-font";
 import { Amiri_400Regular } from "@expo-google-fonts/amiri";
 
@@ -53,19 +54,30 @@ export default function App() {
 
     const prepare = async () => {
       try {
+        console.log("[App] Starting preparation...");
         await SplashScreen.hideAsync();
-        await databaseService.getDb();
+        
+        console.log("[App] Initializing database...");
+        const dbPromise = databaseService.getDb();
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error("Database initialization timeout")), 30000)
+        );
+        
+        await Promise.race([dbPromise, timeoutPromise]);
+        console.log("[App] Database initialized");
 
         const [lastRead, seenOnboarding] = await Promise.all([
           getLastRead(),
           hasSeenOnboarding(),
         ]);
+        
         if (lastRead) {
           useMushafStore.getState().setCurrentPage(lastRead.page);
         }
         setShowOnboarding(!seenOnboarding);
+        console.log("[App] Preparation complete");
       } catch (e) {
-        console.warn(e);
+        console.error("[App] Preparation error:", e);
       } finally {
         setAppReady(true);
       }
@@ -78,40 +90,54 @@ export default function App() {
 
   if (!appReady) {
     return (
-      <SafeAreaProvider>
-        <View style={styles.loader}>
-          <ActivityIndicator size="large" color={colors.brand.default} />
-        </View>
-      </SafeAreaProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaProvider>
+          <View style={styles.loader}>
+            <ActivityIndicator size="large" color={colors.brand.default} />
+            <View style={{ marginTop: 20 }}>
+              <Text style={{ color: colors.text.secondary, textAlign: "center" }}>
+                جاري تجهيز المصحف...
+              </Text>
+              <Text style={{ color: colors.text.secondary, textAlign: "center", marginTop: 5 }}>
+                سيكون جاهزاً في لحظات
+              </Text>
+            </View>
+          </View>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
     );
   }
 
   if (showOnboarding) {
     return (
-      <SafeAreaProvider>
-        <StatusBar style="dark" backgroundColor={colors.background.default} />
-        <View style={styles.onboarding}>
-          <OnboardingScreen onDone={() => setShowOnboarding(false)} />
-        </View>
-      </SafeAreaProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaProvider>
+          <StatusBar style="dark" backgroundColor={colors.background.default} />
+          <View style={styles.onboarding}>
+            <OnboardingScreen onDone={() => setShowOnboarding(false)} />
+          </View>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
     );
   }
 
   return (
-    <SafeAreaProvider>
-      <SafeAreaView style={styles.container}>
-        <StatusBar style="dark" />
-        <View style={styles.content}>
-          {activeTab === "mushaf" && (
-            <MushafScreen onContentTap={() => setFooterVisible((v) => !v)} />
-          )}
-          {activeTab === "progress" && (
-            <ProgressScreen key={progressRefreshKey} onContinueReading={handleContinueReading} />
-          )}
-        </View>
-        <TabFooter activeTab={activeTab} onTabChange={handleTabChange} visible={footerVisible} />
-      </SafeAreaView>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <SafeAreaView style={styles.container}>
+          <StatusBar style="dark" />
+          <View style={styles.content}>
+            {activeTab === "mushaf" && (
+              <MushafScreen onContentTap={() => setFooterVisible((v) => !v)} />
+            )}
+            {activeTab === "progress" && (
+              <ProgressScreen key={progressRefreshKey} onContinueReading={handleContinueReading} />
+            )}
+          </View>
+          <TabFooter activeTab={activeTab} onTabChange={handleTabChange} visible={footerVisible} />
+        </SafeAreaView>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 

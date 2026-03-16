@@ -115,36 +115,66 @@ class DatabaseService {
     const dbPath = `${FileSystem.documentDirectory}SQLite/${DB_NAME}`;
 
     try {
+      console.log("[DB] Checking database at:", dbPath);
+      
+      // Ensure SQLite directory exists
+      const sqliteDir = `${FileSystem.documentDirectory}SQLite`;
+      const dirInfo = await FileSystem.getInfoAsync(sqliteDir);
+      if (!dirInfo.exists) {
+        console.log("[DB] Creating SQLite directory");
+        await FileSystem.makeDirectoryAsync(sqliteDir, { intermediates: true });
+      }
+
       const dbInfo = await FileSystem.getInfoAsync(dbPath);
 
       if (dbInfo.exists) {
-        const existingDb = await SQLite.openDatabaseAsync(DB_NAME);
-        const chapterCount = await existingDb.getFirstAsync<{ count: number }>(
-          "SELECT COUNT(*) as count FROM chapters"
-        );
+        console.log("[DB] Database exists, opening...");
+        try {
+          const existingDb = await SQLite.openDatabaseAsync(DB_NAME);
+          const chapterCount = await existingDb.getFirstAsync<{ count: number }>(
+            "SELECT COUNT(*) as count FROM chapters"
+          );
 
-        if (chapterCount && chapterCount.count > 0) {
-          return existingDb;
+          if (chapterCount && chapterCount.count > 0) {
+            console.log("[DB] Database valid with", chapterCount.count, "chapters");
+            return existingDb;
+          }
+
+          console.log("[DB] Database empty, deleting...");
+          await existingDb.closeAsync().catch(() => {});
+          await FileSystem.deleteAsync(dbPath, { idempotent: true }).catch(() => {});
+        } catch (err) {
+          console.log("[DB] Error opening existing database:", err);
+          await FileSystem.deleteAsync(dbPath, { idempotent: true }).catch(() => {});
         }
-
-        await existingDb.closeAsync().catch(() => {});
-        await FileSystem.deleteAsync(dbPath, { idempotent: true }).catch(() => {});
       }
 
+      console.log("[DB] Loading database from assets...");
       const asset = Asset.Asset.fromModule(require("../../assets/quran.db"));
-      await asset.downloadAsync();
+      
+      if (!asset.downloaded) {
+        console.log("[DB] Asset not downloaded, downloading...");
+        await asset.downloadAsync();
+      }
+      
+      console.log("[DB] Asset ready, localUri:", asset.localUri);
 
       if (asset.localUri) {
-        await FileSystem.deleteAsync(dbPath, { idempotent: true }).catch(() => {});
+        console.log("[DB] Copying database from", asset.localUri, "to", dbPath);
         await FileSystem.copyAsync({ from: asset.localUri, to: dbPath });
+        console.log("[DB] Database copied successfully");
 
-        return SQLite.openDatabaseAsync(DB_NAME);
+        const db = await SQLite.openDatabaseAsync(DB_NAME);
+        console.log("[DB] Database opened successfully");
+        return db;
       }
 
+      console.log("[DB] No localUri, creating new database");
       const newDb = await SQLite.openDatabaseAsync(DB_NAME);
       await this.initializeDatabase(newDb);
       return newDb;
-    } catch {
+    } catch (error) {
+      console.error("[DB] Error during initialization:", error);
       const db = await SQLite.openDatabaseAsync(DB_NAME);
       await this.runMigrations(db);
       return db;
