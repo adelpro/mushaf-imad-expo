@@ -542,6 +542,12 @@ class DatabaseService {
     );
     return result?.count ?? 0;
   }
+
+  async isFirstLaunch(): Promise<boolean> {
+    const dbPath = `${FileSystem.documentDirectory}SQLite/${DB_NAME}`;
+    const dbInfo = await FileSystem.getInfoAsync(dbPath);
+    return !dbInfo.exists;
+  }
 }
 
 export const databaseService = new DatabaseService();
