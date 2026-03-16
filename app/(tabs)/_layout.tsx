@@ -5,6 +5,7 @@ import { Tabs, useRouter, useSegments } from "expo-router";
 import { PageJumpInput } from "../../src/components/page-jump-input";
 import { TabFooter, type TabId } from "../../src/components/tab-footer";
 import { useMushafStore } from "../../src/store/mushaf-store";
+import { useFooterAutoHide } from "../../src/hooks/use-footer-auto-hide";
 import { useUiStore } from "../../src/store/ui-store";
 import { colors } from "../../src/theme";
 
@@ -22,6 +23,8 @@ export default function TabsLayout() {
   const readCount = useMushafStore((s) => s.readCount);
   const setJumpToPage = useMushafStore((s) => s.setJumpToPage);
 
+  useFooterAutoHide();
+
   const activeTab = useMemo<TabId>(() => {
     const tabSegment = segments[segments.length - 1];
     return tabSegment === "progress" ? "progress" : "mushaf";
@@ -32,7 +35,7 @@ export default function TabsLayout() {
       if (tab === activeTab) return;
       router.navigate(ROUTES[tab]);
     },
-    [activeTab, router],
+    [activeTab, router]
   );
 
   const handleJumpToPage = useCallback(
@@ -51,22 +54,12 @@ export default function TabsLayout() {
           }}
           tabBar={() => null}
         >
-          <Tabs.Screen
-            name="index"
-            options={{ title: "المصحف" }}
-          />
-          <Tabs.Screen
-            name="progress"
-            options={{ title: "التقدم" }}
-          />
+          <Tabs.Screen name="index" options={{ title: "المصحف" }} />
+          <Tabs.Screen name="progress" options={{ title: "التقدم" }} />
         </Tabs>
       </View>
       <View style={styles.footerOverlay} pointerEvents="box-none">
-        <TabFooter
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-          visible={footerVisible}
-        />
+        <TabFooter activeTab={activeTab} onTabChange={handleTabChange} visible={footerVisible} />
       </View>
       {activeTab === "mushaf" && (
         <View pointerEvents="box-none" style={styles.pageJumpOverlay}>

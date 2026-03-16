@@ -13,11 +13,7 @@ export async function getReadPages(): Promise<number[]> {
     const data = JSON.parse(raw) as unknown;
     if (!Array.isArray(data)) return [];
     const pages = data.filter(
-      (p): p is number =>
-        typeof p === "number" &&
-        Number.isInteger(p) &&
-        p >= 1 &&
-        p <= TOTAL_PAGES,
+      (p): p is number => typeof p === "number" && Number.isInteger(p) && p >= 1 && p <= TOTAL_PAGES
     );
     return [...new Set(pages)];
   } catch {
@@ -38,22 +34,14 @@ export async function getReadPagesCount(): Promise<number> {
  * Call this only when the user has met the minimum reading time on the page.
  */
 export async function addReadPage(page: number): Promise<void> {
-  if (
-    !Number.isFinite(page) ||
-    !Number.isInteger(page) ||
-    page < 1 ||
-    page > TOTAL_PAGES
-  ) {
+  if (!Number.isFinite(page) || !Number.isInteger(page) || page < 1 || page > TOTAL_PAGES) {
     return;
   }
   try {
     const existing = await getReadPages();
     const set = new Set(existing);
     set.add(page);
-    await AsyncStorage.setItem(
-      READ_PAGES_KEY,
-      JSON.stringify([...set].sort((a, b) => a - b)),
-    );
+    await AsyncStorage.setItem(READ_PAGES_KEY, JSON.stringify([...set].sort((a, b) => a - b)));
   } catch {
     // ignore
   }

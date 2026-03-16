@@ -8,6 +8,7 @@ import {
   View,
   Alert,
   TouchableOpacity,
+  Pressable,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ContinueReadingCard } from "../components/continue-reading-card";
@@ -23,6 +24,8 @@ import { colors } from "../theme";
 
 type ProgressScreenProps = {
   onContinueReading?: (page: number) => void;
+  /** Called when user taps the screen (e.g. to show/hide bottom nav). */
+  onContentTap?: () => void;
 };
 
 type LastReadWithChapter = LastRead & {
@@ -41,18 +44,14 @@ function ProgressLoading() {
 function ProgressEmpty() {
   return (
     <View style={styles.empty}>
-      <Text style={styles.emptyText}>
-        افتح المصحف واقرأ لترى آخر موضع قراءتك هنا
-      </Text>
+      <Text style={styles.emptyText}>افتح المصحف واقرأ لترى آخر موضع قراءتك هنا</Text>
     </View>
   );
 }
 
-export function ProgressScreen({ onContinueReading }: ProgressScreenProps) {
+export function ProgressScreen({ onContinueReading, onContentTap }: ProgressScreenProps) {
   const insets = useSafeAreaInsets();
-  const [lastReadData, setLastReadData] = useState<LastReadWithChapter | null>(
-    null,
-  );
+  const [lastReadData, setLastReadData] = useState<LastReadWithChapter | null>(null);
   const [readCount, setReadCount] = useState(0);
   const [verseCount, setVerseCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
@@ -61,23 +60,16 @@ export function ProgressScreen({ onContinueReading }: ProgressScreenProps) {
   const loadLastRead = useCallback(async () => {
     setLoading(true);
     try {
-      const [lastRead, readPages] = await Promise.all([
-        getLastRead(),
-        getReadPages(),
-      ]);
+      const [lastRead, readPages] = await Promise.all([getLastRead(), getReadPages()]);
       setReadCount(readPages.length);
       const verses =
-        readPages.length > 0
-          ? await databaseService.getVerseCountForPageNumbers(readPages)
-          : 0;
+        readPages.length > 0 ? await databaseService.getVerseCountForPageNumbers(readPages) : 0;
       setVerseCount(verses);
       if (!lastRead) {
         setLastReadData(null);
         return;
       }
-      const chapter = await databaseService.getChapterByNumber(
-        lastRead.chapterNumber,
-      );
+      const chapter = await databaseService.getChapterByNumber(lastRead.chapterNumber);
       if (!chapter) {
         setLastReadData(null);
         return;
@@ -144,10 +136,7 @@ export function ProgressScreen({ onContinueReading }: ProgressScreenProps) {
           <ProgressEmpty />
         )}
         <View style={styles.overallProgressWrapper}>
-          <OverallProgress
-            readCount={readCount}
-            verseCount={verseCount ?? undefined}
-          />
+          <OverallProgress readCount={readCount} verseCount={verseCount ?? undefined} />
         </View>
         <TouchableOpacity
           style={styles.resetButton}
@@ -160,18 +149,25 @@ export function ProgressScreen({ onContinueReading }: ProgressScreenProps) {
     );
   };
 
-  return (
+  const scrollContent = (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={[
-        styles.content,
-        { paddingTop: insets.top + 24 },
-      ]}
+      contentContainerStyle={[styles.content, { paddingTop: insets.top + 24 }]}
       showsVerticalScrollIndicator={false}
     >
       {renderContent()}
     </ScrollView>
   );
+
+  if (onContentTap) {
+    return (
+      <Pressable style={styles.container} onPress={onContentTap} accessible={false}>
+        {scrollContent}
+      </Pressable>
+    );
+  }
+
+  return scrollContent;
 }
 
 const styles = StyleSheet.create({

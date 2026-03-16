@@ -29,11 +29,7 @@ function StatItem({ label, value, total, unit }: StatItemProps) {
   return (
     <View style={styles.statItem}>
       <Text style={styles.statLabel}>{label}</Text>
-      <Text
-        style={styles.statValue}
-        numberOfLines={1}
-        ellipsizeMode="tail"
-      >
+      <Text style={styles.statValue} numberOfLines={1} ellipsizeMode="tail">
         {total !== undefined ? (
           <>
             {value}
@@ -42,9 +38,7 @@ function StatItem({ label, value, total, unit }: StatItemProps) {
         ) : (
           value
         )}
-        {unit != null && unit !== "" ? (
-          <Text style={styles.statUnitInline}> {unit}</Text>
-        ) : null}
+        {unit != null && unit !== "" ? <Text style={styles.statUnitInline}> {unit}</Text> : null}
       </Text>
     </View>
   );
@@ -58,8 +52,7 @@ export function OverallProgress({ readCount, verseCount }: OverallProgressProps)
   return (
     <View style={styles.card}>
       <Text style={styles.title}>ختم القرآن الكريم</Text>
-      <Text style={styles.subtitle}>استمر في رحلتك، كل آية تقربك من الله
-      </Text>
+      <Text style={styles.subtitle}>استمر في رحلتك، كل آية تقربك من الله</Text>
 
       <View style={styles.ringWrapper}>
         <Svg width={SIZE} height={SIZE} style={styles.svg}>
@@ -90,26 +83,15 @@ export function OverallProgress({ readCount, verseCount }: OverallProgressProps)
       </View>
 
       <View style={styles.statsBar}>
-        <StatItem
-          label="الصفحات المقروءة"
-          value={readCount}
-          total={TOTAL_PAGES}
-        />
+        <StatItem label="الصفحات المقروءة" value={readCount} total={TOTAL_PAGES} />
         <View style={styles.statDivider} />
         <StatItem
           label="الآيات"
-          value={
-            verseCount ??
-            Math.round(readCount * (TOTAL_VERSES / TOTAL_PAGES))
-          }
+          value={verseCount ?? Math.round(readCount * (TOTAL_VERSES / TOTAL_PAGES))}
           total={TOTAL_VERSES}
         />
         <View style={styles.statDivider} />
-        <StatItem
-          label="المتبقي"
-          value={TOTAL_PAGES - readCount}
-          unit="صفحة"
-        />
+        <StatItem label="المتبقي" value={TOTAL_PAGES - readCount} unit="صفحة" />
       </View>
     </View>
   );

@@ -1,12 +1,6 @@
 // Quran Component - Chapter Popup Component
 import React from "react";
-import {
-  View,
-  Text,
-  Modal,
-  TouchableOpacity,
-  StyleSheet,
-} from "react-native";
+import { View, Text, Modal, TouchableOpacity, StyleSheet } from "react-native";
 import { Chapter } from "./types";
 import { colors } from "../../theme";
 
@@ -28,18 +22,11 @@ export const ChapterPopup: React.FC<ChapterPopupProps> = ({
   if (!chapter) return null;
 
   return (
-    <Modal
-      transparent
-      visible={visible}
-      animationType="fade"
-      onRequestClose={onClose}
-    >
+    <Modal transparent visible={visible} animationType="fade" onRequestClose={onClose}>
       <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={onClose}>
         <TouchableOpacity activeOpacity={1} style={styles.modal}>
           <View style={styles.header}>
-            <Text style={styles.chapterName}>
-              سورة {chapter.arabicTitle}
-            </Text>
+            <Text style={styles.chapterName}>سورة {chapter.arabicTitle}</Text>
             <Text style={styles.englishName}>{chapter.englishTitle}</Text>
           </View>
 
@@ -50,9 +37,7 @@ export const ChapterPopup: React.FC<ChapterPopupProps> = ({
             </View>
             <View style={styles.infoItem}>
               <Text style={styles.infoLabel}>نوع</Text>
-              <Text style={styles.infoValue}>
-                {chapter.isMeccan ? "مكية" : "مدنية"}
-              </Text>
+              <Text style={styles.infoValue}>{chapter.isMeccan ? "مكية" : "مدنية"}</Text>
             </View>
             <View style={styles.infoItem}>
               <Text style={styles.infoLabel}>الصفحة</Text>
@@ -64,13 +49,8 @@ export const ChapterPopup: React.FC<ChapterPopupProps> = ({
             <TouchableOpacity style={styles.button} onPress={onClose}>
               <Text style={styles.buttonText}>إغلاق</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.button, styles.primaryButton]}
-              onPress={onLongPress}
-            >
-              <Text style={[styles.buttonText, styles.primaryButtonText]}>
-                تفاصيل
-              </Text>
+            <TouchableOpacity style={[styles.button, styles.primaryButton]} onPress={onLongPress}>
+              <Text style={[styles.buttonText, styles.primaryButtonText]}>تفاصيل</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>

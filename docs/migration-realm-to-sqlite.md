@@ -6,30 +6,30 @@ This document describes the migration from Realm database to SQLite using `@expo
 
 ## Migration Summary
 
-| Metric | Value |
-|--------|-------|
-| Source Database | Realm (`quran.realm`) |
-| Target Database | SQLite (`quran.db`) |
-| Migration Date | 2026-02-10 |
+| Metric              | Value                  |
+| ------------------- | ---------------------- |
+| Source Database     | Realm (`quran.realm`)  |
+| Target Database     | SQLite (`quran.db`)    |
+| Migration Date      | 2026-02-10             |
 | Expo SQLite Version | `expo-sqlite` ~16.0.10 |
-| Total Tables | 9 |
-| Total Records | ~40,000 |
+| Total Tables        | 9                      |
+| Total Records       | ~40,000                |
 
 ## Database Schema
 
 ### Tables
 
-| Table | Records | Description |
-|-------|---------|-------------|
-| `chapters` | 114 | Quran chapters (surahs) |
-| `pages` | 604 | Quran pages |
-| `verses` | 6,236 | Quran verses (ayahs) |
-| `parts` | 30 | Quran parts (juz') |
-| `quarters` | 240 | Quarter divisions (hizb) |
-| `sections` | 1,325 | Quran sections |
-| `verse_highlights` | 27,039 | Verse highlight positions |
-| `chapter_headers` | 228 | Chapter title markers |
-| `page_headers` | 1,208 | Page header markers |
+| Table              | Records | Description               |
+| ------------------ | ------- | ------------------------- |
+| `chapters`         | 114     | Quran chapters (surahs)   |
+| `pages`            | 604     | Quran pages               |
+| `verses`           | 6,236   | Quran verses (ayahs)      |
+| `parts`            | 30      | Quran parts (juz')        |
+| `quarters`         | 240     | Quarter divisions (hizb)  |
+| `sections`         | 1,325   | Quran sections            |
+| `verse_highlights` | 27,039  | Verse highlight positions |
+| `chapter_headers`  | 228     | Chapter title markers     |
+| `page_headers`     | 1,208   | Page header markers       |
 
 ### Table Schemas
 
@@ -180,12 +180,12 @@ CREATE TABLE page_headers (
 
 In Realm, embedded objects like `VerseMarker` were stored as nested objects within `Verse`. In SQLite, these have been flattened into the verses table:
 
-| Realm Embedded Object | SQLite Column(s) |
-|----------------------|------------------|
-| `marker1441` | `marker1441_numberCodePoint`, `marker1441_line`, `marker1441_centerX`, `marker1441_centerY` |
-| `marker1405` | `marker1405_numberCodePoint`, `marker1405_line`, `marker1405_centerX`, `marker1405_centerY` |
-| `header1441` | `header1441_part_id`, `header1441_quarter_id` |
-| `header1405` | `header1405_part_id`, `header1405_quarter_id` |
+| Realm Embedded Object | SQLite Column(s)                                                                            |
+| --------------------- | ------------------------------------------------------------------------------------------- |
+| `marker1441`          | `marker1441_numberCodePoint`, `marker1441_line`, `marker1441_centerX`, `marker1441_centerY` |
+| `marker1405`          | `marker1405_numberCodePoint`, `marker1405_line`, `marker1405_centerX`, `marker1405_centerY` |
+| `header1441`          | `header1441_part_id`, `header1441_quarter_id`                                               |
+| `header1405`          | `header1405_part_id`, `header1405_quarter_id`                                               |
 
 ### 2. Relationships
 
@@ -242,16 +242,14 @@ const db = SQLite.openDatabase("quran.db");
 
 ```typescript
 // Get a page by number
-db.transaction(tx => {
-  tx.executeSql(
-    "SELECT * FROM pages WHERE number = ?",
-    [pageNumber],
-    (_, result) => console.log(result.rows)
+db.transaction((tx) => {
+  tx.executeSql("SELECT * FROM pages WHERE number = ?", [pageNumber], (_, result) =>
+    console.log(result.rows)
   );
 });
 
 // Get verses for a chapter
-db.transaction(tx => {
+db.transaction((tx) => {
   tx.executeSql(
     "SELECT * FROM verses WHERE chapter_id = ? ORDER BY number",
     [chapterId],
@@ -260,7 +258,7 @@ db.transaction(tx => {
 });
 
 // Search verses
-db.transaction(tx => {
+db.transaction((tx) => {
   tx.executeSql(
     "SELECT * FROM verses WHERE searchableText LIKE ? LIMIT 50",
     [`%${query}%`],
@@ -499,8 +497,8 @@ Generates `src/constants/imageMap.ts`:
 ```typescript
 export const QuranImages: Record<number, any[]> = {
   1: [
-    require('../../assets/images/quran/1/1.png'),
-    require('../../assets/images/quran/1/2.png'),
+    require("../../assets/images/quran/1/1.png"),
+    require("../../assets/images/quran/1/2.png"),
     // ...
   ],
   2: [

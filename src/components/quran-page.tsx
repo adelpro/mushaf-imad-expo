@@ -28,10 +28,7 @@ const FASEL_CENTER_Y_OFFSET = 8 * LINE_SCALE;
 const SCALED_IMAGE_HEIGHT = width / LINE_ASPECT_RATIO;
 const CROP_OFFSET = (SCALED_IMAGE_HEIGHT - LINE_HEIGHT) / 2;
 
-const resolveLineImage = (
-  pageNumber: number,
-  lineIndex: number,
-): number | undefined => {
+const resolveLineImage = (pageNumber: number, lineIndex: number): number | undefined => {
   const pageImages = QuranImages[pageNumber];
   if (!pageImages) return undefined;
   return pageImages[lineIndex];
@@ -73,10 +70,7 @@ const SurahTitlesLayer = React.memo(function SurahTitlesLayer({
               top: cy - SURA_NAME_BAR_HEIGHT / 2 + SURA_NAME_BAR_CENTER_Y_OFFSET,
             }}
           >
-            <SuraNameBar
-              width={SURA_NAME_BAR_WIDTH}
-              height={SURA_NAME_BAR_HEIGHT}
-            />
+            <SuraNameBar width={SURA_NAME_BAR_WIDTH} height={SURA_NAME_BAR_HEIGHT} />
           </View>
         );
       })}
@@ -188,12 +182,7 @@ export const QuranPage = React.memo<Props>(function QuranPage({
 
     for (const verse of page.verses1441) {
       const marker = verse.marker1441;
-      if (
-        !marker ||
-        marker.line === null ||
-        marker.centerX === null ||
-        marker.centerY === null
-      )
+      if (!marker || marker.line === null || marker.centerX === null || marker.centerY === null)
         continue;
       const list = map.get(marker.line) ?? [];
       list.push({
@@ -215,9 +204,7 @@ export const QuranPage = React.memo<Props>(function QuranPage({
     if (!page || !activeVerse || !activeChapter) return [];
     return page.verses1441
       .filter((v) => v.chapter_id === activeChapter && v.number === activeVerse)
-      .flatMap((v) =>
-        v.highlights1441.map((h) => ({ ...h, verseID: v.verseID })),
-      );
+      .flatMap((v) => v.highlights1441.map((h) => ({ ...h, verseID: v.verseID })));
   }, [page, activeChapter, activeVerse]);
 
   const lines = React.useMemo(() => {
@@ -240,7 +227,7 @@ export const QuranPage = React.memo<Props>(function QuranPage({
           <SurahTitlesLayer headers={headers} lineIndex={i} />
           <VerseMarkersLayer markers={markers} digitsFormat={digitsFormat} />
           <HighlightsLayer highlights={activeHighlights} lineIndex={i} />
-        </View>,
+        </View>
       );
     }
     return result;

@@ -39,7 +39,7 @@ export default function App() {
       setCurrentPage(page);
       setActiveTab("mushaf");
     },
-    [setJumpToPage, setCurrentPage],
+    [setJumpToPage, setCurrentPage]
   );
 
   const [fontsLoaded, fontError] = useFonts({

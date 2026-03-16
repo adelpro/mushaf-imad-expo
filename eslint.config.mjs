@@ -32,10 +32,23 @@ export default defineConfig([
   // ── TypeScript recommended rules ─────────────────────────────────────
   ...tseslint.configs.recommended,
 
+  // ── Allow require for asset files ─────────────────────────────────────
+  {
+    rules: {
+      "@typescript-eslint/no-require-imports": [
+        "error",
+        { allow: [".svg", ".png", ".jpg", ".jpeg", ".gif", ".ttf", ".otf", ".json", ".db"] },
+      ],
+    },
+  },
+
   // ── React (eslint-react — ESLint 10 compatible) ──────────────────────
   {
     ...eslintReact.configs["recommended-typescript"],
     files: ["**/*.{ts,tsx}"],
+    rules: {
+      "@eslint-react/no-array-index-key": "off",
+    },
   },
 
   // ── React Native (wrapped with compat for ESLint 10) ─────────────────
@@ -49,10 +62,10 @@ export default defineConfig([
       },
     },
     rules: {
-      "react-native/no-unused-styles": "warn",
-      "react-native/no-inline-styles": "warn",
+      "react-native/no-unused-styles": "off",
+      "react-native/no-inline-styles": "off",
       "react-native/no-raw-text": "off",
-      "react-native/no-color-literals": "warn",
+      "react-native/no-color-literals": "off",
     },
   },
 

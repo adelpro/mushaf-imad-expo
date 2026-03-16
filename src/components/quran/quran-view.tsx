@@ -84,7 +84,7 @@ export function QuranView({
       if (!pageImages) return undefined;
       return pageImages[lineIndex];
     },
-    [pageNumber],
+    [pageNumber]
   );
 
   const markersByLine = useMemo(() => {
@@ -103,12 +103,7 @@ export function QuranView({
 
     verses.forEach((verse: Verse) => {
       const marker = layout === 1441 ? verse.marker1441 : verse.marker1405;
-      if (
-        !marker ||
-        marker.line === null ||
-        marker.centerX === null ||
-        marker.centerY === null
-      )
+      if (!marker || marker.line === null || marker.centerX === null || marker.centerY === null)
         return;
 
       const list = map.get(marker.line) ?? [];
@@ -121,9 +116,7 @@ export function QuranView({
     });
 
     for (const list of map.values()) {
-      list.sort(
-        (a, b) => a.centerX - b.centerX || a.verse.number - b.verse.number,
-      );
+      list.sort((a, b) => a.centerX - b.centerX || a.verse.number - b.verse.number);
     }
 
     return map;
@@ -210,7 +203,7 @@ export function QuranView({
       onVersePress?.(event);
       onContentTap();
     },
-    [pageNumber, onVersePress, onContentTap],
+    [pageNumber, onVersePress, onContentTap]
   );
 
   const handleVerseLongPress = useCallback(
@@ -232,7 +225,7 @@ export function QuranView({
       };
       onVerseLongPress?.(event);
     },
-    [pageNumber, onVerseLongPress, resolveChapterForVerse],
+    [pageNumber, onVerseLongPress, resolveChapterForVerse]
   );
 
   const handleChapterPress = useCallback(
@@ -252,7 +245,7 @@ export function QuranView({
       };
       onChapterPress?.(event);
     },
-    [pageNumber, onChapterPress],
+    [pageNumber, onChapterPress]
   );
 
   const handleChapterLongPress = useCallback(
@@ -269,17 +262,14 @@ export function QuranView({
       };
       onChapterLongPress?.(event);
     },
-    [pageNumber, onChapterLongPress],
+    [pageNumber, onChapterLongPress]
   );
 
   const renderSuraNameBars = (lineIndex: number) => {
     if (!page || !showSuraName) return null;
 
-    const headers =
-      layout === 1441 ? page.chapterHeaders1441 : page.chapterHeaders1405;
-    const matchingHeaders = headers.filter(
-      (header: ChapterHeader) => header.line === lineIndex,
-    );
+    const headers = layout === 1441 ? page.chapterHeaders1441 : page.chapterHeaders1405;
+    const matchingHeaders = headers.filter((header: ChapterHeader) => header.line === lineIndex);
 
     return matchingHeaders.map((header: ChapterHeader, i: number) => {
       const centerX = width * header.centerX;
@@ -296,19 +286,9 @@ export function QuranView({
             top,
           }}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          onPress={() =>
-            handleChapterPress(
-              createChapter(header.chapter_id),
-              centerX,
-              centerY,
-            )
-          }
+          onPress={() => handleChapterPress(createChapter(header.chapter_id), centerX, centerY)}
           onLongPress={() =>
-            handleChapterLongPress(
-              createChapter(header.chapter_id),
-              centerX,
-              centerY,
-            )
+            handleChapterLongPress(createChapter(header.chapter_id), centerX, centerY)
           }
         >
           <SuraNameBar width={suraNameBarWidth} height={suraNameBarHeight} />
@@ -398,16 +378,12 @@ export function QuranView({
       if (!page) return;
 
       const verses = layout === 1441 ? page.verses1441 : page.verses1405;
-      const highlightsKey =
-        layout === 1441 ? "highlights1441" : "highlights1405";
+      const highlightsKey = layout === 1441 ? "highlights1441" : "highlights1405";
 
       const targetVerse = verses.findLast((v) => {
         const highlights = v[highlightsKey] as VerseHighlight[];
         return highlights.some(
-          (h) =>
-            h.line === lineIndex &&
-            h.left_position <= xIndex &&
-            h.right_position >= xIndex,
+          (h) => h.line === lineIndex && h.left_position <= xIndex && h.right_position >= xIndex
         );
       });
 
@@ -417,7 +393,7 @@ export function QuranView({
       resolveChapterForVerse(targetVerse);
       setVersePopupVisible(true);
     },
-    [width, page, layout, resolveChapterForVerse],
+    [width, page, layout, resolveChapterForVerse]
   );
 
   const renderLines = () => {
@@ -459,7 +435,7 @@ export function QuranView({
             {renderVerseMarkers(i)}
             {renderVerseHighlights(i)}
           </View>
-        </Pressable>,
+        </Pressable>
       );
     }
 
@@ -478,9 +454,7 @@ export function QuranView({
   if (error || !page) {
     return (
       <View style={styles.center}>
-        <Text style={styles.errorText}>
-          {error?.message || "Page not found"}
-        </Text>
+        <Text style={styles.errorText}>{error?.message || "Page not found"}</Text>
       </View>
     );
   }
@@ -490,10 +464,7 @@ export function QuranView({
   return (
     <View style={styles.container}>
       <ScrollView
-        contentContainerStyle={[
-          styles.linesContainer,
-          isCentered && styles.centeredContent,
-        ]}
+        contentContainerStyle={[styles.linesContainer, isCentered && styles.centeredContent]}
         showsVerticalScrollIndicator={true}
         indicatorStyle="black"
       >

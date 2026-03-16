@@ -49,21 +49,12 @@ export const VersePopup: React.FC<VersePopupProps> = ({
   }
 
   return (
-    <Modal
-      transparent
-      visible={visible}
-      animationType="fade"
-      onRequestClose={onClose}
-    >
+    <Modal transparent visible={visible} animationType="fade" onRequestClose={onClose}>
       <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={onClose}>
         <TouchableOpacity activeOpacity={1} style={styles.modal}>
           <View style={styles.header}>
-            <Text style={styles.chapterName}>
-              سورة {chapter?.arabicTitle || ""}
-            </Text>
-            <Text style={styles.verseNumber}>
-              الآية {verse.number}
-            </Text>
+            <Text style={styles.chapterName}>سورة {chapter?.arabicTitle || ""}</Text>
+            <Text style={styles.verseNumber}>الآية {verse.number}</Text>
           </View>
 
           <ScrollView style={styles.content}>
@@ -108,10 +99,7 @@ export const VersePopup: React.FC<VersePopupProps> = ({
               >
                 <Text style={styles.utilButtonText}>نسخ</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.utilButton}
-                onPress={onClose}
-              >
+              <TouchableOpacity style={styles.utilButton} onPress={onClose}>
                 <Text style={styles.utilButtonText}>إغلاق</Text>
               </TouchableOpacity>
             </View>
@@ -140,18 +128,11 @@ export const ChapterPopup: React.FC<ChapterPopupProps> = ({
   if (!chapter) return null;
 
   return (
-    <Modal
-      transparent
-      visible={visible}
-      animationType="fade"
-      onRequestClose={onClose}
-    >
+    <Modal transparent visible={visible} animationType="fade" onRequestClose={onClose}>
       <TouchableOpacity style={styles.overlay} activeOpacity={1} onPress={onClose}>
         <TouchableOpacity activeOpacity={1} style={styles.modal}>
           <View style={styles.header}>
-            <Text style={styles.chapterName}>
-              سورة {chapter.arabicTitle}
-            </Text>
+            <Text style={styles.chapterName}>سورة {chapter.arabicTitle}</Text>
             <Text style={styles.englishName}>{chapter.englishTitle}</Text>
           </View>
 
@@ -162,9 +143,7 @@ export const ChapterPopup: React.FC<ChapterPopupProps> = ({
             </View>
             <View style={styles.infoItem}>
               <Text style={styles.infoLabel}>نوع</Text>
-              <Text style={styles.infoValue}>
-                {chapter.isMeccan ? "مكية" : "مدنية"}
-              </Text>
+              <Text style={styles.infoValue}>{chapter.isMeccan ? "مكية" : "مدنية"}</Text>
             </View>
             <View style={styles.infoItem}>
               <Text style={styles.infoLabel}>الصفحة</Text>
@@ -176,13 +155,8 @@ export const ChapterPopup: React.FC<ChapterPopupProps> = ({
             <TouchableOpacity style={styles.utilButton} onPress={onClose}>
               <Text style={styles.utilButtonText}>إغلاق</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.chapterDetailButton}
-              onPress={onLongPress}
-            >
-              <Text style={styles.chapterDetailText}>
-                تفاصيل
-              </Text>
+            <TouchableOpacity style={styles.chapterDetailButton} onPress={onLongPress}>
+              <Text style={styles.chapterDetailText}>تفاصيل</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>

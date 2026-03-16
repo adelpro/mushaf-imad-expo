@@ -126,14 +126,14 @@ mushaf-imad-expo/
 
 ## Scripts
 
-| Command | Description |
-|---------|-------------|
-| `yarn start` | Start Expo development server |
+| Command             | Description                        |
+| ------------------- | ---------------------------------- |
+| `yarn start`        | Start Expo development server      |
 | `yarn generate-map` | Generate image map for Quran pages |
-| `yarn prebuild` | Generate native projects |
-| `yarn android` | Run on Android device/emulator |
-| `yarn ios` | Run on iOS simulator |
-| `yarn web` | Run in web browser |
+| `yarn prebuild`     | Generate native projects           |
+| `yarn android`      | Run on Android device/emulator     |
+| `yarn ios`          | Run on iOS simulator               |
+| `yarn web`          | Run in web browser                 |
 
 ## Database
 

@@ -8,62 +8,59 @@ interface ShareVerseCardProps {
   chapter: Chapter | null;
 }
 
-export const ShareVerseCard = forwardRef<View, ShareVerseCardProps>(
-  ({ verse, chapter }, ref) => {
-    const surahName = chapter?.arabicTitle || "";
+export const ShareVerseCard = forwardRef<View, ShareVerseCardProps>(function ShareVerseCard(
+  { verse, chapter },
+  ref
+) {
+  const surahName = chapter?.arabicTitle || "";
 
-    return (
-      <View ref={ref} collapsable={false} style={styles.card}>
-        {/* Decorative top border accent */}
-        <View style={styles.topAccent} />
+  return (
+    <View ref={ref} collapsable={false} style={styles.card}>
+      {/* Decorative top border accent */}
+      <View style={styles.topAccent} />
 
-        {/* Ornamental header */}
-        <View style={styles.headerSection}>
-          <View style={styles.ornamentLine}>
-            <View style={styles.ornamentDash} />
-            <Text style={styles.ornamentStar}>✦</Text>
-            <View style={styles.ornamentDash} />
-          </View>
-          <Text style={styles.bismillah}>﷽</Text>
-          <View style={styles.ornamentLine}>
-            <View style={styles.ornamentDash} />
-            <Text style={styles.ornamentDiamond}>◆</Text>
-            <View style={styles.ornamentDash} />
-          </View>
+      {/* Ornamental header */}
+      <View style={styles.headerSection}>
+        <View style={styles.ornamentLine}>
+          <View style={styles.ornamentDash} />
+          <Text style={styles.ornamentStar}>✦</Text>
+          <View style={styles.ornamentDash} />
         </View>
-
-        {/* Verse body */}
-        <View style={styles.verseSection}>
-          <Text style={styles.verseText}>
-            <Text style={styles.bracket}> ﴿</Text>
-            {verse.text}
-            <Text style={styles.bracket}>﴾ </Text>
-          </Text>
-        </View>
-
-        {/* Surah reference pill */}
-        <View style={styles.referenceSection}>
-          <View style={styles.referencePill}>
-            <Text style={styles.referenceText}>
-              سورة {surahName}
-            </Text>
-            <View style={styles.referenceDot} />
-            <Text style={styles.referenceText}>
-              الآية {toArabicDigits(verse.number)}
-            </Text>
-          </View>
-        </View>
-
-        {/* Branding footer */}
-        <View style={styles.brandingSection}>
-          <View style={styles.brandingLine} />
-          <Text style={styles.brandingText}>مصحف عماد</Text>
-          <Text style={styles.brandingSubtext}>Mushaf Imad</Text>
+        <Text style={styles.bismillah}>﷽</Text>
+        <View style={styles.ornamentLine}>
+          <View style={styles.ornamentDash} />
+          <Text style={styles.ornamentDiamond}>◆</Text>
+          <View style={styles.ornamentDash} />
         </View>
       </View>
-    );
-  },
-);
+
+      {/* Verse body */}
+      <View style={styles.verseSection}>
+        <Text style={styles.verseText}>
+          <Text style={styles.bracket}> ﴿</Text>
+          {verse.text}
+          <Text style={styles.bracket}>﴾ </Text>
+        </Text>
+      </View>
+
+      {/* Surah reference pill */}
+      <View style={styles.referenceSection}>
+        <View style={styles.referencePill}>
+          <Text style={styles.referenceText}>سورة {surahName}</Text>
+          <View style={styles.referenceDot} />
+          <Text style={styles.referenceText}>الآية {toArabicDigits(verse.number)}</Text>
+        </View>
+      </View>
+
+      {/* Branding footer */}
+      <View style={styles.brandingSection}>
+        <View style={styles.brandingLine} />
+        <Text style={styles.brandingText}>مصحف عماد</Text>
+        <Text style={styles.brandingSubtext}>Mushaf Imad</Text>
+      </View>
+    </View>
+  );
+});
 
 const styles = StyleSheet.create({
   card: {
@@ -77,7 +74,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#1B5E20",
   },
 
-  // Header
   headerSection: {
     alignItems: "center",
     paddingTop: 28,
@@ -107,7 +103,6 @@ const styles = StyleSheet.create({
     color: "#C5A55A",
   },
 
-  // Verse
   verseSection: {
     marginHorizontal: 28,
     marginVertical: 16,
@@ -134,7 +129,6 @@ const styles = StyleSheet.create({
     color: "#C5A55A",
   },
 
-  // Reference
   referenceSection: {
     alignItems: "center",
     marginBottom: 20,
@@ -159,8 +153,6 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     backgroundColor: "#C5A55A",
   },
-
-  // Branding
   brandingSection: {
     alignItems: "center",
     paddingBottom: 24,

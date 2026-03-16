@@ -1,11 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import {
-  Dimensions,
-  FlatList,
-  StyleSheet,
-  View,
-  ViewToken,
-} from "react-native";
+import { Dimensions, FlatList, StyleSheet, View, ViewToken } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { databaseService } from "../services/sqlite-service";
 import { getLastRead, setLastRead } from "../services/last-read-service";
@@ -127,43 +121,38 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
     };
   }, []);
 
-  const onViewableItemsChanged = useRef(
-    ({ viewableItems }: ViewableItemsChangedInfo) => {
-      const first = viewableItems[0];
-      const pageNum =
-        typeof first?.item === "number"
-          ? first.item
-          : Number.parseInt(first?.key ?? "", 10);
+  const onViewableItemsChanged = useRef(({ viewableItems }: ViewableItemsChangedInfo) => {
+    const first = viewableItems[0];
+    const pageNum =
+      typeof first?.item === "number" ? first.item : Number.parseInt(first?.key ?? "", 10);
 
-      if (!Number.isFinite(pageNum)) return;
+    if (!Number.isFinite(pageNum)) return;
 
-      if (dwellTimerRef.current) {
-        clearTimeout(dwellTimerRef.current);
-        dwellTimerRef.current = null;
-      }
+    if (dwellTimerRef.current) {
+      clearTimeout(dwellTimerRef.current);
+      dwellTimerRef.current = null;
+    }
 
-      setCurrentPage(pageNum);
-      useMushafStore.getState().setCurrentPage(pageNum);
-      currentDwellPageRef.current = pageNum;
+    setCurrentPage(pageNum);
+    useMushafStore.getState().setCurrentPage(pageNum);
+    currentDwellPageRef.current = pageNum;
 
-      if (chapterUpdateTimerRef.current) {
-        clearTimeout(chapterUpdateTimerRef.current);
-      }
-      chapterUpdateTimerRef.current = setTimeout(() => {
-        chapterUpdateTimerRef.current = null;
-        void updateChapterHighlight(pageNum);
-      }, CHAPTER_UPDATE_DEBOUNCE_MS);
+    if (chapterUpdateTimerRef.current) {
+      clearTimeout(chapterUpdateTimerRef.current);
+    }
+    chapterUpdateTimerRef.current = setTimeout(() => {
+      chapterUpdateTimerRef.current = null;
+      void updateChapterHighlight(pageNum);
+    }, CHAPTER_UPDATE_DEBOUNCE_MS);
 
-      dwellTimerRef.current = setTimeout(() => {
-        dwellTimerRef.current = null;
-        void persistLastRead(pageNum);
-        void addReadPage(pageNum).then(() => {
-          void getReadPagesCount().then((c) => useMushafStore.getState().setReadCount(c));
-        });
-      }, MIN_DWELL_MS);
-    },
-  ).current;
-
+    dwellTimerRef.current = setTimeout(() => {
+      dwellTimerRef.current = null;
+      void persistLastRead(pageNum);
+      void addReadPage(pageNum).then(() => {
+        void getReadPagesCount().then((c) => useMushafStore.getState().setReadCount(c));
+      });
+    }, MIN_DWELL_MS);
+  }).current;
   return (
     <View
       style={[
