@@ -1,19 +1,16 @@
 {
   "expo": {
-    "name": "mushaf-imad-expo",
-    "slug": "mushaf-imad-expo",
-    "scheme": "mushafimadexpo",
+    "name": "mushaf-imad-rn",
+    "slug": "mushaf-imad-rn",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.adelproexpo",
-      "infoPlist": {
-        "UIViewControllerBasedStatusBarAppearance": true
-      }
+      "bundleIdentifier": "com.adelpro.mushafimadrn"
     },
     "android": {
       "adaptiveIcon": {
@@ -22,24 +19,24 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.adelpro.mushafimadexpo"
+      "package": "com.adelpro.mushafimadrn"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-splash-screen",
-      "expo-sqlite",
-      "expo-font",
-      "expo-router"
-    ],
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "backgroundColor": "#FFF8E1",
-      "dark": {
-        "image": "./assets/splash-icon-dark.png",
-        "backgroundColor": "#000000"
-      }
-    }
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#FFF8E1",
+          "image": "./assets/splash-icon.png",
+          "dark": {
+            "image": "./assets/splash-icon-dark.png",
+            "backgroundColor": "#000000"
+          },
+          "imageWidth": 200
+        }
+      ]
+    ]
   }
 }
