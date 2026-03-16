@@ -1,17 +1,18 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
 import { Amiri_400Regular } from "@expo-google-fonts/amiri";
+import LottieView from "lottie-react-native";
 
 import { OnboardingScreen } from "../src/screens/onboarding-screen";
 import { useMushafStore } from "../src/store/mushaf-store";
 import { getLastRead } from "../src/services/last-read-service";
 import { hasSeenOnboarding } from "../src/services/onboarding-service";
+import { databaseService } from "../src/services/sqlite-service";
 import { colors } from "../src/theme";
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
@@ -20,6 +21,7 @@ SplashScreen.setOptions({ fade: true, duration: 1000 });
 export default function RootLayout() {
   const [appReady, setAppReady] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [isFirstLaunch, setIsFirstLaunch] = useState(false);
 
   const [fontsLoaded, fontError] = useFonts({
     uthmanTn1Bold: require("../assets/fonts/UthmanTN1B-Ver20.ttf"),
@@ -29,57 +31,107 @@ export default function RootLayout() {
   useEffect(() => {
     if (!fontsLoaded && !fontError) return;
 
-    void (async () => {
-      const [lastRead, seenOnboarding] = await Promise.all([getLastRead(), hasSeenOnboarding()]);
-      if (lastRead) {
-        useMushafStore.getState().setCurrentPage(lastRead.page);
+    const prepare = async () => {
+      try {
+        const firstLaunch = await databaseService.isFirstLaunch();
+        if (firstLaunch) setIsFirstLaunch(true);
+
+        await SplashScreen.hideAsync();
+        await databaseService.getDb();
+
+        const [lastRead, seenOnboarding] = await Promise.all([
+          getLastRead(),
+          hasSeenOnboarding(),
+        ]);
+        if (lastRead) {
+          useMushafStore.getState().setCurrentPage(lastRead.page);
+        }
+        setShowOnboarding(!seenOnboarding);
+      } catch (e) {
+        console.warn(e);
+      } finally {
+        setAppReady(true);
       }
-      setShowOnboarding(!seenOnboarding);
-      setAppReady(true);
-      await SplashScreen.hideAsync();
-    })();
+    };
+
+    prepare();
   }, [fontsLoaded, fontError]);
 
-  if (!fontsLoaded || !appReady) {
+  if (!fontsLoaded && !fontError) return null;
+
+  if (!appReady) {
     return (
-      <GestureHandlerRootView style={styles.flex1}>
-        <SafeAreaProvider>
-          <View style={styles.loader}>
-            <ActivityIndicator size="large" />
-          </View>
-        </SafeAreaProvider>
-      </GestureHandlerRootView>
+      <SafeAreaProvider>
+        <View style={styles.loader}>
+          <ActivityIndicator size="large" color={colors.brand.default} />
+        </View>
+      </SafeAreaProvider>
+    );
+  }
+
+  if (isFirstLaunch) {
+    return (
+      <SafeAreaProvider>
+        <View style={styles.splash}>
+          <LottieView
+            source={require("../assets/animations/mushaf.json")}
+            autoPlay
+            loop
+            style={styles.lottie}
+          />
+          <ActivityIndicator size="large" color={colors.brand.default} style={styles.spinner} />
+          <Text style={styles.message}>
+            جارٍ تجهيز المصحف…{"\n"}
+            سيكون جاهزاً في لحظات
+          </Text>
+        </View>
+      </SafeAreaProvider>
     );
   }
 
   if (showOnboarding) {
     return (
-      <GestureHandlerRootView style={styles.flex1}>
-        <SafeAreaProvider>
-          <StatusBar style="dark" backgroundColor={colors.background.default} />
-          <View style={styles.onboarding}>
-            <OnboardingScreen onDone={() => setShowOnboarding(false)} />
-          </View>
-        </SafeAreaProvider>
-      </GestureHandlerRootView>
+      <SafeAreaProvider>
+        <StatusBar style="dark" backgroundColor={colors.background.default} />
+        <View style={styles.onboarding}>
+          <OnboardingScreen onDone={() => setShowOnboarding(false)} />
+        </View>
+      </SafeAreaProvider>
     );
   }
 
   return (
-    <GestureHandlerRootView style={styles.flex1}>
-      <SafeAreaProvider>
-        <StatusBar style="dark" />
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(tabs)" />
-        </Stack>
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
+    <SafeAreaProvider>
+      <StatusBar style="dark" />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(tabs)" />
+      </Stack>
+    </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  flex1: {
+  splash: {
     flex: 1,
+    backgroundColor: colors.background.default,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 32,
+  },
+  lottie: {
+    width: 280,
+    height: 280,
+  },
+  spinner: {
+    marginTop: 20,
+    marginBottom: 16,
+  },
+  message: {
+    fontSize: 18,
+    lineHeight: 32,
+    textAlign: "center",
+    color: colors.text.secondary,
+    fontFamily: "uthmanTn1Bold",
   },
   loader: {
     flex: 1,

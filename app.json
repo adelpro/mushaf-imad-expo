@@ -7,6 +7,7 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "main": "index.ts",
 
     "ios": {
       "supportsTablet": true,
