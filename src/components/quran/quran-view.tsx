@@ -46,7 +46,6 @@ export function QuranView({
   showSuraName = true,
   showVerseMarkers = true,
   showHighlights = true,
-  digitsFormat = true,
   highlightColor = colors.state.textSelection,
   activeChapter,
   activeVerse,
@@ -316,7 +315,7 @@ export function QuranView({
           onPress={() => handleVersePress(m.verse, x, y)}
           onLongPress={() => handleVerseLongPress(m.verse, x, y)}
         >
-          <VerseFasel number={m.verse.number} scale={lineScale} digitsFormat={digitsFormat} />
+          <VerseFasel number={m.verse.number} scale={lineScale} />
         </TouchableOpacity>
       );
     });

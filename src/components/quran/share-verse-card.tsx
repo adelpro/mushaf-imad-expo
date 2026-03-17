@@ -1,7 +1,6 @@
 import React, { forwardRef } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Verse, Chapter } from "./types";
-import { toArabicDigits } from "../../utils/linguistic";
 
 interface ShareVerseCardProps {
   verse: Verse;
@@ -48,7 +47,7 @@ export const ShareVerseCard = forwardRef<View, ShareVerseCardProps>(function Sha
         <View style={styles.referencePill}>
           <Text style={styles.referenceText}>سورة {surahName}</Text>
           <View style={styles.referenceDot} />
-          <Text style={styles.referenceText}>الآية {toArabicDigits(verse.number)}</Text>
+          <Text style={styles.referenceText}>الآية {verse.number}</Text>
         </View>
       </View>
 
