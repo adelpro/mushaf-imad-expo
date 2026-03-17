@@ -152,6 +152,9 @@ export interface QuranViewProps {
   activeChapter?: number;
   activeVerse?: number | null;
 
+  /** When true, this page is the currently visible one; zoom is reset when becoming visible. */
+  isViewable?: boolean;
+
   // Callbacks
   onVersePress?: (event: VersePressEvent) => void;
   onVerseLongPress?: (event: VersePressEvent) => void;

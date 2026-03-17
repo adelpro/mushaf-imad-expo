@@ -175,6 +175,7 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
             <QuranView
               activeChapter={currentChapter}
               activeVerse={activeVerse}
+              isViewable={currentPage === item}
               onContentTap={handleContentTap}
               pageNumber={item}
             />
