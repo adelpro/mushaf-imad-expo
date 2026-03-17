@@ -3,6 +3,7 @@ import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
 import { Amiri_400Regular } from "@expo-google-fonts/amiri";
@@ -54,41 +55,47 @@ export default function RootLayout() {
 
   if (appReady) {
     return (
-      <SafeAreaProvider>
-        <StatusBar style="dark" />
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(tabs)" />
-        </Stack>
-      </SafeAreaProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaProvider>
+          <StatusBar style="dark" />
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(tabs)" />
+          </Stack>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
     );
   }
 
   if (isFirstLaunch) {
     return (
-      <SafeAreaProvider>
-        <View style={styles.splash}>
-          <LottieView
-            source={require("../assets/animations/mushaf.json")}
-            autoPlay
-            loop
-            style={styles.lottie}
-          />
-          <ActivityIndicator size="large" color={colors.brand.default} style={styles.spinner} />
-          <Text style={styles.message}>
-            جارٍ تجهيز المصحف…{"\n"}
-            سيكون جاهزاً في لحظات
-          </Text>
-        </View>
-      </SafeAreaProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaProvider>
+          <View style={styles.splash}>
+            <LottieView
+              source={require("../assets/animations/mushaf.json")}
+              autoPlay
+              loop
+              style={styles.lottie}
+            />
+            <ActivityIndicator size="large" color={colors.brand.default} style={styles.spinner} />
+            <Text style={styles.message}>
+              جارٍ تجهيز المصحف…{"\n"}
+              سيكون جاهزاً في لحظات
+            </Text>
+          </View>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
     );
   }
 
   return (
-    <SafeAreaProvider>
-      <View style={styles.loader}>
-        <ActivityIndicator size="large" color={colors.brand.default} />
-      </View>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <View style={styles.loader}>
+          <ActivityIndicator size="large" color={colors.brand.default} />
+        </View>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 
