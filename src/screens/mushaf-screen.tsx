@@ -1,20 +1,16 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import { Dimensions, FlatList, StyleSheet, View, ViewToken } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { PageJumpInput } from "../components/page-jump-input";
 import { databaseService } from "../services/sqlite-service";
-import { setLastRead } from "../services/last-read-service";
-import { addReadPage } from "../services/read-pages-service";
+import { getLastRead, setLastRead } from "../services/last-read-service";
+import { addReadPage, getReadPagesCount } from "../services/read-pages-service";
 import { QuranView } from "../components/quran";
 import { colors } from "../theme";
 import { useMushafStore } from "../store/mushaf-store";
 
 const { height, width } = Dimensions.get("window");
 
-/** Minimum time (ms) on a page before it counts as "read" for Continue Reading */
-const MIN_DWELL_MS = 12_000;
-
-/** Debounce (ms) before updating chapter highlight to reduce DB queries during fast scroll */
+const MIN_DWELL_MS = 1000;
 const CHAPTER_UPDATE_DEBOUNCE_MS = 250;
 
 type ViewableItemsChangedInfo = {
@@ -33,18 +29,19 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
   const jumpToPage = useMushafStore((s) => s.jumpToPage);
   const setJumpToPage = useMushafStore((s) => s.setJumpToPage);
   const storeCurrentPage = useMushafStore((s) => s.currentPage);
-  const setStoreCurrentPage = useMushafStore((s) => s.setCurrentPage);
+  const setReadCount = useMushafStore((s) => s.setReadCount);
+
   const pages = Array.from({ length: 604 }, (_, i) => i + 1);
-  const [currentPage, setCurrentPage] = useState(1);
   const flatListRef = useRef<FlatList<number>>(null);
   const dwellTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const chapterUpdateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const currentDwellPageRef = useRef<number>(1);
 
+  useEffect(() => {
+    void getReadPagesCount().then(setReadCount);
+  }, [setReadCount]);
+
   const initialScrollIndex = (() => {
-    // When coming from "أكمل" (Continue), jumpToPage is set and must be used exclusively.
-    // Do NOT fall back to storeCurrentPage here—that would use the last scroll position
-    // instead of the persisted last-read page.
     const target = jumpToPage ?? storeCurrentPage;
     if (target >= 1 && target <= 604) return target - 1;
     return 0;
@@ -52,13 +49,11 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
 
   useEffect(() => {
     if (jumpToPage != null) {
-      const page = jumpToPage;
-      setJumpToPage(null);
-      const index = page - 1;
-      const id = requestAnimationFrame(() => {
-        flatListRef.current?.scrollToIndex({ index, animated: false });
+      flatListRef.current?.scrollToIndex({
+        index: jumpToPage - 1,
+        animated: false,
       });
-      return () => cancelAnimationFrame(id);
+      setJumpToPage(null);
     }
   }, [jumpToPage, setJumpToPage]);
 
@@ -80,9 +75,7 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
       if (currentDwellPageRef.current !== pageNumber) return;
       const chapterRef = page?.verses1441?.[0]?.chapter_id ?? null;
       if (chapterRef != null) {
-        const chapter =
-          (await databaseService.getChapterByNumber(chapterRef)) ??
-          (await databaseService.getChapterByIdentifier(chapterRef));
+        const chapter = await databaseService.getChapterByIdentifier(chapterRef);
         if (chapter && currentDwellPageRef.current === pageNumber) {
           setCurrentChapter(chapter.number);
         }
@@ -94,12 +87,16 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
 
   async function persistLastRead(pageNumber: number) {
     try {
+      // Don't override a manual save on the same page or a later page
+      const existing = await getLastRead();
+      if (existing?.source === "manual" && existing.page >= pageNumber) {
+        return;
+      }
+
       const page = await databaseService.getPageByNumber(pageNumber);
       const chapterRef = page?.verses1441?.[0]?.chapter_id ?? null;
       if (chapterRef != null) {
-        const chapter =
-          (await databaseService.getChapterByNumber(chapterRef)) ??
-          (await databaseService.getChapterByIdentifier(chapterRef));
+        const chapter = await databaseService.getChapterByIdentifier(chapterRef);
         if (chapter) {
           const firstVerse = page?.verses1441?.[0];
           const ayah = firstVerse?.number ?? 1;
@@ -107,6 +104,7 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
             page: pageNumber,
             chapterNumber: chapter.number,
             ayah,
+            source: "auto",
           });
         }
       }
@@ -117,12 +115,8 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
 
   useEffect(() => {
     return () => {
-      if (dwellTimerRef.current) {
-        clearTimeout(dwellTimerRef.current);
-      }
-      if (chapterUpdateTimerRef.current) {
-        clearTimeout(chapterUpdateTimerRef.current);
-      }
+      if (dwellTimerRef.current) clearTimeout(dwellTimerRef.current);
+      if (chapterUpdateTimerRef.current) clearTimeout(chapterUpdateTimerRef.current);
     };
   }, []);
 
@@ -138,8 +132,7 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
       dwellTimerRef.current = null;
     }
 
-    setCurrentPage(pageNum);
-    setStoreCurrentPage(pageNum);
+    useMushafStore.getState().setCurrentPage(pageNum);
     currentDwellPageRef.current = pageNum;
 
     if (chapterUpdateTimerRef.current) {
@@ -153,17 +146,13 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
     dwellTimerRef.current = setTimeout(() => {
       dwellTimerRef.current = null;
       void persistLastRead(pageNum);
-      void addReadPage(pageNum);
+      void addReadPage(pageNum).then(() => {
+        void getReadPagesCount().then((c) => useMushafStore.getState().setReadCount(c));
+      });
     }, MIN_DWELL_MS);
   }).current;
-
-  const handleJumpToPage = useCallback((page: number) => {
-    const index = page - 1;
-    flatListRef.current?.scrollToIndex({ index, animated: false });
-  }, []);
-
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
       <FlatList
         ref={flatListRef}
         data={pages}
@@ -196,7 +185,6 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
         viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
         windowSize={3}
       />
-      <PageJumpInput currentPage={currentPage} onJumpToPage={handleJumpToPage} />
     </View>
   );
 }

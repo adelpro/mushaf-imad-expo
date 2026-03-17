@@ -1,19 +1,17 @@
 {
   "expo": {
-    "name": "mushaf-imad-expo",
-    "slug": "mushaf-imad-expo",
-    "scheme": "mushafimadexpo",
+    "name": "mushaf-imad-rn",
+    "slug": "mushaf-imad-rn",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "main": "index.ts",
+
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.adelproexpo",
-      "infoPlist": {
-        "UIViewControllerBasedStatusBarAppearance": true
-      }
+      "bundleIdentifier": "com.adelpro.mushafimadrn"
     },
     "android": {
       "adaptiveIcon": {
@@ -22,11 +20,14 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.adelpro.mushafimadexpo"
+      "package": "com.adelpro.mushafimadrn"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
+    "assetBundlePatterns": [
+      "assets/**/*"
+    ],
     "plugins": [
       [
         "expo-splash-screen",
@@ -39,10 +40,7 @@
           },
           "imageWidth": 200
         }
-      ],
-      "expo-sqlite",
-      "expo-font",
-      "expo-router"
+      ]
     ]
   }
 }

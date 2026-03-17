@@ -87,10 +87,8 @@ type MarkerEntry = {
 
 const VerseMarkersLayer = React.memo(function VerseMarkersLayer({
   markers,
-  digitsFormat,
 }: {
   markers: MarkerEntry[];
-  digitsFormat?: boolean;
 }) {
   if (markers.length === 0) return null;
 
@@ -109,7 +107,7 @@ const VerseMarkersLayer = React.memo(function VerseMarkersLayer({
               top: y - FASEL_HEIGHT / 2 + FASEL_CENTER_Y_OFFSET,
             }}
           >
-            <VerseFasel number={m.number} scale={LINE_SCALE} digitsFormat={digitsFormat} />
+            <VerseFasel number={m.number} scale={LINE_SCALE} />
           </View>
         );
       })}
@@ -165,14 +163,12 @@ interface Props {
   pageNumber: number;
   activeChapter?: number;
   activeVerse?: number | null;
-  digitsFormat?: boolean;
 }
 
 export const QuranPage = React.memo<Props>(function QuranPage({
   pageNumber,
   activeChapter,
   activeVerse,
-  digitsFormat = true,
 }) {
   const { page, loading, error, retry } = useQuranPage(pageNumber);
 
@@ -225,7 +221,7 @@ export const QuranPage = React.memo<Props>(function QuranPage({
             />
           )}
           <SurahTitlesLayer headers={headers} lineIndex={i} />
-          <VerseMarkersLayer markers={markers} digitsFormat={digitsFormat} />
+          <VerseMarkersLayer markers={markers} />
           <HighlightsLayer highlights={activeHighlights} lineIndex={i} />
         </View>
       );

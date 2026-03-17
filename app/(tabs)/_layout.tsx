@@ -1,9 +1,10 @@
 import { useCallback, useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 import { Tabs, useRouter, useSegments } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
 
+import { PageJumpInput } from "../../src/components/page-jump-input";
 import { TabFooter, type TabId } from "../../src/components/tab-footer";
+import { useMushafStore } from "../../src/store/mushaf-store";
 import { useFooterAutoHide } from "../../src/hooks/use-footer-auto-hide";
 import { useUiStore } from "../../src/store/ui-store";
 import { colors } from "../../src/theme";
@@ -18,6 +19,9 @@ export default function TabsLayout() {
   const segments = useSegments();
   const router = useRouter();
   const footerVisible = useUiStore((s) => s.footerVisible);
+  const currentPage = useMushafStore((s) => s.currentPage);
+  const readCount = useMushafStore((s) => s.readCount);
+  const setJumpToPage = useMushafStore((s) => s.setJumpToPage);
 
   useFooterAutoHide();
 
@@ -34,10 +38,11 @@ export default function TabsLayout() {
     [activeTab, router]
   );
 
+  const handleJumpToPage = useCallback((page: number) => setJumpToPage(page), [setJumpToPage]);
+
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.content}>
-        {/* Keep both tabs mounted so tab switch and Continue Reading are instant (no remount). */}
         <Tabs
           detachInactiveScreens={false}
           screenOptions={{
@@ -53,7 +58,16 @@ export default function TabsLayout() {
       <View style={styles.footerOverlay} pointerEvents="box-none">
         <TabFooter activeTab={activeTab} onTabChange={handleTabChange} visible={footerVisible} />
       </View>
-    </SafeAreaView>
+      {activeTab === "mushaf" && (
+        <View pointerEvents="box-none" style={styles.pageJumpOverlay}>
+          <PageJumpInput
+            currentPage={currentPage}
+            onJumpToPage={handleJumpToPage}
+            readCount={readCount}
+          />
+        </View>
+      )}
+    </View>
   );
 }
 
@@ -71,5 +85,8 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     overflow: "hidden",
+  },
+  pageJumpOverlay: {
+    ...StyleSheet.absoluteFillObject,
   },
 });

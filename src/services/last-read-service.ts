@@ -6,6 +6,8 @@ export type LastRead = {
   page: number;
   chapterNumber: number;
   ayah: number;
+  /** "manual" = saved by user long-press; "auto" = saved by dwell timer */
+  source?: "manual" | "auto";
 };
 
 export async function getLastRead(): Promise<LastRead | null> {
@@ -34,6 +36,14 @@ export async function getLastRead(): Promise<LastRead | null> {
 export async function setLastRead(value: LastRead): Promise<void> {
   try {
     await AsyncStorage.setItem(LAST_READ_KEY, JSON.stringify(value));
+  } catch {
+    // ignore
+  }
+}
+
+export async function clearLastRead(): Promise<void> {
+  try {
+    await AsyncStorage.removeItem(LAST_READ_KEY);
   } catch {
     // ignore
   }

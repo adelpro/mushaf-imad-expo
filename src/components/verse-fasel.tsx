@@ -1,7 +1,6 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import Fasel from "../../assets/images/fasel.svg";
-import { toArabicDigits } from "../utils/linguistic";
 import { colors } from "../theme";
 
 const BALANCE = 3.69;
@@ -13,10 +12,9 @@ const BASE_PADDING = 2 * BALANCE;
 type Props = {
   number: number;
   scale: number;
-  digitsFormat?: boolean;
 };
 
-export function VerseFasel({ number, scale, digitsFormat = true }: Props) {
+export function VerseFasel({ number, scale }: Props) {
   const width = BASE_WIDTH * scale;
   const height = BASE_HEIGHT * scale;
   const fontSize = BASE_FONT_SIZE * scale;
@@ -28,16 +26,18 @@ export function VerseFasel({ number, scale, digitsFormat = true }: Props) {
       <View style={styles.textContainer}>
         <Text
           adjustsFontSizeToFit
-          minimumFontScale={0.8}
+          minimumFontScale={0.3}
+          numberOfLines={1}
           style={[
             styles.text,
             {
               fontSize,
               paddingHorizontal,
+              width: "100%",
             },
           ]}
         >
-          {digitsFormat ? toArabicDigits(number) : String(number)}
+          {String(number)}
         </Text>
       </View>
     </View>

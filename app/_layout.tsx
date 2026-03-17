@@ -3,14 +3,16 @@ import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useFonts } from "expo-font";
 import { Amiri_400Regular } from "@expo-google-fonts/amiri";
 import LottieView from "lottie-react-native";
 
+import { OnboardingScreen } from "../src/screens/onboarding-screen";
 import { useMushafStore } from "../src/store/mushaf-store";
 import { getLastRead } from "../src/services/last-read-service";
+import { hasSeenOnboarding } from "../src/services/onboarding-service";
 import { databaseService } from "../src/services/sqlite-service";
 import { colors } from "../src/theme";
 
@@ -19,6 +21,7 @@ SplashScreen.setOptions({ fade: true, duration: 1000 });
 
 export default function RootLayout() {
   const [appReady, setAppReady] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [isFirstLaunch, setIsFirstLaunch] = useState(false);
 
   const [fontsLoaded, fontError] = useFonts({
@@ -37,10 +40,14 @@ export default function RootLayout() {
         await SplashScreen.hideAsync();
         await databaseService.getDb();
 
-        const lastRead = await getLastRead();
+        const [lastRead, seenOnboarding] = await Promise.all([
+          getLastRead(),
+          hasSeenOnboarding(),
+        ]);
         if (lastRead) {
           useMushafStore.getState().setCurrentPage(lastRead.page);
         }
+        setShowOnboarding(!seenOnboarding);
       } catch (e) {
         console.warn(e);
       } finally {
@@ -53,14 +60,13 @@ export default function RootLayout() {
 
   if (!fontsLoaded && !fontError) return null;
 
-  if (appReady) {
+  if (!appReady) {
     return (
       <GestureHandlerRootView style={{ flex: 1 }}>
         <SafeAreaProvider>
-          <StatusBar style="dark" />
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(tabs)" />
-          </Stack>
+          <View style={styles.loader}>
+            <ActivityIndicator size="large" color={colors.brand.default} />
+          </View>
         </SafeAreaProvider>
       </GestureHandlerRootView>
     );
@@ -88,12 +94,26 @@ export default function RootLayout() {
     );
   }
 
+  if (showOnboarding) {
+    return (
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaProvider>
+          <StatusBar style="dark" backgroundColor={colors.background.default} />
+          <View style={styles.onboarding}>
+            <OnboardingScreen onDone={() => setShowOnboarding(false)} />
+          </View>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
+    );
+  }
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <View style={styles.loader}>
-          <ActivityIndicator size="large" color={colors.brand.default} />
-        </View>
+        <StatusBar style="dark" />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(tabs)" />
+        </Stack>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
@@ -126,5 +146,9 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+  },
+  onboarding: {
+    flex: 1,
+    backgroundColor: colors.background.default,
   },
 });
