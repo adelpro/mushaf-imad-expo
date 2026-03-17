@@ -2,6 +2,7 @@
 
 export { QuranView } from "./quran-view";
 export { useQuranData } from "./use-quran-data";
+export { useZoomPan } from "./use-zoom-pan";
 export { VersePopup } from "./verse-popup";
 export { ChapterPopup } from "./chapter-popup";
 

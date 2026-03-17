@@ -13,6 +13,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { GestureDetector } from "react-native-gesture-handler";
+import Animated from "react-native-reanimated";
 import { captureRef } from "react-native-view-shot";
 import SuraNameBar from "../../../assets/images/sura_name_bar.svg";
 import { QuranImages } from "../../constants/image-map";
@@ -33,6 +35,7 @@ import {
   VersePressEvent,
 } from "./types";
 import { useQuranData } from "./use-quran-data";
+import { useZoomPan } from "./use-zoom-pan";
 import { VersePopup } from "./verse-popup";
 
 const { width } = Dimensions.get("window");
@@ -52,6 +55,7 @@ export function QuranView({
   onChapterPress,
   onChapterLongPress,
   onContentTap,
+  isViewable = false,
 }: QuranViewProps) {
   const { page, loading, error } = useQuranData(pageNumber);
 
@@ -74,6 +78,18 @@ export function QuranView({
   const faselWidth = 21 * faselBalance * lineScale;
   const faselHeight = 27 * faselBalance * lineScale;
   const faselCenterYOffset = config.verseMarkerCenterYOffset * lineScale;
+
+  const contentHeightMax = (lineHeight + LINE_GAP) * config.lineCount - LINE_GAP;
+  const isCentered = pageNumber === 1 || pageNumber === 2;
+  const lineCount = isCentered ? 9 : config.lineCount;
+  const contentHeight = (lineHeight + LINE_GAP) * lineCount - LINE_GAP;
+
+  const { gesture, animatedStyle, getContentX } = useZoomPan({
+    width,
+    contentHeight,
+    contentHeightMax,
+    isViewable,
+  });
 
   const resolveLineImage = useCallback(
     (lineIndex: number) => {
@@ -332,7 +348,8 @@ export function QuranView({
   const onLineLongPress = useCallback(
     (lineIndex: number, locationX: number) => {
       triggerImpactHaptic();
-      const xIndex = locationX / width;
+      const contentX = getContentX(locationX);
+      const xIndex = Math.max(0, Math.min(1, contentX / width));
 
       if (!page) return;
 
@@ -352,7 +369,7 @@ export function QuranView({
       resolveChapterForVerse(targetVerse);
       setVersePopupVisible(true);
     },
-    [width, page, layout, resolveChapterForVerse]
+    [width, page, layout, resolveChapterForVerse, getContentX]
   );
 
   const renderLines = () => {
@@ -418,16 +435,19 @@ export function QuranView({
     );
   }
 
-  const isCentered = pageNumber === 1 || pageNumber === 2;
-
   return (
     <View style={styles.container}>
       <ScrollView
         contentContainerStyle={[styles.linesContainer, isCentered && styles.centeredContent]}
         showsVerticalScrollIndicator={true}
         indicatorStyle="black"
+        nestedScrollEnabled
       >
-        {renderLines()}
+        <GestureDetector gesture={gesture}>
+          <Animated.View style={[{ width, height: contentHeight }, animatedStyle]}>
+            {renderLines()}
+          </Animated.View>
+        </GestureDetector>
       </ScrollView>
 
       <VersePopup
