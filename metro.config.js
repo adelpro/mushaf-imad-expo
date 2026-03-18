@@ -10,4 +10,8 @@ config.resolver.assetExts = config.resolver.assetExts.filter((ext) => ext !== "s
 config.resolver.assetExts.push("realm");
 config.resolver.sourceExts.push("svg");
 
+config.cacheVersion = "v1";
+
+config.watchFolders = [];
+
 module.exports = config;

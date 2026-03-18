@@ -3,6 +3,7 @@
     "name": "mushaf-imad-rn",
     "slug": "mushaf-imad-rn",
     "version": "1.0.0",
+    "scheme": "mushafimad",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
