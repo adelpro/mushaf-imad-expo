@@ -1,4 +1,4 @@
-# Mushaf Imad RN
+# Mushaf Imad Expo
 
 [![Version](https://img.shields.io/badge/version-0.2.0-athar-blue)](https://github.com/mushaf-imad/mushaf-imad-expo)
 [![Expo](https://img.shields.io/badge/Expo-54.0.33-blueviolet)](https://expo.dev)
@@ -31,7 +31,7 @@ A React Native Quran reading application built with Expo, featuring page-by-page
 
 ## Overview
 
-Mushaf Imad RN is a reusable Quran page rendering component for Expo applications. It displays Quran pages with support for interactive verses, chapter information, and customizable layouts.
+Mushaf Imad Expo is a reusable Quran page rendering component for Expo applications. It displays Quran pages with support for interactive verses, chapter information, and customizable layouts.
 
 ## Features
 
