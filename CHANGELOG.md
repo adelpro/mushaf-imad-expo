@@ -5,27 +5,50 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+[UNRELEASED]
+
 ## [0.2.0-athar] - 2026-03-10
 
 ### Added
 
-- **Share Verse Feature**: Added ability to share verses as text and image ([#37](https://github.com/mushaf-imad/mushaf-imad-expo/pull/37))
-- **Floating Page Jump Input**: Draggable floating input for quick page navigation ([#36](https://github.com/mushaf-imad/mushaf-imad-expo/pull/36))
-- **Quranic Brackets**: Make Quranic brackets inline with verse text ([#58](https://github.com/mushaf-imad/mushaf-imad-expo/pull/58))
-- **Loading States**: Added loading text to ActivityIndicator states
-- **Clean Build Scripts**: Added `clean:all` and `fresh` scripts for project reset
-
-### Changed
-
-- **Improved Share UI**: Enhanced share verse UI design
-- **State Management**: Migrated from local state to centralized Zustand store
-- **Rendering Optimization**: Memoized QuranPage rendering with specialized layer components
+- Add Default Parameter Values to Prevent Undefined Behavior
+- Add JSDoc Documentation
+- Search Component UX Improvements & Debounce Loading States
+- Standardize Component and hook Exports
+- Haptic Feedback
+- Add Reading Chart with Historical Tracking & Pages/Hizbs Toggle
+- Add ErrorBoundary Component & Base Error Logger
+- Add accessibility labels and hints to interactive elements for screen reader support
+- Add reminder system for verses and chapters
+- Add Rate on Store button to Settings
+- Add multi-bookmark system
+- Add custom reading themes (Sepia, High Contrast)
+- Add empty state illustration for no results in search
+- Enable arrow‑key navigation in MushafPage
 
 ### Fixed
 
-- **Font Error**: Removed font error throw to prevent app crash
-- **Atomic Updates**: Fixed atomic page state updates to prevent progressive rendering
-- **Verse Trigger**: Fixed verse trigger misalignment
+- Tutorial & Safe Area Fixes
+- Standardize Error Messages
+- Ammarahmed1263 — Type Consolidation & UI Refinement
+- iOS Edge-to-Edge Support, Safe Area Optimization, and RTL Alignment
+- Standardize camelCase naming in tracker.tsx and MushafPage.tsx
+- Update pan gesture constants, add sensitivity settings, and fix navigation glitch
+- Fix changelog modal RTL alignment and semantic list structure
+- Address PR review feedback for reminders feature
+- Platform-specific changelogs, RTL and safe area for What's New modal
+- Remove duplicated thumn entry in mushaf-elmadina-warsh-azrak
+- Use iOS safe area inset instead of hardcoded top margin
+- Replace raw route names in back button labels
+- iOS physical device QA audit
+- Add accessibility labels to icon-only buttons
+
+### Changed
+
+- IOS Edge-to-Edge Support, Safe Area Optimization, and RTL Alignment
+- IOS physical device QA audit
+- Add local development environment setup
+- Remove hardcoded timeout from splash screen
 
 ## [0.1.0] - 2026-02-10
 
