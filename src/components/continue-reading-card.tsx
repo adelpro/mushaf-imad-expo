@@ -10,6 +10,12 @@ export type ContinueReadingCardData = {
   page: number;
 };
 
+/**
+ * "أكمل القراءة" card — shows the reader's last position (surah, ayah,
+ * page) with a prominent continue button that jumps back into the mushaf at
+ * that page. Styled to match the app's green brand cards with a subtle
+ * decorative circle pattern and glassy badges.
+ */
 type ContinueReadingCardProps = {
   data: ContinueReadingCardData;
   onContinue: () => void;
@@ -17,44 +23,46 @@ type ContinueReadingCardProps = {
 
 export function ContinueReadingCard({ data, onContinue }: ContinueReadingCardProps) {
   return (
-    <View style={styles.cardWrapper}>
-      <View style={styles.card}>
-        <View style={styles.decorativePattern}>
-          <Svg width="128" height="128" viewBox="0 0 100 100">
-            <Circle cx="20" cy="20" r="40" fill={colors.text.inverse} opacity={0.15} />
-            <Circle cx="10" cy="50" r="25" fill={colors.text.inverse} opacity={0.1} />
-          </Svg>
+    <View style={styles.card}>
+      {/* Decorative background pattern */}
+      <Svg width="160" height="160" viewBox="0 0 160 160" style={styles.pattern}>
+        <Circle cx="130" cy="20" r="60" fill={colors.text.inverse} opacity={0.08} />
+        <Circle cx="150" cy="50" r="35" fill={colors.text.inverse} opacity={0.05} />
+        <Circle cx="20" cy="140" r="45" fill={colors.text.inverse} opacity={0.06} />
+      </Svg>
+
+      <View style={styles.cardContent}>
+        <View style={styles.cardHeader}>
+          <View style={styles.iconBox}>
+            <Feather name="book-open" size={15} color={colors.text.inverse} />
+          </View>
+          <Text style={styles.continueLabel}>أكمل القراءة</Text>
+          <View style={styles.pageBadge}>
+            <Text style={styles.pageBadgeText}>صفحة {data.page}</Text>
+          </View>
         </View>
 
-        <View style={styles.cardContent}>
-          <View style={styles.cardHeader}>
-            <View style={styles.iconBox}>
-              <Feather name="book-open" size={14} color={colors.text.inverse} />
+        <View style={styles.cardBody}>
+          <View style={styles.cardText}>
+            <Text style={styles.surahArabicName}>{data.surahArabicName}</Text>
+            <View style={styles.positionRow}>
+              <Feather name="map-pin" size={12} color="rgba(255,255,255,0.65)" />
+              <Text style={styles.position}>الآية {data.ayah}</Text>
             </View>
-            <Text style={styles.continueLabel}>أكمل القراءة</Text>
           </View>
 
-          <View style={styles.cardBody}>
-            <View style={styles.cardText}>
-              <Text style={styles.surahArabicName}>{data.surahArabicName}</Text>
-              <Text style={styles.position}>
-                الآية {data.ayah} • صفحة {data.page}
-              </Text>
-            </View>
-
-            <Pressable
-              style={({ pressed }) => [
-                styles.continueButton,
-                pressed && styles.continueButtonPressed,
-              ]}
-              onPress={onContinue}
-              accessibilityRole="button"
-              accessibilityLabel="أَكْمِل الْقِرَاءَة"
-            >
-              <Feather name="play" size={14} color={colors.text.primary} style={styles.playIcon} />
-              <Text style={styles.continueButtonText}>أكمل</Text>
-            </Pressable>
-          </View>
+          <Pressable
+            style={({ pressed }) => [
+              styles.continueButton,
+              pressed && styles.continueButtonPressed,
+            ]}
+            onPress={onContinue}
+            accessibilityRole="button"
+            accessibilityLabel="أَكْمِل الْقِرَاءَة"
+          >
+            <Feather name="play" size={15} color={colors.brand.default} style={styles.playIcon} />
+            <Text style={styles.continueButtonText}>أكمل</Text>
+          </Pressable>
         </View>
       </View>
     </View>
@@ -62,26 +70,21 @@ export function ContinueReadingCard({ data, onContinue }: ContinueReadingCardPro
 }
 
 const styles = StyleSheet.create({
-  cardWrapper: {
-    marginBottom: 24,
-  },
   card: {
-    borderRadius: 16,
+    borderRadius: 20,
     backgroundColor: colors.brand.default,
     overflow: "hidden",
     shadowColor: colors.shadow.default,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.16,
+    shadowRadius: 14,
     elevation: 6,
   },
-  decorativePattern: {
+  pattern: {
     position: "absolute",
     top: 0,
     left: 0,
-    width: 128,
-    height: 128,
-    opacity: 0.6,
+    opacity: 0.8,
   },
   cardContent: {
     position: "relative",
@@ -91,27 +94,41 @@ const styles = StyleSheet.create({
   cardHeader: {
     flexDirection: "row-reverse",
     alignItems: "center",
-    justifyContent: "flex-start",
-    gap: 8,
-    marginBottom: 16,
+    gap: 10,
+    marginBottom: 18,
   },
   iconBox: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
+    width: 30,
+    height: 30,
+    borderRadius: 10,
     backgroundColor: "rgba(255, 255, 255, 0.2)",
     alignItems: "center",
     justifyContent: "center",
   },
   continueLabel: {
-    fontSize: 12,
+    fontSize: 13,
+    fontWeight: "700",
+    color: "rgba(255, 255, 255, 0.9)",
+    writingDirection: "rtl",
+  },
+  pageBadge: {
+    marginLeft: "auto",
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
+  },
+  pageBadgeText: {
+    color: colors.text.inverse,
+    fontSize: 11,
     fontWeight: "600",
-    color: "rgba(255, 255, 255, 0.85)",
     writingDirection: "rtl",
   },
   cardBody: {
     flexDirection: "row-reverse",
-    alignItems: "flex-end",
+    alignItems: "center",
     justifyContent: "space-between",
     gap: 16,
   },
@@ -119,12 +136,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   surahArabicName: {
-    fontSize: 22,
+    fontSize: 24,
     fontFamily: "uthmanTn1Bold",
     color: colors.text.inverse,
     marginBottom: 8,
     writingDirection: "rtl",
     textAlign: "right",
+  },
+  positionRow: {
+    flexDirection: "row-reverse",
+    alignItems: "center",
+    gap: 6,
   },
   position: {
     fontSize: 12,
@@ -137,27 +159,31 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: colors.text.inverse,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 22,
+    borderRadius: 14,
     shadowColor: colors.shadow.default,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 3,
   },
   continueButtonPressed: {
     opacity: 0.9,
+    transform: [{ scale: 0.97 }],
   },
   playIcon: {
-    marginRight: 8,
+    marginLeft: 0,
+    marginRight: 0,
   },
   continueButtonText: {
     fontSize: 15,
     fontFamily: "Amiri_400Regular",
-    color: colors.text.primary,
+    color: colors.brand.default,
+    fontWeight: "700",
     writingDirection: "rtl",
     lineHeight: 20,
+    marginLeft: 8,
     ...(Platform.OS === "android" && { includeFontPadding: false }),
   },
 });

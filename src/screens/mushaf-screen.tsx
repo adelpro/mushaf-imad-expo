@@ -4,13 +4,16 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { databaseService } from "../services/sqlite-service";
 import { getLastRead, setLastRead } from "../services/last-read-service";
 import { addReadPage, getReadPagesCount } from "../services/read-pages-service";
-import { QuranView } from "../components/quran";
+import { QuranView, VersePressEvent } from "../components/quran";
 import { colors } from "../theme";
 import { useMushafStore } from "../store/mushaf-store";
 
 const { height, width } = Dimensions.get("window");
 
-const MIN_DWELL_MS = 1000;
+const TOTAL_MUSHAF_PAGES = 604;
+// Position tracking only (not a reading-count signal): how long to wait after
+// the reader lands on a page before persisting it as the "continue" position.
+const LAST_READ_DEBOUNCE_MS = 500;
 const CHAPTER_UPDATE_DEBOUNCE_MS = 250;
 
 type ViewableItemsChangedInfo = {
@@ -31,21 +34,38 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
   const storeCurrentPage = useMushafStore((s) => s.currentPage);
   const setReadCount = useMushafStore((s) => s.setReadCount);
 
-  const pages = Array.from({ length: 604 }, (_, i) => i + 1);
+  const pages = Array.from({ length: TOTAL_MUSHAF_PAGES }, (_, i) => i + 1);
+
+  // Where the reader starts (a jump target or the saved position). Used both
+  // for the initial scroll and as the "previous page" seed so the first
+  // viewability event never counts pages the reader skipped via a jump.
+  const initialTarget = (() => {
+    const target = jumpToPage ?? storeCurrentPage;
+    return target >= 1 && target <= TOTAL_MUSHAF_PAGES ? target : 1;
+  })();
+
   const flatListRef = useRef<FlatList<number>>(null);
-  const dwellTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastReadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const chapterUpdateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const currentDwellPageRef = useRef<number>(1);
+  const currentViewablePageRef = useRef<number>(initialTarget);
+  const sessionStartedRef = useRef(false);
+
+  // Practical reading count — a page counts as read through real actions:
+  //  1. Tapping a verse on the page (instant, strongest signal).
+  //  2. Leaving the page (swiping to another page) — the reader moved on.
+  //  3. Leaving the mushaf screen — the page being read counts on exit.
+  const markPageRead = useCallback((page: number) => {
+    if (!Number.isFinite(page) || page < 1 || page > TOTAL_MUSHAF_PAGES) return;
+    void addReadPage(page).then(() => {
+      void getReadPagesCount().then((c) => useMushafStore.getState().setReadCount(c));
+    });
+  }, []);
 
   useEffect(() => {
     void getReadPagesCount().then(setReadCount);
   }, [setReadCount]);
 
-  const initialScrollIndex = (() => {
-    const target = jumpToPage ?? storeCurrentPage;
-    if (target >= 1 && target <= 604) return target - 1;
-    return 0;
-  })();
+  const initialScrollIndex = initialTarget - 1;
 
   useEffect(() => {
     if (jumpToPage != null) {
@@ -57,26 +77,43 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
     }
   }, [jumpToPage, setJumpToPage]);
 
+  // Leaving the mushaf counts the page the reader was on last.
+  useEffect(() => {
+    return () => {
+      if (lastReadTimerRef.current) clearTimeout(lastReadTimerRef.current);
+      if (chapterUpdateTimerRef.current) clearTimeout(chapterUpdateTimerRef.current);
+      if (sessionStartedRef.current) {
+        markPageRead(currentViewablePageRef.current);
+      }
+    };
+  }, [markPageRead]);
+
   const handleContentTap = useCallback(() => {
     onContentTap();
-    const pageToSave = currentDwellPageRef.current;
+    const pageToSave = currentViewablePageRef.current;
     if (Number.isFinite(pageToSave)) {
-      if (dwellTimerRef.current) {
-        clearTimeout(dwellTimerRef.current);
-        dwellTimerRef.current = null;
+      if (lastReadTimerRef.current) {
+        clearTimeout(lastReadTimerRef.current);
+        lastReadTimerRef.current = null;
       }
       void persistLastRead(pageToSave);
     }
   }, [onContentTap]);
 
+  // Tapping a verse means the reader is engaging with the page — count it now.
+  const handleVersePress = useCallback(
+    (event: VersePressEvent) => markPageRead(event.page),
+    [markPageRead]
+  );
+
   async function updateChapterHighlight(pageNumber: number) {
     try {
       const page = await databaseService.getPageByNumber(pageNumber);
-      if (currentDwellPageRef.current !== pageNumber) return;
+      if (currentViewablePageRef.current !== pageNumber) return;
       const chapterRef = page?.verses1441?.[0]?.chapter_id ?? null;
       if (chapterRef != null) {
         const chapter = await databaseService.getChapterByIdentifier(chapterRef);
-        if (chapter && currentDwellPageRef.current === pageNumber) {
+        if (chapter && currentViewablePageRef.current === pageNumber) {
           setCurrentChapter(chapter.number);
         }
       }
@@ -113,13 +150,6 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
     }
   }
 
-  useEffect(() => {
-    return () => {
-      if (dwellTimerRef.current) clearTimeout(dwellTimerRef.current);
-      if (chapterUpdateTimerRef.current) clearTimeout(chapterUpdateTimerRef.current);
-    };
-  }, []);
-
   const onViewableItemsChanged = useRef(({ viewableItems }: ViewableItemsChangedInfo) => {
     const first = viewableItems[0];
     const pageNum =
@@ -127,13 +157,20 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
 
     if (!Number.isFinite(pageNum)) return;
 
-    if (dwellTimerRef.current) {
-      clearTimeout(dwellTimerRef.current);
-      dwellTimerRef.current = null;
+    // The page the reader just left counts as read (they moved on).
+    const previousPage = currentViewablePageRef.current;
+    if (
+      sessionStartedRef.current &&
+      previousPage !== pageNum &&
+      previousPage >= 1 &&
+      previousPage <= TOTAL_MUSHAF_PAGES
+    ) {
+      markPageRead(previousPage);
     }
+    sessionStartedRef.current = true;
 
     useMushafStore.getState().setCurrentPage(pageNum);
-    currentDwellPageRef.current = pageNum;
+    currentViewablePageRef.current = pageNum;
 
     if (chapterUpdateTimerRef.current) {
       clearTimeout(chapterUpdateTimerRef.current);
@@ -143,14 +180,17 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
       void updateChapterHighlight(pageNum);
     }, CHAPTER_UPDATE_DEBOUNCE_MS);
 
-    dwellTimerRef.current = setTimeout(() => {
-      dwellTimerRef.current = null;
+    // Keep the "continue reading" position in sync (position only, debounced
+    // so fast flipping doesn't spam SQLite).
+    if (lastReadTimerRef.current) {
+      clearTimeout(lastReadTimerRef.current);
+    }
+    lastReadTimerRef.current = setTimeout(() => {
+      lastReadTimerRef.current = null;
       void persistLastRead(pageNum);
-      void addReadPage(pageNum).then(() => {
-        void getReadPagesCount().then((c) => useMushafStore.getState().setReadCount(c));
-      });
-    }, MIN_DWELL_MS);
+    }, LAST_READ_DEBOUNCE_MS);
   }).current;
+
   return (
     <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
       <FlatList
@@ -177,6 +217,7 @@ export function MushafScreen({ onContentTap }: MushafScreenProps) {
               activeVerse={activeVerse}
               isViewable={storeCurrentPage === item}
               onContentTap={handleContentTap}
+              onVersePress={handleVersePress}
               pageNumber={item}
             />
           </View>

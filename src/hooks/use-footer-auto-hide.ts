@@ -5,14 +5,18 @@ import { useUiStore, FOOTER_AUTO_HIDE_DELAY_MS } from "../store/ui-store";
  * Subscribes to user activity and hides the footer after a period of inactivity.
  * Call reportUserActivity() from screens when the user taps; that shows the
  * footer and resets the auto-hide timer.
+ *
+ * Pass `enabled: false` on screens where the footer should stay visible (e.g.
+ * the progress screen, which has no tap-to-toggle handler to bring it back).
  */
-export function useFooterAutoHide() {
+export function useFooterAutoHide(enabled = true) {
   const lastActivityAt = useUiStore((s) => s.lastActivityAt);
   const footerVisible = useUiStore((s) => s.footerVisible);
   const setFooterVisible = useUiStore((s) => s.setFooterVisible);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    if (!enabled) return;
     if (!footerVisible) return;
 
     const scheduleHide = () => {
@@ -30,5 +34,5 @@ export function useFooterAutoHide() {
         timeoutRef.current = null;
       }
     };
-  }, [lastActivityAt, footerVisible, setFooterVisible]);
+  }, [enabled, lastActivityAt, footerVisible, setFooterVisible]);
 }
