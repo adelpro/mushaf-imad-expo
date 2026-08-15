@@ -3,7 +3,8 @@
   "version": "0.2.0-athar",
   "main": "expo-router/entry",
   "scripts": {
-    "start": "expo start",
+    "start": "node scripts/start-app.js",
+    "export:app": "node scripts/export-app.js",
     "generate-map": "node scripts/generate-map.js",
     "prebuild": "npx expo prebuild --clean",
     "android": "expo run:android -d",
