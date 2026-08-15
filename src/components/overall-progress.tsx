@@ -1,11 +1,14 @@
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Dimensions, Pressable, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 import { TOTAL_PAGES, TOTAL_VERSES } from "../constants/mushaf";
 import { toArabicDigits } from "../utils/date-utils";
 import { colors } from "../theme";
 
-const SIZE = 210;
+// Ring diameter is capped so it always fits inside the card on narrow
+// screens (card width ≈ screen − 40px page padding − 44px card padding),
+// while a floor keeps it usable on ultra-narrow devices.
+const SIZE = Math.min(210, Math.max(160, Dimensions.get("window").width - 84));
 const OUTER_STROKE_WIDTH = 16;
 const INNER_STROKE_WIDTH = 11;
 const OUTER_RADIUS = (SIZE - OUTER_STROKE_WIDTH) / 2;

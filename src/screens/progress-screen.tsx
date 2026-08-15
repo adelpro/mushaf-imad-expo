@@ -337,6 +337,11 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: 20,
     paddingBottom: 48,
+    // On tablets/wide screens keep the report column-shaped and centered
+    // instead of stretching edge to edge.
+    width: "100%",
+    maxWidth: 640,
+    alignSelf: "center",
   },
   header: {
     flexDirection: "row-reverse",
