@@ -201,8 +201,13 @@ export function ProgressScreen({ onContinueReading }: ProgressScreenProps) {
           style: "destructive",
           onPress: async () => {
             setLoading(true);
-            await Promise.all([clearLastRead(), clearAllReadProgress()]);
-            await loadLastRead();
+            try {
+              await Promise.all([clearLastRead(), clearAllReadProgress()]);
+            } finally {
+              // Always reload (and clear the loading state) even if a clear
+              // call rejects — otherwise the screen stays stuck on the spinner.
+              await loadLastRead();
+            }
           },
         },
       ]
@@ -465,6 +470,6 @@ const styles = StyleSheet.create({
   resetButtonText: {
     color: colors.text.error,
     fontSize: 15,
-    fontFamily: "uthman_tn1_bold",
+    fontFamily: "uthmanTn1Bold",
   },
 });

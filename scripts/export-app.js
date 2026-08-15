@@ -14,7 +14,12 @@ const limiter = path.join(__dirname, "limit-fs-concurrency.js");
 const cli = path.join(__dirname, "..", "node_modules", "@expo", "cli", "build", "bin", "cli");
 
 const args = process.argv.slice(2);
-const expoArgs = ["export", "--max-workers", "1", ...args];
+const expoArgs = ["export", ...args];
+// Limit bundling workers by default (EMFILE), but never override a
+// --max-workers flag the caller already passed.
+if (!args.some((a) => a.startsWith("--max-workers"))) {
+  expoArgs.push("--max-workers", "1");
+}
 
 console.log(`[export-app] running: node ${path.relative(process.cwd(), cli)} ${expoArgs.join(" ")}`);
 
@@ -22,7 +27,7 @@ const result = spawnSync(process.execPath, [cli, ...expoArgs], {
   cwd: path.join(__dirname, ".."),
   env: {
     ...process.env,
-    NODE_OPTIONS: `-r ${limiter}${process.env.NODE_OPTIONS ? " " + process.env.NODE_OPTIONS : ""}`,
+    NODE_OPTIONS: `-r "${limiter}"${process.env.NODE_OPTIONS ? " " + process.env.NODE_OPTIONS : ""}`,
   },
   stdio: "inherit",
 });

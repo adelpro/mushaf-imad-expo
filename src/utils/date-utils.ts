@@ -34,7 +34,12 @@ export function startOfToday(now: Date = new Date()): Date {
 /** The date `daysBefore` days before `anchor` (inclusive), at midnight. */
 export function dateDaysBefore(daysBefore: number, anchor: Date = new Date()): Date {
   const start = startOfToday(anchor);
-  return new Date(start.getTime() - daysBefore * DAY_MS);
+  // Use calendar-day arithmetic (setDate) rather than subtracting a fixed
+  // number of milliseconds: on DST transitions a day is 23/25 hours long and
+  // millisecond math would duplicate or skip date keys.
+  const result = new Date(start);
+  result.setDate(start.getDate() - daysBefore);
+  return result;
 }
 
 /**

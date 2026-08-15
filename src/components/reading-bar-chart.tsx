@@ -63,9 +63,10 @@ export function ReadingBarChart({
   // several charts with the same title are rendered on one screen).
   const gradientId = useRef(`barGrad-${++gradientCounter}`).current;
 
-  // Keep charts readable: if there are too many bars, aggregate into buckets
-  // by grouping consecutive entries (keeps the last bucket as-is).
-  const bars = data.length > MAX_BARS ? bucketize(data, Math.ceil(data.length / MAX_BARS)) : data;
+  // Keep charts readable: if there are too many bars, aggregate consecutive
+  // entries into at most MAX_BARS buckets (the last bucket stays as-is).
+  // `bucketize` takes the number of buckets, not a group size.
+  const bars = data.length > MAX_BARS ? bucketize(data, MAX_BARS) : data;
 
   if (bars.length === 0) {
     return (

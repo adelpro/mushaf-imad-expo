@@ -3,6 +3,7 @@ import {
   arabicShortDate,
   bucketDailyCounts,
   computeStreaks,
+  dateDaysBefore,
   fillDailyCounts,
   getLastDateKeys,
   toArabicDigits,
@@ -111,6 +112,18 @@ describe("computeStreaks", () => {
       current: 2,
       best: 3,
     });
+  });
+});
+
+describe("dateDaysBefore (calendar-day arithmetic)", () => {
+  it("returns the same calendar day even across a DST transition", () => {
+    // 2026-10-25 is the EU DST fall-back (a 25-hour day); subtracting 1 day
+    // must land on 2026-10-24, not 2026-10-23T23:00.
+    const anchor = new Date(2026, 9, 25, 12, 0, 0);
+    const d = dateDaysBefore(1, anchor);
+    expect(d.getFullYear()).toBe(2026);
+    expect(d.getMonth()).toBe(9);
+    expect(d.getDate()).toBe(24);
   });
 });
 

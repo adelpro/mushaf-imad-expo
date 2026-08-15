@@ -22,7 +22,7 @@ const result = spawnSync(process.execPath, [cli, ...expoArgs], {
   cwd: path.join(__dirname, ".."),
   env: {
     ...process.env,
-    NODE_OPTIONS: `-r ${limiter}${process.env.NODE_OPTIONS ? " " + process.env.NODE_OPTIONS : ""}`,
+    NODE_OPTIONS: `-r "${limiter}"${process.env.NODE_OPTIONS ? " " + process.env.NODE_OPTIONS : ""}`,
   },
   stdio: "inherit",
 });

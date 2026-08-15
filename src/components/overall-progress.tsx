@@ -3,6 +3,7 @@ import { Dimensions, Pressable, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 import { TOTAL_PAGES, TOTAL_VERSES } from "../constants/mushaf";
 import { toArabicDigits } from "../utils/date-utils";
+import { MIN_DAILY_GOAL, MAX_DAILY_GOAL } from "../services/read-history-service";
 import { colors } from "../theme";
 
 // Ring diameter is capped so it always fits inside the card on narrow
@@ -126,8 +127,10 @@ export function OverallProgress({
   const wirdPct = dailyGoal > 0 ? wirdCount / dailyGoal : 0;
   const clampedWirdPct = Math.min(Math.max(wirdPct, 0), 1);
 
-  const goalMinusDisabled = dailyGoal <= 1;
-  const goalPlusDisabled = dailyGoal >= 60;
+  // Stepper buttons clamp to the shared goal bounds (kept in sync with the
+  // service constants instead of duplicating the numbers).
+  const goalMinusDisabled = dailyGoal <= MIN_DAILY_GOAL;
+  const goalPlusDisabled = dailyGoal >= MAX_DAILY_GOAL;
 
   return (
     <View style={styles.card}>
@@ -140,7 +143,6 @@ export function OverallProgress({
           <Text style={styles.khatmaBadgeText}>ختمة</Text>
         </View>
       </View>
-
       <View style={styles.ringWrapper}>
         <Svg width={SIZE} height={SIZE} style={styles.svg}>
           {/* Khatma ring (outer) */}
@@ -171,7 +173,6 @@ export function OverallProgress({
           </Text>
         </View>
       </View>
-
       {/* Legend with live percentages */}
       <View style={styles.legendRow}>
         <View style={styles.legendItem}>
@@ -187,7 +188,6 @@ export function OverallProgress({
           </Text>
         </View>
       </View>
-
       {/* Wird (daily goal) row */}
       <View style={styles.wirdRow}>
         <View style={styles.wirdInfo}>
@@ -225,12 +225,10 @@ export function OverallProgress({
           </View>
         )}
       </View>
-
       {/* Wird progress bar (today's goal) */}
       <View style={styles.wirdBarTrack}>
         <View style={[styles.wirdBarFill, { width: `${clampedWirdPct * 100}%` }]} />
       </View>
-
       <View style={styles.statsBar}>
         <StatItem label="الصفحات المقروءة" value={readCount} total={TOTAL_PAGES} />
         <View style={styles.statDivider} />
@@ -241,13 +239,16 @@ export function OverallProgress({
         />
         <View style={styles.statDivider} />
         <StatItem label="المتبقي" value={Math.max(TOTAL_PAGES - readCount, 0)} unit="صفحة" />
-      </View>
-
+      </View>{" "}
       {/* Completion estimate based on average reading pace. Only shown when
           the average is at least 1 page/day — with lower averages the number
           of days becomes absurdly large and demotivating, so a gentle hint is
           shown instead. */}
-      {avgPagesPerDay >= 1 && readCount > 0 ? (
+      {readCount >= TOTAL_PAGES ? (
+        <View style={styles.estimateRow}>
+          <Text style={styles.estimateText}>🎉 مبارك! أكملت ختمة القرآن الكريم</Text>
+        </View>
+      ) : avgPagesPerDay >= 1 && readCount > 0 ? (
         <View style={styles.estimateRow}>
           <Text style={styles.estimateText}>
             بمعدل {toArabicDigits(avgPagesPerDay.toFixed(1)).replace(".", "٫")} صفحة/يوم، متبقٍ لك ~

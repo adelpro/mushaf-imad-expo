@@ -2,6 +2,7 @@ import React from "react";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 import Feather from "@expo/vector-icons/Feather";
+import { toArabicDigits } from "../utils/date-utils";
 import { colors } from "../theme";
 
 export type ContinueReadingCardData = {
@@ -38,7 +39,7 @@ export function ContinueReadingCard({ data, onContinue }: ContinueReadingCardPro
           </View>
           <Text style={styles.continueLabel}>أكمل القراءة</Text>
           <View style={styles.pageBadge}>
-            <Text style={styles.pageBadgeText}>صفحة {data.page}</Text>
+            <Text style={styles.pageBadgeText}>صفحة {toArabicDigits(data.page)}</Text>
           </View>
         </View>
 
@@ -47,7 +48,7 @@ export function ContinueReadingCard({ data, onContinue }: ContinueReadingCardPro
             <Text style={styles.surahArabicName}>{data.surahArabicName}</Text>
             <View style={styles.positionRow}>
               <Feather name="map-pin" size={12} color="rgba(255,255,255,0.65)" />
-              <Text style={styles.position}>الآية {data.ayah}</Text>
+              <Text style={styles.position}>الآية {toArabicDigits(data.ayah)}</Text>
             </View>
           </View>
 
