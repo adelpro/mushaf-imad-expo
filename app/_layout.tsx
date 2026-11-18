@@ -40,6 +40,11 @@ export default function RootLayout() {
         await SplashScreen.hideAsync();
         await databaseService.getDb();
 
+        // First launch: the mushaf splash is only a temporary preparation
+        // screen — once the database is ready, dismiss it so the user can
+        // proceed instead of being stuck on "جارٍ تجهيز المصحف" forever.
+        setIsFirstLaunch(false);
+
         const [lastRead, seenOnboarding] = await Promise.all([
           getLastRead(),
           hasSeenOnboarding(),

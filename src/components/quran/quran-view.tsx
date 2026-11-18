@@ -24,7 +24,6 @@ import { colors } from "../../theme";
 import { triggerImpactHaptic, triggerSelectionHaptic } from "../../utils/triggerHaptics";
 import { VerseFasel } from "../verse-fasel";
 import { setLastRead } from "../../services/last-read-service";
-import { addReadPagesUpTo } from "../../services/read-pages-service";
 import { ChapterPopup } from "./chapter-popup";
 import { DEFAULT_CONFIG } from "./constants";
 import { ShareVerseCard } from "./share-verse-card";
@@ -190,8 +189,9 @@ export function QuranView({
         ayah: ayahNumber,
         source: "manual",
       });
-      // Mark all pages from 1 up to current page as read
-      await addReadPagesUpTo(pageNumber);
+      // Note: saving progress only persists the reading position. Pages are
+      // counted as read only after the user actually dwells on them in the
+      // mushaf view — a jump must not fabricate read history.
       setVersePopupVisible(false);
       Alert.alert(
         "تم حفظ التقدم ✅",

@@ -1,10 +1,20 @@
+/**
+ * Read-pages service — the khatma (whole-Quran completion) counter.
+ *
+ * Stores the set of page numbers the user has actually read. Pages are added
+ * only through real reading actions (tapping a verse, swiping to the next
+ * page, or leaving the mushaf on a page) — never by merely viewing or
+ * jumping. Each page read also counts toward today's wird via
+ * read-history-service, so the daily goal and charts stay in sync.
+ */
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { TOTAL_PAGES } from "../constants/mushaf";
+import { addPagesToReadHistory, clearReadHistory } from "./read-history-service";
 
 const READ_PAGES_KEY = "mushaf_read_pages";
 
 /**
- * Returns the set of page numbers the user has "read" (met minimum dwell time, no duplicates).
+ * Returns the set of unique page numbers the user has read (no duplicates).
  */
 export async function getReadPages(): Promise<number[]> {
   try {
@@ -31,7 +41,8 @@ export async function getReadPagesCount(): Promise<number> {
 
 /**
  * Marks a page as read and persists. Idempotent (no duplicate counting).
- * Call this only when the user has met the minimum reading time on the page.
+ * Call this when the user actually engages with the page: taps a verse,
+ * swipes away from it after reading, or leaves the mushaf on it.
  */
 export async function addReadPage(page: number): Promise<void> {
   if (!Number.isFinite(page) || !Number.isInteger(page) || page < 1 || page > TOTAL_PAGES) {
@@ -42,27 +53,10 @@ export async function addReadPage(page: number): Promise<void> {
     const set = new Set(existing);
     set.add(page);
     await AsyncStorage.setItem(READ_PAGES_KEY, JSON.stringify([...set].sort((a, b) => a - b)));
-  } catch {
-    // ignore
-  }
-}
-
-/**
- * Marks all pages from 1 up to (and including) the given page as read.
- * Used when the user saves progress at a specific verse — all prior pages
- * are considered read.
- */
-export async function addReadPagesUpTo(page: number): Promise<void> {
-  if (!Number.isFinite(page) || !Number.isInteger(page) || page < 1 || page > TOTAL_PAGES) {
-    return;
-  }
-  try {
-    const existing = await getReadPages();
-    const set = new Set(existing);
-    for (let p = 1; p <= page; p++) {
-      set.add(p);
-    }
-    await AsyncStorage.setItem(READ_PAGES_KEY, JSON.stringify([...set].sort((a, b) => a - b)));
+    // Count toward today's wird. The history service dedupes within a day,
+    // so re-reading a page already read today (or in previous days) still
+    // counts as today's reading exactly once.
+    await addPagesToReadHistory([page]);
   } catch {
     // ignore
   }
@@ -77,4 +71,11 @@ export async function clearReadPages(): Promise<void> {
   } catch {
     // ignore
   }
+}
+
+/**
+ * Clears read pages and their daily reading history (used by "reset progress").
+ */
+export async function clearAllReadProgress(): Promise<void> {
+  await Promise.all([clearReadPages(), clearReadHistory()]);
 }

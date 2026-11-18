@@ -23,12 +23,15 @@ export default function TabsLayout() {
   const readCount = useMushafStore((s) => s.readCount);
   const setJumpToPage = useMushafStore((s) => s.setJumpToPage);
 
-  useFooterAutoHide();
-
   const activeTab = useMemo<TabId>(() => {
     const tabSegment = segments[segments.length - 1];
     return tabSegment === "progress" ? "progress" : "mushaf";
   }, [segments]);
+
+  // Keep the footer visible on the progress screen: it has no tap-to-toggle
+  // handler (unlike the mushaf screen), so auto-hiding would trap the user
+  // without a way to bring the tab bar back.
+  useFooterAutoHide(activeTab !== "progress");
 
   const handleTabChange = useCallback(
     (tab: TabId) => {
